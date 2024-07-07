@@ -1,0 +1,13 @@
+# Vscode settings
+.vscode/
+
+# Folder to exclude
+# python virtual environment
+venv/
+# folder to store data
+data/
+# temporary folder
+tmp/
+
+# All python cache files
+*.pyc

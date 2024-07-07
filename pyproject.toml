@@ -1,0 +1,48 @@
+[project]
+name = "diet-optimization"
+version = "0.0.0"
+readme = "README.md"
+requires-python = "~=3.11"
+dependencies = ["numpy"]
+
+[project.optional-dependencies]
+dev = ["pre-commit"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = ["*"]
+
+[tool.ruff]
+select = [
+    "F",    # flake8 (pyflakes)
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "I",    # isort
+    "UP",   # pyupgrade
+    "BLE",  # flake8-blind-except
+    "B",    # flake8-bugbear
+    "A",    # flake8-builtins
+    "INP",  # flake8-no-pep420
+    "PIE",  # flake8-pie
+    "Q",    # flake8-quotes
+    "RET",  # flake8-return
+    "SLF",  # flake8-self
+    "SIM",  # flake8-simplify
+    "TID",  # flask8-tidy-imports
+    "TCH",  # flake8-type-checking
+    "PTH",  # flake8-use-pathlib
+    "NPY",  # numpy-specific rules
+    "PERF", # perflint
+    "FURB", # refurb
+    "RUF",  # ruff-specific rules
+]
+line-length = 130
+ignore = ["E731"] # Allow named lambdas
+preview = true
+
+[tool.pyright]
+reportIncompatibleMethodOverride = true
+include = ["*"]
