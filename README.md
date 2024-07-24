@@ -1,6 +1,19 @@
-## Diet optimization
+# Diet optimization
 
-# Notes
+## Installation
+
+From the root of the repository run
+```bash
+pip install -e ".[dev]"
+```
+
+## Usage
+
+To fetch everything use:
+```
+make all
+```
+Else the individual make commands can be used.
 
 ## Data sources
 
