@@ -3,11 +3,16 @@ DATA_DIR = $(shell realpath data)
 
 all: prices products nutritents
 
-prices:
-	DATA_DIR=$(DATA_DIR) OWNER=albert27 SIZE=100 python scripts/extract_prices.py
+prices-fetch:
+	DATA_DIR=$(DATA_DIR) OWNER=albert27 SIZE=100 python scripts/prices_fetch.py
+
+prices-summarize:
+	DATA_DIR=$(DATA_DIR) python scripts/prices_summarize.py
+
+prices: prices prices-summarize
 
 products:
-	DATA_DIR=$(DATA_DIR) python scripts/extract_products.py
+	DATA_DIR=$(DATA_DIR) python scripts/products_extract.py
 
 clean:
 	rm -r $(DATA_DIR)/*.csv
