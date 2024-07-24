@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 DATA_DIR = $(shell realpath data)
 
-all: prices products nutritents
+all: prices products nutrients
 
 prices-fetch:
 	DATA_DIR=$(DATA_DIR) OWNER=albert27 SIZE=100 python scripts/prices_fetch.py
@@ -19,10 +19,10 @@ products-summarize:
 
 products: products products-summarize
 
-nutritents-fetch:
+nutrients-fetch:
 	DATA_DIR=$(DATA_DIR) python scripts/nutrients_fetch.py
 
-nutritents: nutritents-fetch
+nutrients: nutrients-fetch
 
 clean:
 	rm -r $(DATA_DIR)/*.csv
