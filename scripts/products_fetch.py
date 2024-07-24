@@ -1,6 +1,6 @@
-"""This script extracts the product information of the products present in prices.json.
+"""This script fetches the product information of the products present in prices.json from the Open Food Facts database.
 
-Usage of script DATA_DIR=<data directory> python scripts/products_extract.py
+Usage of script DATA_DIR=<data directory> python scripts/products_fetch.py
 The api documentation used: https://openfoodfacts.org/api/docs.
 """
 
@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 import requests
+from tqdm import tqdm
 
 DATA_DIR = Path(os.getenv("DATA_DIR", ""))
 
@@ -22,14 +23,13 @@ def load_product_codes_from_prices() -> list[str]:
 
 
 def fetch_product_info(product_code: str) -> dict[str, Any]:
-    print(product_code)
     return requests.get(URL + product_code).json()
 
 
 if __name__ == "__main__":
     product_codes = load_product_codes_from_prices()
 
-    data = [fetch_product_info(product_code) for product_code in product_codes]
+    data = [fetch_product_info(product_code) for product_code in tqdm(product_codes)]
 
     with (DATA_DIR / "products.json").open("w") as file:
         json.dump(data, file, indent=2)

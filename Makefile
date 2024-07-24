@@ -12,7 +12,7 @@ prices-summarize:
 prices: prices prices-summarize
 
 products-fetch:
-	DATA_DIR=$(DATA_DIR) python scripts/products_extract.py
+	DATA_DIR=$(DATA_DIR) python scripts/products_fetch.py
 
 products-summarize:
 	DATA_DIR=$(DATA_DIR) python scripts/products_summarize.py
