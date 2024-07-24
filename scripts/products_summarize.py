@@ -11,6 +11,40 @@ from typing import Any
 
 DATA_DIR = Path(os.getenv("DATA_DIR", ""))
 
+nutrients = [
+    "alcohol_100g",
+    "alcohol_unit",
+    "calcium_100g",
+    "calcium_unit",
+    "carbohydrates_100g",
+    "carbohydrates_unit",
+    # "energy",
+    # "energy-kcal",
+    "energy-kcal_100g",
+    "energy-kcal_unit",
+    # "energy-kcal_value",
+    # "energy-kcal_value_computed",
+    # "energy_100g",
+    # "energy_unit",
+    # "energy_value",
+    "fat_100g",
+    "fat_unit",
+    "fiber_100g",
+    "fiber_unit",
+    "proteins_100g",
+    "proteins_unit",
+    "salt_100g",
+    "salt_unit",
+    "saturated-fat_100g",
+    "saturated-fat_unit",
+    "sodium_100g",
+    "sodium_unit",
+    "sugars_100g",
+    "sugars_unit",
+    "vitamin-b9_100g",
+    "vitamin-b9_unit",
+]
+
 
 def create_csv(file, items: list[dict[str, Any]]):
     header = ["product_code", "ciqual_code"]
@@ -20,10 +54,13 @@ def create_csv(file, items: list[dict[str, Any]]):
 
     # Write the data rows
     for item in items:
-        product_code = item["code"]
-        ciqual_code = item["product"]["categories_properties"].get("ciqual_food_code:en")
-        row_dict = {"product_code": product_code, "ciqual_code": ciqual_code}
-        writer.writerow([row_dict[col] for col in header])
+        row_dict = {
+            "name": item["product"].get("product_name"),
+            "product_code": item["code"],
+            "ciqual_code": item["product"]["categories_properties"].get("ciqual_food_code:en"),
+        }
+        row_dict.update(item["product"]["nutriments"])
+        writer.writerow([row_dict.get(col) for col in header])
 
 
 if __name__ == "__main__":
