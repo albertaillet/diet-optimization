@@ -81,3 +81,17 @@ Here is the combined table listing the availability of different nutrients in th
 | Retinol equivalents (RE)  | ❌          | ✅     | ✅     |
 | Wholegrain total          | ❌          | ❌     | ✅     |
 | Waste                     | ❌          | ❌     | ✅     |
+
+### Data source for nutrition recommendations
+
+[Nordic Nutrition Recommendations 2023](https://pub.norden.org/nord2023-003/recommendations.html), which contains the following for a select number of nurtients.
+
+| Term | Definition |
+|------|------------|
+| **Average Requirement (AR)** | The average daily nutrient intake level estimated to meet the requirements of half of the individuals in a particular life-stage group in the general population. Used to assess adequacy of nutrient intake of groups. |
+| **Recommended Intake (RI)** | The average daily dietary nutrient intake level sufficient to meet the nutrient requirements of nearly all (97.5%) individuals in a life-stage group. Used to plan diets for individuals and groups. |
+| **Adequate Intake (AI)** | The recommended average daily intake level based on observed or experimentally determined estimates of nutrient intake by a group. Used when an RI cannot be determined. |
+| **Provisional AR** | The average daily nutrient intake level suggested to meet the requirements of half of the individuals in a life-stage group. An approximation of AR with larger uncertainty. |
+| **Recommended intake range of macronutrients** | The recommended average daily nutrient range of energy-providing macronutrients expressed as a percentage of total energy intake. Associated with reduced risk of chronic diseases. |
+| **Tolerable Upper Intake Level (UL)** | The highest average daily nutrient intake level likely to pose no risk of adverse health effects to almost all individuals. |
+| **Chronic Disease Risk Reduction Intake (CDRR)** | The intake level above which reduction is expected to reduce chronic disease risk within life-stage groups in the general population. |
