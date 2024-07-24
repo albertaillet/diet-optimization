@@ -35,5 +35,5 @@ if __name__ == "__main__":
     with (DATA_DIR / "prices.json").open("r") as file:
         data = json.load(file)
 
-    with (DATA_DIR / "prices.csv").open(mode="w", newline="", encoding="utf-8") as file:
+    with (DATA_DIR / "prices.csv").open("w", newline="", encoding="utf-8") as file:
         create_csv(file, data["items"])

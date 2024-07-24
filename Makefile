@@ -1,15 +1,16 @@
 SHELL := /bin/bash
 DATA_DIR = $(shell realpath data)
+OFF_USERNAME = "albert27"
 
 all: prices products nutrients
 
 prices-fetch:
-	DATA_DIR=$(DATA_DIR) OWNER=albert27 SIZE=100 python scripts/prices_fetch.py
+	DATA_DIR=$(DATA_DIR) OWNER=$(OFF_USERNAME) SIZE=100 python scripts/prices_fetch.py
 
 prices-summarize:
 	DATA_DIR=$(DATA_DIR) python scripts/prices_summarize.py
 
-prices: prices prices-summarize
+prices: prices-fetch prices-summarize
 
 products-fetch:
 	DATA_DIR=$(DATA_DIR) python scripts/products_fetch.py
@@ -17,7 +18,7 @@ products-fetch:
 products-summarize:
 	DATA_DIR=$(DATA_DIR) python scripts/products_summarize.py
 
-products: products products-summarize
+products: products-fetch products-summarize
 
 nutrients-fetch:
 	DATA_DIR=$(DATA_DIR) python scripts/nutrients_fetch.py

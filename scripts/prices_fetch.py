@@ -21,5 +21,5 @@ PARAMS = {"owner": OWNER, "page": 1, "size": SIZE}
 if __name__ == "__main__":
     # NOTE: this is limited to max 100 items and multiple queries will have to be made for more than that.
     data = requests.get(URL, params=PARAMS, headers={"accept": "application/json"}).json()
-    with (DATA_DIR / "prices.json").open(mode="w") as file:
+    with (DATA_DIR / "prices.json").open("w") as file:
         json.dump(data, file, indent=2)

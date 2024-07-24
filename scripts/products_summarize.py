@@ -120,5 +120,5 @@ if __name__ == "__main__":
     with (DATA_DIR / "products.json").open("r") as file:
         data = json.load(file)
 
-    with (DATA_DIR / "products.csv").open(mode="w", newline="", encoding="utf-8") as file:
+    with (DATA_DIR / "products.csv").open("w", newline="", encoding="utf-8") as file:
         create_csv(file, data)
