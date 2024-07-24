@@ -45,6 +45,54 @@ nutrients = [
     "vitamin-b9_unit",
 ]
 
+all_estimated_nutrients = [
+    "alcohol_100g",
+    "beta-carotene_100g",
+    "calcium_100g",
+    "carbohydrates_100g",
+    "cholesterol_100g",
+    "copper_100g",
+    "energy-kcal_100g",
+    "energy-kj_100g",
+    "energy_100g",
+    "fat_100g",
+    "fiber_100g",
+    "fructose_100g",
+    "galactose_100g",
+    "glucose_100g",
+    "iodine_100g",
+    "iron_100g",
+    "lactose_100g",
+    "magnesium_100g",
+    "maltose_100g",
+    "manganese_100g",
+    "pantothenic-acid_100g",
+    "phosphorus_100g",
+    "phylloquinone_100g",
+    "polyols_100g",
+    "potassium_100g",
+    "proteins_100g",
+    "salt_100g",
+    "saturated-fat_100g",
+    "selenium_100g",
+    "sodium_100g",
+    "starch_100g",
+    "sucrose_100g",
+    "sugars_100g",
+    "vitamin-a_100g",
+    "vitamin-b12_100g",
+    "vitamin-b1_100g",
+    "vitamin-b2_100g",
+    "vitamin-b6_100g",
+    "vitamin-b9_100g",
+    "vitamin-c_100g",
+    "vitamin-d_100g",
+    "vitamin-e_100g",
+    "vitamin-pp_100g",
+    "water_100g",
+    "zinc_100g",
+]
+
 
 def create_csv(file, items: list[dict[str, Any]]):
     header = ["product_code", "ciqual_code"]
@@ -61,6 +109,11 @@ def create_csv(file, items: list[dict[str, Any]]):
         }
         row_dict.update(item["product"]["nutriments"])
         writer.writerow([row_dict.get(col) for col in header])
+
+        # Check that all estimated nutrients seem to have the same keys
+        estimated_nutrients = item["product"].get("nutriments_estimated")
+        if estimated_nutrients is not None:
+            assert set(estimated_nutrients.keys()) == set(all_estimated_nutrients)
 
 
 if __name__ == "__main__":
