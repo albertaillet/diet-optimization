@@ -25,7 +25,6 @@ select = [
     "BLE",  # flake8-blind-except
     "B",    # flake8-bugbear
     "A",    # flake8-builtins
-    "INP",  # flake8-no-pep420
     "PIE",  # flake8-pie
     "Q",    # flake8-quotes
     "RET",  # flake8-return
