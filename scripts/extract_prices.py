@@ -1,6 +1,6 @@
 """This script extracts the prices reported by the specified user using the openfoodfacts prices API as a csv file.
 
-Usage of script OWNER=<yourusername> python scripts/extract_prices.py
+Usage of script DATA_DIR=<data directory> OWNER=<yourusername> python scripts/extract_prices.py
 The api documentation used: https://prices.openfoodfacts.org/api/docs.
 """
 
@@ -11,12 +11,12 @@ from typing import Any
 
 import requests
 
-OWNER = os.environ.get("OWNER")
-SIZE = os.environ.get("SIZE", 100)  # 1 < SIZE < 100
+OWNER = os.getenv("OWNER")
+SIZE = os.getenv("SIZE", 100)  # 1 < SIZE < 100
+DATA_DIR = Path(os.getenv("DATA_DIR", ""))
 
 URL = "https://prices.openfoodfacts.org/api/v1/prices"
 PARAMS = {"owner": OWNER, "page": 1, "size": SIZE}
-OUTPUT_PATH = Path(__file__).parent.parent / "data" / "prices_data.csv"
 
 
 def fetch_data() -> dict[str, Any]:
@@ -47,6 +47,5 @@ def create_csv(file, items: list[dict[str, Any]]):
 
 if __name__ == "__main__":
     data = fetch_data()
-
-    with OUTPUT_PATH.open(mode="w", newline="", encoding="utf-8") as file:
+    with (DATA_DIR / "prices.csv").open(mode="w", newline="", encoding="utf-8") as file:
         create_csv(file, data["items"])

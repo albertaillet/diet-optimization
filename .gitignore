@@ -1,13 +1,15 @@
 # Vscode settings
 .vscode/
 
-# Folder to exclude
+# Folders to exclude
 # python virtual environment
 venv/
-# folder to store data
-data/
 # temporary folder
 tmp/
+
+# All data in json and csv files
+data/*.json
+data/*.csv
 
 # All python cache files
 *.pyc
