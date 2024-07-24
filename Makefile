@@ -11,8 +11,14 @@ prices-summarize:
 
 prices: prices prices-summarize
 
-products:
+
+products-fetch:
 	DATA_DIR=$(DATA_DIR) python scripts/products_extract.py
+
+products-summarize:
+	DATA_DIR=$(DATA_DIR) python scripts/products_summarize.py
+
+products: products products-summarize
 
 clean:
 	rm -r $(DATA_DIR)/*.csv
