@@ -25,5 +25,8 @@ nutrients-fetch:
 
 nutrients: nutrients-fetch
 
+recommendations:
+	DATA_DIR=$(DATA_DIR) python scripts/recommentations_fetch.py
+
 clean:
 	rm -r $(DATA_DIR)/*.csv
