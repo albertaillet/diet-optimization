@@ -1,6 +1,6 @@
 """This script fetches the webpage with the Nordic Nutrition Recommendations 2023.
 
-Usage of script DATA_DIR=<data directory> python scripts/recommentations_fetch.py
+Usage of script DATA_DIR=<data directory> python scripts/recommendations_fetch.py
 """
 
 import os

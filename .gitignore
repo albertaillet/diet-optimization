@@ -9,7 +9,7 @@ tmp/
 
 # All data in json, html and csv files
 data/*.json
-data/*.csv
+data/**/*.csv
 data/*.html
 
 # All python cache files
