@@ -1,6 +1,6 @@
 """This script summarizes the extracted csv tables from the Nordic Nutrition Recommendations 2023.
 
-Usage of script DATA_DIR=<data directory> python scripts/recommendations_summarize.py
+Usage of script DATA_DIR=<data directory> python scripts/recommendations_summarize_general.py
 """
 
 import csv
@@ -18,13 +18,13 @@ def extract_summary_table(file) -> dict[str, dict[str, Any]]:
     assert next(reader) == ["", "FEMALES", "MALES", "FEMALES", "MALES", ""]
     summary_table = {}
     for row in reader:
-        nutirent, unit = row[0].split(", ")
+        nutrient, unit = row[0].split(", ")
         value_females, value_males, _, _ = row[1:5]
         comment = row[5].replace("\xa0", "")
         assert comment in {"", "AI in NNR2023"}, comment
         RI_or_AI = "AI" if comment == "AI in NNR2023" else "RI"
-        assert nutirent not in summary_table
-        summary_table[nutirent] = {
+        assert nutrient not in summary_table
+        summary_table[nutrient] = {
             "unit": unit,
             "RI_or_AI": RI_or_AI,
             "value_males": float(value_males),
@@ -38,18 +38,29 @@ def extract_upper_intake_table(file) -> dict[str, dict[str, Any]]:
     assert next(reader) == ["", "", "UL per day"]
     upper_intake_table = {}
     for row in reader:
-        nutirent, unit_per_day, value = row
+        nutrient, unit_per_day, value = row
+        if nutrient == "Magnesium":
+            # NOTE: The UL of Magnesium is currently lower than the AR, so it is skipped.
+            # Provisional AR is set to 240 mg/day (females) and 280 mg/day (males).
+            # UL is set to 250 mg/day [...] applies only to magnesium in dietary supplements (SCF, 2006).
+            # see https://pub.norden.org/nord2023-003/magnesium.html
+            continue
         unit, day = unit_per_day.split("/")
         assert day == "d", unit_per_day
-        assert nutirent not in upper_intake_table
-        upper_intake_table[nutirent] = {"unit": unit, "value_upper_intake": float(value)}
+        assert nutrient not in upper_intake_table
+        upper_intake_table[nutrient] = {"unit": unit, "value_upper_intake": float(value)}
     return upper_intake_table
+
+
+def fix_micrograms(unit: str) -> str:
+    # both `µ` (MICRO SIGN) and `μ` (GREEK SMALL LETTER MU) are used # noqa: RUF003
+    return unit.replace("μ", "µ")  # noqa: RUF001
 
 
 def convert_unit(unit_1: str, unit_2: str, value_2: float) -> float:
     """Convert value_2 with unit_2 to unit_1."""
-    # both `µ` (MICRO SIGN) and `μ` (GREEK SMALL LETTER MU) are used # noqa: RUF003
-    unit_2 = unit_2.replace("μ", "µ")  # noqa: RUF001
+    unit_1 = fix_micrograms(unit_1)
+    unit_2 = fix_micrograms(unit_2)
 
     if unit_1 == unit_2 or (unit_1 == "RE" and unit_2 == "µg RE"):  # noqa: RUF001
         return value_2
@@ -66,12 +77,17 @@ def convert_unit(unit_1: str, unit_2: str, value_2: float) -> float:
 
 def merge_tables(table_1: dict[str, dict[str, Any]], table_2: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
     table = {}
-    for nutrient in table_1.keys() | table_2.keys():
+    for nutrient in sorted(table_1.keys() | table_2.keys()):
         if nutrient in table_1 and nutrient in table_2:
             unit_1 = table_1[nutrient]["unit"]
             unit_2 = table_2[nutrient]["unit"]
-            value_2 = table_2[nutrient]["value_upper_intake"]
-            table_2[nutrient]["value_upper_intake"] = convert_unit(unit_1, unit_2, value_2)
+            value_upper_intake = table_2[nutrient]["value_upper_intake"]
+            value_upper_intake = convert_unit(unit_1, unit_2, value_upper_intake)
+            table_2[nutrient]["value_upper_intake"] = value_upper_intake
+            value_males = table_1[nutrient]["value_males"]
+            assert value_males < value_upper_intake, (value_males, value_upper_intake, nutrient)
+            value_females = table_1[nutrient]["value_females"]
+            assert value_females < value_upper_intake, (value_females, value_upper_intake, nutrient)
             table[nutrient] = table_1[nutrient] | table_2[nutrient]
         elif nutrient in table_1:
             table[nutrient] = table_1[nutrient]
@@ -79,6 +95,7 @@ def merge_tables(table_1: dict[str, dict[str, Any]], table_2: dict[str, dict[str
             table[nutrient] = table_2[nutrient]
         else:
             raise KeyError
+        table[nutrient]["unit"] = fix_micrograms(table[nutrient]["unit"])
     return table
 
 
@@ -95,5 +112,5 @@ if __name__ == "__main__":
     with (DATA_DIR / "recommendations.csv").open("w", encoding="utf-8") as file:
         writer = csv.writer(file)
         writer.writerow(header)
-        for nutrient, row_data in summary_table.items():
-            writer.writerow([nutrient] + [row_data.get(col) for col in header[1:]])
+        for nutrient in sorted(summary_table):
+            writer.writerow([nutrient] + [summary_table[nutrient].get(col) for col in header[1:]])

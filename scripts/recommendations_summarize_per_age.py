@@ -1,6 +1,7 @@
 """This script summarizes the extracted csv tables from the Nordic Nutrition Recommendations 2023.
 
-Usage of script DATA_DIR=<data directory> python scripts/recommendations_summarize.py
+Usage of script DATA_DIR=<data directory> python scripts/recommendations_summarize_per_age.py
+# NOTE: This script is unfinished in its current form.
 """
 
 import csv
@@ -39,6 +40,7 @@ def extract_table(file):
             case _:
                 individual_type = get_indiviudal_type(row[0], group)
                 print(individual_type)
+        # perpare the row data in way that it can later be merged.
 
 
 if __name__ == "__main__":
@@ -48,3 +50,5 @@ if __name__ == "__main__":
             continue
         with file_path.open("r", encoding="utf-8") as file:
             extract_table(file)
+
+    # Merge all the tables with recommendations
