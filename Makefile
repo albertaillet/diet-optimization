@@ -31,8 +31,11 @@ recommendations-fetch:
 recommendations-extract:
 	DATA_DIR=$(DATA_DIR) python scripts/recommendations_extract_tables.py
 
-recommendations-summarize:
+recommendations-summarize-age:
 	DATA_DIR=$(DATA_DIR) python scripts/recommendations_summarize_per_age.py
+
+recommendations-summarize-general:
+	DATA_DIR=$(DATA_DIR) python scripts/recommendations_summarize_general.py
 
 recommendations: recommendations-fetch recommendations-extract
 
