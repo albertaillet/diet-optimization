@@ -37,5 +37,8 @@ recommendations-summarize-general:
 
 recommendations: recommendations-fetch recommendations-extract recommendations-summarize-general
 
+optimize:
+	DATA_DIR=$(DATA_DIR) python scripts/combine_and_optimize.py
+
 clean:
 	rm -r $(DATA_DIR)/*.csv
