@@ -2,7 +2,7 @@ SHELL := /bin/bash
 DATA_DIR = $(shell realpath data)
 OFF_USERNAME = "albert27"
 
-all: prices products nutrients
+all: prices products nutrients recommendations
 
 prices-fetch:
 	DATA_DIR=$(DATA_DIR) OWNER=$(OFF_USERNAME) SIZE=100 python scripts/prices_fetch.py
@@ -15,10 +15,13 @@ prices: prices-fetch prices-summarize
 products-fetch:
 	DATA_DIR=$(DATA_DIR) python scripts/products_fetch.py
 
+ciqual-fetch:
+	DATA_DIR=$(DATA_DIR) python scripts/ciqual_fetch.py
+
 products-summarize:
 	DATA_DIR=$(DATA_DIR) python scripts/products_summarize.py
 
-products: products-fetch products-summarize
+products: products-fetch ciqual-fetch products-summarize
 
 nutrients-fetch:
 	DATA_DIR=$(DATA_DIR) python scripts/nutrients_fetch.py
@@ -37,7 +40,7 @@ recommendations-summarize-age:
 recommendations-summarize-general:
 	DATA_DIR=$(DATA_DIR) python scripts/recommendations_summarize_general.py
 
-recommendations: recommendations-fetch recommendations-extract
+recommendations: recommendations-fetch recommendations-extract recommendations-summarize-general
 
 clean:
 	rm -r $(DATA_DIR)/*.csv
