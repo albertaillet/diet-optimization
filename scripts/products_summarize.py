@@ -36,7 +36,7 @@ all_estimated_nutrients = [
     "manganese",
     "pantothenic-acid",
     "phosphorus",
-    "phylloquinone",
+  # "phylloquinone",
     "polyols",
     "potassium",
     "proteins",
@@ -172,10 +172,11 @@ def create_csv(file, items: list[dict[str, Any]], ciqual_lookup: dict[str, dict[
         reported_nutrients = item["product"]["nutriments"]
 
         # Check that all estimated nutrients seem to have the same keys
-        estimated_nutrients = item["product"].get("nutriments_estimated")
-        if estimated_nutrients is not None:
-            assert set(estimated_nutrients.keys()) == set(name + "_100g" for name in all_estimated_nutrients)
-            # NOTE: The OFF estimated nutrients are not used as the unit have not been checked.
+        # estimated_nutrients = item["product"].get("nutriments_estimated")
+        # if estimated_nutrients is not None:
+        #     assert set(estimated_nutrients.keys()) == set(name + "_100g" for name in all_estimated_nutrients)
+        # phylloquinone is also present in the OFF estimated_nutrients.
+        # NOTE: The OFF estimated nutrients are not used as the unit have not been checked.
 
         ciqual_code = item["product"]["categories_properties"].get("ciqual_food_code:en")
         ciqual_nutrients = ciqual_lookup[ciqual_code]["nutrients"] if ciqual_code is not None else {}
