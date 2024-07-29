@@ -18,6 +18,9 @@ products-fetch:
 ciqual-fetch:
 	DATA_DIR=$(DATA_DIR) python scripts/ciqual_fetch.py
 
+ciqual-explore:
+	DATA_DIR=$(DATA_DIR) python scripts/ciqual_explore.py
+
 products-summarize:
 	DATA_DIR=$(DATA_DIR) python scripts/products_summarize.py
 
