@@ -15,33 +15,33 @@ DATA_DIR = Path("/home/alsundai/git/diet-optimization/data")
 all_estimated_nutrients = [
     # "alcohol",
     # "beta-carotene",
-    # "calcium",
+    "calcium",
     "carbohydrates",
     # "cholesterol",
-    # "copper",
+    "copper",
     "energy-kcal",
     # "energy-kj",
     # "energy",
     "fat",
-    # "fiber",
+    "fiber",
     # "fructose",
     # "galactose",
     # "glucose",
     # "iodine",
     "iron",
     # "lactose",
-    # "magnesium",
+    "magnesium",
     # "maltose",
     # "manganese",
-    # "pantothenic-acid",
-    # "phosphorus",
+    # "pantothenic-acid",  # has multiple units
+    # "phosphorus",  # has multiple units
     # "phylloquinone",
     # "polyols",
-    # "potassium",
+    "potassium",
     "proteins",
     # "salt",
-    # "saturated-fat",
-    # "selenium",
+    "saturated-fat",
+    "selenium",
     # "sodium",
     # "starch",
     # "sucrose",
@@ -50,14 +50,14 @@ all_estimated_nutrients = [
     "vitamin-b12",
     # "vitamin-b1",
     # "vitamin-b2",
-    # "vitamin-b6",
+    "vitamin-b6",
     # "vitamin-b9",
-    # "vitamin-c",
-    # "vitamin-d",
-    # "vitamin-e",
+    "vitamin-c",
+    # "vitamin-d",  # has multiple units
+    "vitamin-e",
     # "vitamin-pp",
     # "water",
-    # "zinc",
+    "zinc",
 ]
 pd.set_option("display.max_rows", None)
 pd.set_option("display.max_columns", None)
@@ -73,13 +73,17 @@ def filter_products(products: pd.DataFrame) -> pd.DataFrame:
     cols = ["product_code", "product_name", "ciqual_code"]
     nutrient_cols = [name + suffix for name in all_estimated_nutrients for suffix in ("_100g", "_unit", "_source")]
     relevant_products = products[cols + nutrient_cols].dropna()
+    # NOTE: temporary check
+    assert relevant_products.shape == (26, len(nutrient_cols) + 3), (relevant_products.shape, (25, len(nutrient_cols) + 3))
 
     # Check that all columns have the same unit and source between rows.
     for nutient in all_estimated_nutrients:
-        assert relevant_products[nutient + "_unit"].nunique() == 1, nutient
-        assert relevant_products[nutient + "_source"].nunique() == 1, nutient
+        unique_units = relevant_products[nutient + "_unit"].unique()
+        assert len(unique_units) == 1, (nutient, unique_units)
+        if nutient not in ("fiber", "calcium"):
+            unique_sources = relevant_products[nutient + "_source"].unique()
+            assert len(unique_sources) == 1, (nutient, unique_sources)
 
-    assert relevant_products.shape == (25, 21)  # NOTE: temporary check
     return relevant_products
 
 
@@ -114,12 +118,27 @@ c_costs = 0.1 * products_and_prices["price_chf"].values.astype("float")  # to pr
 # TODO: hardcoded at the moment for testing.
 recommendations_lb_ub_unit = {
     "carbohydrates": (0, 200, "g"),
-    "energy-kcal": (1_500.0, 3_000.0, "kcal"),
-    "fat": (60.0, np.nan, "g"),
-    "iron": (9.0, 60.0, "g"),
-    "proteins": (120.0, np.nan, "g"),
-    "vitamin-b12": (4.0, np.nan, "mg"),
+    "calcium": (950, 2500, "mg"),
+    "copper": (0.9, 5, "mg"),  # NOTE: setting a higher lower bound for copper makes the problem unfeasible
+    "fiber": (60, np.nan, "g"),
+    "energy-kcal": (1_500, 3_000, "kcal"),
+    "fat": (60, np.nan, "g"),
+    "potassium": (3500, np.nan, "mg"),
+    "magnesium": (350, np.nan, "mg"),
+    "saturated-fat": (0, np.nan, "g"),
+    "selenium": (90, 255, "µg"),  # noqa: RUF001
+    "iron": (9, 60, "mg"),
+    "proteins": (120, np.nan, "g"),
+    "vitamin-b12": (4, np.nan, "µg"),  # noqa: RUF001
+    "vitamin-b6": (1.8, 12, "mg"),
+    "vitamin-c": (110, np.nan, "mg"),
+    "vitamin-e": (11, 200, "mg"),
+    "zinc": (12.7, 25, "mg"),
 }
+for nutrient in all_estimated_nutrients:
+    unique_units = set(products_and_prices[nutrient + "_unit"].unique())
+    recommendation_unit = recommendations_lb_ub_unit[nutrient][2]
+    assert unique_units == {recommendation_unit}, (nutrient, unique_units, recommendation_unit)
 
 # do this and print result using scipy.optimize.linprog
 # Lower bounds for nutrients
@@ -139,17 +158,15 @@ b_ub_ub = ub[~np.isnan(ub)]
 A_ub = np.vstack([A_ub_lb, A_ub_ub])
 b_ub = np.concatenate([b_ub_lb, b_ub_ub])
 
-# %% Linear programming to minimize cost
 result = linprog(c_costs, A_ub=A_ub, b_ub=b_ub, bounds=(0, None))
 
-# %%
 result_table = pd.DataFrame({
-    "product_code": products_and_prices["product_code"],
+    # "product_code": products_and_prices["product_code"],
     "product_name": products_and_prices["product_name"],
-    "location": products_and_prices["location"],
+    # "location": products_and_prices["location"],
     "quantity_g": 100 * result.x,
 })
-print(result_table[result_table["quantity_g"] > 0])
+print(result_table[result_table["quantity_g"] > 0].head(30))
 
 nutrient_results = A_nutrients.T @ result.x
 nutrient_result_table = pd.DataFrame({"nutrient": all_estimated_nutrients, "value": nutrient_results})

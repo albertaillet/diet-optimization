@@ -148,7 +148,7 @@ def to_value(value: str) -> float | None:
     value = value.replace(",", ".")
     # Set unknown values to None
     if value in {"", "-"}:
-        return None
+        return 0
     # Set values with traces to 0. Similar to:
     # https://github.com/openfoodfacts/openfoodfacts-server/blob/main/lib/ProductOpener/NutritionCiqual.pm#L194
     if "traces" in value:
