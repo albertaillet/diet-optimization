@@ -3,14 +3,14 @@
 Usage of script DATA_DIR=<data directory> python scripts/combine_and_optimize.py
 """
 
-# %%
+import os
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from scipy.optimize import linprog
 
-DATA_DIR = Path("/home/alsundai/git/diet-optimization/data")
+DATA_DIR = Path(os.getenv("DATA_DIR", ""))
 
 used_nutrients = [
     # "alcohol",
@@ -66,8 +66,7 @@ def filter_products(products: pd.DataFrame) -> pd.DataFrame:
     cols = ["product_code", "product_name", "ciqual_code"]
     nutrient_cols = [name + suffix for name in used_nutrients for suffix in ("_value", "_unit", "_source")]
     relevant_products = products[cols + nutrient_cols].dropna()
-    # NOTE: temporary check
-    assert relevant_products.shape == (26, len(nutrient_cols) + 3), (relevant_products.shape, (25, len(nutrient_cols) + 3))
+    assert relevant_products.shape[1] == len(nutrient_cols) + 3, (relevant_products.shape, len(nutrient_cols) + 3)
 
     # Check that all columns have the same unit and source between rows.
     for nutient in used_nutrients:
@@ -83,7 +82,7 @@ def filter_products(products: pd.DataFrame) -> pd.DataFrame:
 def fix_prices(prices: pd.DataFrame) -> pd.DataFrame:
     """Set all prices to the same currency: CHF. Also removes duplicate prices of the same location."""
     EUR_TO_CHF = 0.96  # TODO: fetch this from the internet.
-    assert set(prices["currency"].unique()) == {"EUR", "CHF"}
+    assert all(c in {"EUR", "CHF"} for c in prices["currency"].unique()), prices["currency"].unique()
     prices["price"] = prices.apply(lambda row: EUR_TO_CHF * row["price"] if row["currency"] == "EUR" else row["price"], axis=1)
     # check the "date column" and take the latest price from each product with individual product_id and location_osm_id
     prices["date"] = pd.to_datetime(prices["date"])
@@ -100,7 +99,7 @@ def add_hardcoded_additional_recommendations(recommendations: pd.DataFrame) -> p
     additional_recommendations_lb_ub_unit = {
         "carbohydrates": (0, np.nan, "g"),
         "fiber": (40, 70, "g"),
-        "energy-kcal": (2_700, 3_000, "kcal"),
+        "energy-kcal": (2_500, 3_000, "kcal"),
         "fat": (70, np.nan, "g"),
         "saturated-fat": (0, np.nan, "g"),
         "proteins": (150, np.nan, "g"),
@@ -165,6 +164,9 @@ indexed_recommendations = add_hardcoded_additional_recommendations(recommendatio
 lb, ub = get_recommendations_upper_and_lower_bounds(indexed_recommendations, products_and_prices)
 
 result = solve_optimization(A_nutrients, lb, ub, c_costs)
+if result.x is None:
+    print(result)
+
 result_table = pd.DataFrame({
     "product_code": products_and_prices["product_code"],
     "product_name": products_and_prices["product_name"],
@@ -181,5 +183,3 @@ nutrient_result_table = pd.DataFrame({
 print(nutrient_result_table)
 
 print("Price per day:", round(result.fun, 4), "CHF")
-
-# %%
