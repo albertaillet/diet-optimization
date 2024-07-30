@@ -172,14 +172,14 @@ def load_ciqual_database(file):
         name = row["alim_nom_eng"]
         nutrients = {}
         for col, (new_col, col_unit) in nutrient_keys.items():
-            nutrients[new_col + "_100g"] = to_value(row[col])
+            nutrients[new_col + "_value"] = to_value(row[col])
             nutrients[new_col + "_unit"] = col_unit
         ciqual_data[ciqual_id] = {"name": name, "nutrients": nutrients}
     return ciqual_data
 
 
 def create_csv(file, items: list[dict[str, Any]], ciqual_lookup: dict[str, dict[str, Any]]):
-    nutrient_header = [name + suffix for name in all_estimated_nutrients for suffix in ("_100g", "_unit", "_source")]
+    nutrient_header = [name + suffix for name in all_estimated_nutrients for suffix in ("_value", "_unit", "_source")]
     header = ["product_code", "product_name", "ciqual_code", *nutrient_header]
 
     writer = csv.writer(file)
@@ -192,7 +192,7 @@ def create_csv(file, items: list[dict[str, Any]], ciqual_lookup: dict[str, dict[
         # Check that all estimated nutrients seem to have the same keys
         # estimated_nutrients = item["product"].get("nutriments_estimated")
         # if estimated_nutrients is not None:
-        #     assert set(estimated_nutrients.keys()) == set(name + "_100g" for name in all_estimated_nutrients)
+        #     assert set(estimated_nutrients.keys()) == set(name + "_value" for name in all_estimated_nutrients)
         # phylloquinone is also present in the OFF estimated_nutrients.
         # NOTE: The OFF estimated nutrients are not used as the unit have not been checked.
 
@@ -201,15 +201,15 @@ def create_csv(file, items: list[dict[str, Any]], ciqual_lookup: dict[str, dict[
 
         nutrients = {}
         for nurtient_name in all_estimated_nutrients:
-            nurtient_100g = nurtient_name + "_100g"
+            nurtient_value = nurtient_name + "_value"
             nurtient_unit = nurtient_name + "_unit"
             nutrient_source = nurtient_name + "_source"
-            if nurtient_100g in reported_nutrients:
-                nutrients[nurtient_100g] = reported_nutrients[nurtient_100g]
+            if nurtient_name in reported_nutrients:
+                nutrients[nurtient_value] = reported_nutrients[nurtient_name]
                 nutrients[nurtient_unit] = reported_nutrients[nurtient_unit]
                 nutrients[nutrient_source] = "reported"
-            elif nurtient_100g in ciqual_nutrients:
-                nutrients[nurtient_100g] = ciqual_nutrients[nurtient_100g]
+            elif nurtient_value in ciqual_nutrients:
+                nutrients[nurtient_value] = ciqual_nutrients[nurtient_value]
                 nutrients[nurtient_unit] = ciqual_nutrients[nurtient_unit]
                 nutrients[nutrient_source] = "ciqual"
 

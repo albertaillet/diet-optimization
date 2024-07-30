@@ -64,7 +64,7 @@ used_nutrients = [
 def filter_products(products: pd.DataFrame) -> pd.DataFrame:
     """Filters to only the relevant nutrients and drops all products with missing values."""
     cols = ["product_code", "product_name", "ciqual_code"]
-    nutrient_cols = [name + suffix for name in used_nutrients for suffix in ("_100g", "_unit", "_source")]
+    nutrient_cols = [name + suffix for name in used_nutrients for suffix in ("_value", "_unit", "_source")]
     relevant_products = products[cols + nutrient_cols].dropna()
     # NOTE: temporary check
     assert relevant_products.shape == (26, len(nutrient_cols) + 3), (relevant_products.shape, (25, len(nutrient_cols) + 3))
@@ -157,7 +157,7 @@ relevant_products = filter_products(products)
 fixed_prices = fix_prices(prices)
 products_and_prices = pd.merge(relevant_products, fixed_prices, how="inner", on=["product_code", "product_name"])
 
-A_nutrients = products_and_prices[[n + "_100g" for n in used_nutrients]].values
+A_nutrients = products_and_prices[[n + "_value" for n in used_nutrients]].values
 
 c_costs = 0.1 * products_and_prices["price_chf"].values.astype("float")  # to price per kg to price per 100g
 
