@@ -61,7 +61,6 @@ def convert_unit(nutrient: str, unit_1: str, unit_2: str) -> tuple[float, float,
     """Convert value_2 with unit_2 to a unit common with unit_1."""
     unit_1 = fix_micrograms(unit_1)
     unit_2 = fix_micrograms(unit_2)
-
     if unit_1 == unit_2 or (nutrient == "Vitamin A" and unit_1 == "RE" and unit_2 == "µg RE"):  # noqa: RUF001
         return 1, 1, unit_1
     if nutrient == "Vitamin E" and unit_1 == "α-TE" and unit_2 == "mg":  # noqa: RUF001
@@ -69,7 +68,7 @@ def convert_unit(nutrient: str, unit_1: str, unit_2: str) -> tuple[float, float,
         # 1 IU is the biological equivalent of about 0.667 mg d (RRR)-alpha-tocopherol (2/3 mg exactly),
         # or of 0.90 mg of dl-alpha-tocopherol, corresponding to the then-measured relative potency of stereoisomers
         # NOTE: assumes mg means mg of IU and I read that α-TE is (RRR)-alpha-tocopherol          # noqa: RUF003
-        return 1, 0.667, "α-TE"  # noqa: RUF001
+        return 1.5, 1, unit_2
     if nutrient == "Copper" and unit_1 == "µg" and unit_2 == "mg":  # noqa: RUF001
         return 0.001, 1, unit_2
     if unit_1 == "µg" and unit_2 == "mg":  # noqa: RUF001
@@ -104,7 +103,19 @@ def merge_tables(table_1: dict[str, dict[str, Any]], table_2: dict[str, dict[str
         else:
             raise KeyError
         table[nutrient]["unit"] = fix_micrograms(table[nutrient]["unit"])
+        # Fix potassium to be in mg instead of g.
+        if nutrient == "Potassium":
+            assert nutrient in table_1 and nutrient not in table_2
+            assert table[nutrient]["unit"] == "g"
+            table[nutrient]["unit"] = "mg"
+            table[nutrient]["value_females"] *= 1000
+            table[nutrient]["value_males"] *= 1000
     return table
+
+
+def fix_nutrient_key(nutrient: str) -> str:
+    """Renames nutrient names in the tables to the ones present in OFF."""
+    return nutrient.lower().replace(" ", "-")
 
 
 if __name__ == "__main__":
@@ -121,4 +132,4 @@ if __name__ == "__main__":
         writer = csv.writer(file)
         writer.writerow(header)
         for nutrient in sorted(summary_table):
-            writer.writerow([nutrient] + [summary_table[nutrient].get(col) for col in header[1:]])
+            writer.writerow([fix_nutrient_key(nutrient)] + [summary_table[nutrient].get(col) for col in header[1:]])
