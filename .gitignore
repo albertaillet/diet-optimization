@@ -7,9 +7,9 @@ venv/
 # temporary folder
 tmp/
 
-# All data in json, html and csv files
+# All intermediate data in json, html and csv files
 data/*.json
-data/**/*.csv
+data/recommendations/*.csv
 data/*.html
 
 # All python cache files
