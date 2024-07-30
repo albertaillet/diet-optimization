@@ -36,7 +36,7 @@ all_estimated_nutrients = [
     "manganese",
     "pantothenic-acid",
     "phosphorus",
-  # "phylloquinone",
+    # "phylloquinone",
     "polyols",
     "potassium",
     "proteins",
@@ -142,6 +142,24 @@ def get_ciqual_nutrient_keys(header: list[str]) -> dict[str, tuple[str, str]]:
     return nutrient_keys
 
 
+def to_value(value: str) -> float | None:
+    """Transform the ciqual string values to numerical values."""
+    # Replace comma with dots 2,4 -> 2.4
+    value = value.replace(",", ".")
+    # Set unknown values to None
+    if value in {"", "-"}:
+        return None
+    # Set values with traces to 0. Similar to:
+    # https://github.com/openfoodfacts/openfoodfacts-server/blob/main/lib/ProductOpener/NutritionCiqual.pm#L194
+    if "traces" in value:
+        return 0.0
+    # Set values with < to their upper bound
+    # NOTE: There could be a better way to do this, as this overestimates certain nutrients.
+    if "<" in value:
+        return float(value.replace("<", ""))
+    return float(value)
+
+
 def load_ciqual_database(file):
     reader = csv.reader(file, delimiter="\t")
     header = next(reader)
@@ -154,7 +172,7 @@ def load_ciqual_database(file):
         name = row["alim_nom_eng"]
         nutrients = {}
         for col, (new_col, col_unit) in nutrient_keys.items():
-            nutrients[new_col + "_100g"] = row[col]
+            nutrients[new_col + "_100g"] = to_value(row[col])
             nutrients[new_col + "_unit"] = col_unit
         ciqual_data[ciqual_id] = {"name": name, "nutrients": nutrients}
     return ciqual_data
