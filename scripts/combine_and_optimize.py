@@ -39,10 +39,10 @@ used_nutrients = [
     # "polyols",
     "potassium",
     "proteins",
-    # "salt",
+    "salt",
     "saturated-fat",
     "selenium",
-    # "sodium",
+    # "sodium",  # has multiple units
     # "starch",
     # "sucrose",
     # "sugars",
@@ -73,7 +73,7 @@ def filter_products(products: pd.DataFrame) -> pd.DataFrame:
     for nutient in used_nutrients:
         unique_units = relevant_products[nutient + "_unit"].unique()
         assert len(unique_units) == 1, (nutient, unique_units)
-        if nutient not in ("fiber", "calcium"):
+        if nutient not in ("fiber", "calcium", "salt"):
             unique_sources = relevant_products[nutient + "_source"].unique()
             assert len(unique_sources) == 1, (nutient, unique_sources)
 
@@ -92,24 +92,29 @@ def fix_prices(prices: pd.DataFrame) -> pd.DataFrame:
     return latest_prices.rename(columns={"price": "price_chf"}).drop(columns=["currency"])
 
 
-def get_recommendations_upper_and_lower_bounds(
-    recommendations: pd.DataFrame, products_and_prices: pd.DataFrame
-) -> tuple[np.ndarray, np.ndarray]:
+def add_hardcoded_additional_recommendations(recommendations: pd.DataFrame) -> pd.DataFrame:
     indexed_recommendations = recommendations.set_index("nutrient")
 
     # Adding macronutrients to the micronutrient dataframe.
     # NOTE: same for males and females
     additional_recommendations_lb_ub_unit = {
-        "carbohydrates": (0, 200, "g"),
-        "fiber": (60, np.nan, "g"),
-        "energy-kcal": (1_500, 3_000, "kcal"),
-        "fat": (60, np.nan, "g"),
+        "carbohydrates": (0, np.nan, "g"),
+        "fiber": (40, 70, "g"),
+        "energy-kcal": (2_700, 3_000, "kcal"),
+        "fat": (70, np.nan, "g"),
         "saturated-fat": (0, np.nan, "g"),
-        "proteins": (120, np.nan, "g"),
+        "proteins": (150, np.nan, "g"),
+        "salt": (1, 2.3, "g"),
     }
     for nutrient, (lb, ub, unit) in additional_recommendations_lb_ub_unit.items():
         indexed_recommendations.loc[nutrient] = [unit, None, lb, lb, ub]
 
+    return indexed_recommendations
+
+
+def get_recommendations_upper_and_lower_bounds(
+    indexed_recommendations: pd.DataFrame, products_and_prices: pd.DataFrame
+) -> tuple[np.ndarray, np.ndarray]:
     # Check that the upper and lower bounds nutrients use the same units as the product nutrients.
     for nutrient in used_nutrients:
         product_unique_units = set(products_and_prices[nutrient + "_unit"].unique())
@@ -118,10 +123,10 @@ def get_recommendations_upper_and_lower_bounds(
 
     # Lower bounds for nutrients
     value_key = "value_males"  # "value_females"  # NOTE: using male values
-    lb = indexed_recommendations[value_key][used_nutrients].values
+    lb = indexed_recommendations[value_key][used_nutrients].values.astype("float")
 
     # Upper bounds for nutrients
-    ub = indexed_recommendations["value_upper_intake"][used_nutrients].values
+    ub = indexed_recommendations["value_upper_intake"][used_nutrients].values.astype("float")
 
     # lb.shape, ub.shape  # (n_nutrients,)
     return lb, ub
@@ -156,19 +161,23 @@ A_nutrients = products_and_prices[[n + "_100g" for n in used_nutrients]].values
 
 c_costs = 0.1 * products_and_prices["price_chf"].values.astype("float")  # to price per kg to price per 100g
 
-lb, ub = get_recommendations_upper_and_lower_bounds(recommendations, products_and_prices)
+indexed_recommendations = add_hardcoded_additional_recommendations(recommendations)
+lb, ub = get_recommendations_upper_and_lower_bounds(indexed_recommendations, products_and_prices)
 
 result = solve_optimization(A_nutrients, lb, ub, c_costs)
 result_table = pd.DataFrame({
-    # "product_code": products_and_prices["product_code"],
+    "product_code": products_and_prices["product_code"],
     "product_name": products_and_prices["product_name"],
-    # "location": products_and_prices["location"],
-    "quantity_g": 100 * result.x,
+    "location": products_and_prices["location"],
+    "quantity_g": (100 * result.x).round(2),
 })
 print(result_table[result_table["quantity_g"] > 0].head(30))
 
 nutrient_results = A_nutrients.T @ result.x
-nutrient_result_table = pd.DataFrame({"nutrient": used_nutrients, "value": nutrient_results})
+nutrient_result_table = pd.DataFrame({
+    "value": nutrient_results.round(2),
+    "unit": indexed_recommendations["unit"][used_nutrients],
+})
 print(nutrient_result_table)
 
 print("Price per day:", round(result.fun, 4), "CHF")
