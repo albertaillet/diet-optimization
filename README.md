@@ -3,6 +3,7 @@
 ## Installation
 
 From the root of the repository run
+
 ```bash
 pip install -e ".[dev]"
 ```
@@ -10,9 +11,11 @@ pip install -e ".[dev]"
 ## Usage
 
 To fetch everything use:
+
 ```
 make all
 ```
+
 Else the individual make commands can be used.
 
 ## Data sources
@@ -99,12 +102,56 @@ Here is the combined table listing the availability of different nutrients in th
 
 [Nordic Nutrition Recommendations 2023](https://pub.norden.org/nord2023-003/recommendations.html), which contains the following for a select number of nurtients.
 
-| Term | Definition |
-|------|------------|
-| **Average Requirement (AR)** | The average daily nutrient intake level estimated to meet the requirements of half of the individuals in a particular life-stage group in the general population. Used to assess adequacy of nutrient intake of groups. |
-| **Recommended Intake (RI)** | The average daily dietary nutrient intake level sufficient to meet the nutrient requirements of nearly all (97.5%) individuals in a life-stage group. Used to plan diets for individuals and groups. |
-| **Adequate Intake (AI)** | The recommended average daily intake level based on observed or experimentally determined estimates of nutrient intake by a group. Used when an RI cannot be determined. |
-| **Provisional AR** | The average daily nutrient intake level suggested to meet the requirements of half of the individuals in a life-stage group. An approximation of AR with larger uncertainty. |
-| **Recommended intake range of macronutrients** | The recommended average daily nutrient range of energy-providing macronutrients expressed as a percentage of total energy intake. Associated with reduced risk of chronic diseases. |
-| **Tolerable Upper Intake Level (UL)** | The highest average daily nutrient intake level likely to pose no risk of adverse health effects to almost all individuals. |
-| **Chronic Disease Risk Reduction Intake (CDRR)** | The intake level above which reduction is expected to reduce chronic disease risk within life-stage groups in the general population. |
+| Term                                             | Definition                                                                                                                                                                                                              |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Average Requirement (AR)**                     | The average daily nutrient intake level estimated to meet the requirements of half of the individuals in a particular life-stage group in the general population. Used to assess adequacy of nutrient intake of groups. |
+| **Recommended Intake (RI)**                      | The average daily dietary nutrient intake level sufficient to meet the nutrient requirements of nearly all (97.5%) individuals in a life-stage group. Used to plan diets for individuals and groups.                    |
+| **Adequate Intake (AI)**                         | The recommended average daily intake level based on observed or experimentally determined estimates of nutrient intake by a group. Used when an RI cannot be determined.                                                |
+| **Provisional AR**                               | The average daily nutrient intake level suggested to meet the requirements of half of the individuals in a life-stage group. An approximation of AR with larger uncertainty.                                            |
+| **Recommended intake range of macronutrients**   | The recommended average daily nutrient range of energy-providing macronutrients expressed as a percentage of total energy intake. Associated with reduced risk of chronic diseases.                                     |
+| **Tolerable Upper Intake Level (UL)**            | The highest average daily nutrient intake level likely to pose no risk of adverse health effects to almost all individuals.                                                                                             |
+| **Chronic Disease Risk Reduction Intake (CDRR)** | The intake level above which reduction is expected to reduce chronic disease risk within life-stage groups in the general population.                                                                                   |
+
+## Optimization library
+
+For optimizing the diet, a linear programming python library is used, here are the considered choices:
+
+-   **SciPy (`scipy.optimize.linprog`)**
+
+    -   [Repository](https://github.com/scipy/scipy)
+    -   [Documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linprog.html)
+
+-   **OR-Tools (`ortools.linear_solver`)**
+
+    -   [Repository](https://github.com/google/or-tools)
+    -   [Documentation](https://or-tools.github.io/docs/pdoc/ortools/linear_solver.html)
+    -   [Example](https://github.com/google/or-tools/blob/stable/examples/python/linear_programming.py)
+    -   [Usage in OFF](https://github.com/openfoodfacts/recipe-estimator/blob/main/recipe_estimator.py)
+
+-   **CVXPY**
+
+    -   [Repository](https://github.com/cvxpy/cvxpy)
+
+-   **PuLP**
+
+    -   [Repository](https://github.com/coin-or/pulp)
+
+-   **Pyomo**
+
+    -   [Repository](https://github.com/Pyomo/pyomo)
+
+-   **Cvxopt**
+
+    -   [Repository](https://github.com/cvxopt/cvxopt)
+
+-   **GLPK (GNU Linear Programming Kit)**
+
+    -   [Repository](https://www.gnu.org/software/glpk/)
+
+-   **Cbc**
+
+    -   [Repository](https://github.com/coin-or/Cbc)
+
+-   **Gurobi**
+    -   [Gurobi Website](https://www.gurobi.com/)
+    -   Note: Gurobi is commercial software
