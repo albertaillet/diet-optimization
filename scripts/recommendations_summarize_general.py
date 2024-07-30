@@ -57,22 +57,24 @@ def fix_micrograms(unit: str) -> str:
     return unit.replace("μ", "µ")  # noqa: RUF001
 
 
-def convert_unit(unit_1: str, unit_2: str, value_2: float) -> float:
-    """Convert value_2 with unit_2 to unit_1."""
+def convert_unit(nutrient: str, unit_1: str, unit_2: str) -> tuple[float, float, str]:
+    """Convert value_2 with unit_2 to a unit common with unit_1."""
     unit_1 = fix_micrograms(unit_1)
     unit_2 = fix_micrograms(unit_2)
 
-    if unit_1 == unit_2 or (unit_1 == "RE" and unit_2 == "µg RE"):  # noqa: RUF001
-        return value_2
-    if unit_1 == "α-TE" and unit_2 == "mg":  # noqa: RUF001
+    if unit_1 == unit_2 or (nutrient == "Vitamin A" and unit_1 == "RE" and unit_2 == "µg RE"):  # noqa: RUF001
+        return 1, 1, unit_1
+    if nutrient == "Vitamin E" and unit_1 == "α-TE" and unit_2 == "mg":  # noqa: RUF001
         # TODO: check correct interpretation of https://en.wikipedia.org/wiki/Vitamin_E#Food_labeling
         # 1 IU is the biological equivalent of about 0.667 mg d (RRR)-alpha-tocopherol (2/3 mg exactly),
         # or of 0.90 mg of dl-alpha-tocopherol, corresponding to the then-measured relative potency of stereoisomers
         # NOTE: assumes mg means mg of IU and I read that α-TE is (RRR)-alpha-tocopherol          # noqa: RUF003
-        return int(value_2 * 0.667)
+        return 1, 0.667, "α-TE"  # noqa: RUF001
+    if nutrient == "Copper" and unit_1 == "µg" and unit_2 == "mg":  # noqa: RUF001
+        return 0.001, 1, unit_2
     if unit_1 == "µg" and unit_2 == "mg":  # noqa: RUF001
-        return 1000 * value_2
-    raise Exception(unit_1, unit_2, value_2)
+        return 1, 1000, unit_1
+    raise Exception(nutrient, unit_1, unit_2)
 
 
 def merge_tables(table_1: dict[str, dict[str, Any]], table_2: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
@@ -82,13 +84,19 @@ def merge_tables(table_1: dict[str, dict[str, Any]], table_2: dict[str, dict[str
             unit_1 = table_1[nutrient]["unit"]
             unit_2 = table_2[nutrient]["unit"]
             value_upper_intake = table_2[nutrient]["value_upper_intake"]
-            value_upper_intake = convert_unit(unit_1, unit_2, value_upper_intake)
-            table_2[nutrient]["value_upper_intake"] = value_upper_intake
-            value_males = table_1[nutrient]["value_males"]
+            factor_value, factor_upper_intake, unit = convert_unit(nutrient, unit_1, unit_2)
+            value_upper_intake = round(factor_upper_intake * value_upper_intake, 1)
+            value_males = table_1[nutrient]["value_males"] * factor_value
             assert value_males < value_upper_intake, (value_males, value_upper_intake, nutrient)
-            value_females = table_1[nutrient]["value_females"]
+            value_females = table_1[nutrient]["value_females"] * factor_value
             assert value_females < value_upper_intake, (value_females, value_upper_intake, nutrient)
-            table[nutrient] = table_1[nutrient] | table_2[nutrient]
+            table[nutrient] = {
+                "RI_or_AI": table_1[nutrient]["RI_or_AI"],
+                "value_males": value_males,
+                "value_females": value_females,
+                "value_upper_intake": value_upper_intake,
+                "unit": unit,
+            }
         elif nutrient in table_1:
             table[nutrient] = table_1[nutrient]
         elif nutrient in table_2:
