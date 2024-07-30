@@ -2,7 +2,10 @@ SHELL := /bin/bash
 DATA_DIR = $(shell realpath data)
 OFF_USERNAME = "albert27"
 
-all: prices products recommendations
+
+all-fetch: prices-fetch products-fetch ciqual-fetch recommendations-fetch
+
+all: prices-summarize products-summarize recommendations-extract recommendations-summarize-general optimize
 
 prices-fetch:
 	DATA_DIR=$(DATA_DIR) OWNER=$(OFF_USERNAME) SIZE=100 python scripts/prices_fetch.py
