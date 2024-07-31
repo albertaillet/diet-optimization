@@ -13,6 +13,12 @@ pip install -e ".[dev]"
 To fetch everything use:
 
 ```
+make all-fetch
+```
+
+to the process the fetched data and optimize use:
+
+```
 make all
 ```
 
