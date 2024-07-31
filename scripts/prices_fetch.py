@@ -9,17 +9,32 @@ import os
 from pathlib import Path
 
 import requests
+from tqdm import trange
 
 OWNER = os.getenv("OWNER")
-SIZE = os.getenv("SIZE", 100)  # 1 < SIZE < 100
+SIZE = int(os.getenv("SIZE", 100))  # 1 < SIZE < 100
 DATA_DIR = Path(os.getenv("DATA_DIR", ""))
 
 URL = "https://prices.openfoodfacts.org/api/v1/prices"
-PARAMS = {"owner": OWNER, "page": 1, "size": SIZE}
 
 
 if __name__ == "__main__":
-    # NOTE: this is limited to max 100 items and multiple queries will have to be made for more than that.
-    data = requests.get(URL, params=PARAMS, headers={"accept": "application/json"}).json()
+    # Fetch the first page.
+    params = {"owner": OWNER, "page": 1, "size": SIZE}
+    first_page_data = requests.get(URL, params=params, headers={"accept": "application/json"}).json()
+    n_total_items = first_page_data["total"]
+    items = first_page_data["items"]
+
+    # Fetch the next pages.
+    for i in trange(1, first_page_data["pages"]):
+        params = {"owner": OWNER, "page": (i + 1), "size": SIZE}
+        next_page_data = requests.get(URL, params=params, headers={"accept": "application/json"}).json()
+        items.extend(next_page_data["items"])
+        assert n_total_items == next_page_data["total"]
+
+    # Check that we fetched all items.
+    assert len(items) == n_total_items
+
+    # Dump fetched data to a json file.
     with (DATA_DIR / "prices.json").open("w") as file:
-        json.dump(data, file, indent=2)
+        json.dump({"items": items, "total": n_total_items}, file, indent=2)
