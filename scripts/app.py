@@ -3,11 +3,12 @@ with linear optimization to get the optimal quantities of food products.
 
 Usage of script DATA_DIR=<data directory> python scripts/app.py
 
+TODO: show levels of current of diet on the slider markers.
 TODO: Use both EUR and CHF
-TODO: Choose which nutrients to include.
 TODO: Include other objectives than price minimization with tunable hyperparameters.
 TODO: Choose to include maximum values even when they are not available in recommendations.
 TODO: Minimize the use of pandas (I don't like pandas).
+TODO: Button to reset dropdown to all available nutrients and another to only macronutrients
 """
 
 import math
@@ -23,6 +24,8 @@ from scipy.optimize import linprog
 
 DATA_DIR = Path(os.getenv("DATA_DIR", ""))
 
+DROPDOWN_CHOICE_ID = "dropdown-choice"
+SLIDER_TABLE_ID = "slider-table"
 SLIDER_TYPE_ID = "slider"
 RESULT_TABLE_ID = "result-table"
 
@@ -121,27 +124,25 @@ def add_hardcoded_additional_recommendations(recommendations: dict[str, dict[str
         recommendations[nutrient] = {"value_males": lb, "value_females": lb, "value_upper_intake": ub, "unit": unit}
 
 
-def get_arrays(
-    bounds: dict[str, dict[str, float | str]], products_and_prices: pd.DataFrame, used_nutrients: list[str]
-) -> tuple[np.ndarray, ...]:
+def get_arrays(bounds: dict[str, dict[str, float | str]], products_and_prices: pd.DataFrame) -> tuple[np.ndarray, ...]:
     """From dict of"""
     # Check that the upper and lower bounds nutrients use the same units as the product nutrients.
-    for nutrient in used_nutrients:
+    for nutrient in bounds:
         product_unique_units = set(products_and_prices[nutrient + "_unit"].unique())
         recommendation_unit = bounds[nutrient]["unit"]
         assert product_unique_units == {recommendation_unit}, (nutrient, product_unique_units, recommendation_unit)
 
     # Nutrients of each product
-    A_nutrients = products_and_prices[[n + "_value" for n in used_nutrients]].values
+    A_nutrients = products_and_prices[[nutrient + "_value" for nutrient in bounds]].values
 
     # Costs of each product
     c_costs = 0.1 * products_and_prices["price_chf"].values.astype("float")  # to price per kg to price per 100g
 
     # Lower bounds for nutrients
-    lb = np.array([bounds[nutrient]["lb"] for nutrient in used_nutrients])
+    lb = np.array([bounds[nutrient]["lb"] for nutrient in bounds])
 
     # Upper bounds for nutrients
-    ub = np.array([bounds[nutrient]["ub"] for nutrient in used_nutrients])
+    ub = np.array([bounds[nutrient]["ub"] for nutrient in bounds])
 
     # lb.shape, ub.shape  # (n_nutrients,)
     return A_nutrients, lb, ub, c_costs
@@ -178,19 +179,20 @@ def create_rangeslider(nutrient: str, data: dict[str, float | str]) -> dcc.Range
     _min = 0 if nutrient != "energy-kcal" else 1000
     _max = 4 * lower if np.isnan(upper) else math.ceil(upper + (lower - _min))
     _max = _min + 100 if _max == _min else _max
-
     unit = data["unit"]
+    marks = {
+        _min: {"label": f"{_min}{unit}"},
+        lower: {"label": f"{lower}{unit}", "style": {"color": "#369c36"}},
+        _max: {"label": f"{_max}{unit}"},
+    }
+    if not np.isnan(upper):
+        marks[upper] = {"label": f"{upper}{unit}", "style": {"color": "#f53d3d"}}
     return dcc.RangeSlider(
         min=_min,
         max=_max,
         value=[lower] if np.isnan(upper) else [lower, upper],
         tooltip={"placement": "bottom", "always_visible": False, "template": f"{{value}}{unit}"},
-        marks={
-            _min: {"label": f"{_min}{unit}"},
-            lower: {"label": f"{lower}{unit}", "style": {"color": "#369c36"}},
-            upper: {"label": f"{upper}{unit}", "style": {"color": "#f53d3d"}},
-            _max: {"label": f"{_max}{unit}"},
-        },
+        marks=marks,
         allowCross=False,
         id={"type": SLIDER_TYPE_ID, "nutrient": nutrient, "unit": unit},
         persistence=True,
@@ -220,12 +222,17 @@ def extract_slider_values(
 def create_app(recommendations: dict[str, dict[str, float | str]], products_and_prices: pd.DataFrame) -> Dash:
     app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-    nutrient_slider_table_body = html.Tbody([
-        get_nutrient_slider_row(nutrient, recommendations[nutrient]) for nutrient in USED_NUTRIENTS
-    ])
+    dropdown = dcc.Dropdown(
+        options=USED_NUTRIENTS,
+        value=USED_NUTRIENTS,
+        placeholder="Choose nutrients",
+        multi=True,
+        persistence=True,
+        id=DROPDOWN_CHOICE_ID,
+    )
 
     app.layout = html.Div([
-        dbc.Navbar(dbc.Container(html.H1("Dashboard"))),
+        dbc.Navbar([dbc.Container(html.H1("Dashboard")), dropdown]),
         dbc.Container(
             dbc.Row([
                 dbc.Col(
@@ -236,15 +243,17 @@ def create_app(recommendations: dict[str, dict[str, float | str]], products_and_
                                 html.P("Adjust your nutrient targets to optimize your diet."),
                             ])
                         ]),
-                        dbc.CardBody(dbc.Table(nutrient_slider_table_body, striped=True, bordered=False, borderless=True)),
+                        dbc.CardBody(dbc.Table(id=SLIDER_TABLE_ID, striped=True, bordered=False, borderless=True)),
                     ]),
                     md=6,
                 ),
                 dbc.Col(
                     dbc.Card([
-                        dbc.CardBody([
-                            html.H4("Optimized Meal"),
-                            html.P("The recommended food items and quantities to meet your nutrient targets."),
+                        dbc.CardHeader([
+                            dbc.CardBody([
+                                html.H4("Optimized Meal"),
+                                html.P("The recommended food items and quantities to meet your nutrient targets."),
+                            ])
                         ]),
                         dbc.CardBody(id=RESULT_TABLE_ID),
                     ]),
@@ -256,13 +265,21 @@ def create_app(recommendations: dict[str, dict[str, float | str]], products_and_
     ])
 
     @app.callback(
+        Output(SLIDER_TABLE_ID, "children"),
+        Input(DROPDOWN_CHOICE_ID, "value"),
+    )
+    def create_chosen_sliders(chosen_nutrients: list[str]):
+        return html.Tbody([get_nutrient_slider_row(nutrient, recommendations[nutrient]) for nutrient in chosen_nutrients])
+
+    @app.callback(
         Output(RESULT_TABLE_ID, "children"),
         Input({"type": SLIDER_TYPE_ID, "nutrient": ALL, "unit": ALL}, "value"),
         State({"type": SLIDER_TYPE_ID, "nutrient": ALL, "unit": ALL}, "id"),
+        prevent_initial_call=True,
     )
     def optimize(slider_values: list[list[float]], slider_ids: list[dict[str, str]]):
         chosen_bounds = extract_slider_values(slider_values, slider_ids)
-        A_nutrients, lb, ub, c_costs = get_arrays(chosen_bounds, products_and_prices, USED_NUTRIENTS)
+        A_nutrients, lb, ub, c_costs = get_arrays(chosen_bounds, products_and_prices)
         result = solve_optimization(A_nutrients, lb, ub, c_costs)
         if result.x is None:
             return html.H4("No solution")
@@ -290,7 +307,7 @@ if __name__ == "__main__":
     fixed_prices = fix_prices(prices)
     products_and_prices = pd.merge(relevant_products, fixed_prices, how="inner", on=["product_code", "product_name"])
 
-    recommendations = pd.read_csv(DATA_DIR / "recommendations.csv").set_index("nutrient").to_dict("index")
+    recommendations = pd.read_csv(DATA_DIR / "recommendations.csv").set_index("nutrient").to_dict("index")  # type: ignore
     add_hardcoded_additional_recommendations(recommendations)
 
     app = create_app(recommendations, products_and_prices)
