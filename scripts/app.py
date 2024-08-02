@@ -6,12 +6,13 @@ import dash
 import dash_bootstrap_components as dbc
 import numpy as np
 import pandas as pd
-from dash import Dash, dcc, html
+from dash import ALL, Dash, Input, Output, State, dcc, html
 from scipy.optimize import linprog
 
-STORE_ID = "store"
-OPTIMIZE_BUTTON_ID = "optimize-button"
 DATA_DIR = Path(os.getenv("DATA_DIR", ""))
+
+SLIDER_TYPE_ID = "slider"
+RESULT_TABLE_ID = "result-table"
 
 used_nutrients = [
     # "alcohol",
@@ -113,20 +114,19 @@ def add_hardcoded_additional_recommendations(recommendations: pd.DataFrame) -> p
 
 
 def get_recommendations_upper_and_lower_bounds(
-    indexed_recommendations: pd.DataFrame, products_and_prices: pd.DataFrame
+    recommendations: dict[str, dict[str, float | str]], products_and_prices: pd.DataFrame
 ) -> tuple[np.ndarray, np.ndarray]:
     # Check that the upper and lower bounds nutrients use the same units as the product nutrients.
     for nutrient in used_nutrients:
         product_unique_units = set(products_and_prices[nutrient + "_unit"].unique())
-        recommendation_unit = indexed_recommendations.loc[nutrient, "unit"]
+        recommendation_unit = recommendations[nutrient]["unit"]
         assert product_unique_units == {recommendation_unit}, (nutrient, product_unique_units, recommendation_unit)
 
     # Lower bounds for nutrients
-    value_key = "value_males"  # "value_females"  # NOTE: using male values
-    lb = indexed_recommendations[value_key][used_nutrients].values.astype("float")
+    lb = np.array([recommendations[nutrient]["lb"] for nutrient in used_nutrients])
 
     # Upper bounds for nutrients
-    ub = indexed_recommendations["value_upper_intake"][used_nutrients].values.astype("float")
+    ub = np.array([recommendations[nutrient]["ub"] for nutrient in used_nutrients])
 
     # lb.shape, ub.shape  # (n_nutrients,)
     return lb, ub
@@ -169,7 +169,7 @@ def create_rangeslider(nutrient: str, data: pd.Series) -> dcc.RangeSlider:
         min=_min,
         max=_max,
         value=[lower] if np.isnan(upper) else [lower, upper],
-        tooltip={"placement": "bottom", "always_visible": False},
+        tooltip={"placement": "bottom", "always_visible": False, "template": f"{{value}}{unit}"},
         marks={
             _min: {"label": f"{_min}{unit}"},
             lower: {"label": f"{lower}{unit}", "style": {"color": "#369c36"}},
@@ -177,15 +177,29 @@ def create_rangeslider(nutrient: str, data: pd.Series) -> dcc.RangeSlider:
             _max: {"label": f"{_max}{unit}"},
         },
         allowCross=False,
-        id=f"{nutrient}-slider",
+        id={"type": SLIDER_TYPE_ID, "nutrient": nutrient, "unit": unit},
+        persistence=True,
     )
 
 
-def get_row(nutrient: str, data: pd.Series) -> html.Tr:
+def get_nutrient_slider_row(nutrient: str, data: pd.Series) -> html.Tr:
     return html.Tr([
         html.Td(nutrient, style={"width": "20%"}),
         html.Td(create_rangeslider(nutrient, data), style={"width": "80%"}),
     ])
+
+
+def extract_recommendations(
+    slider_values: list[list[float]], slider_ids: list[dict[str, str]]
+) -> dict[str, dict[str, float | str]]:
+    return {
+        slider_id["nutrient"]: {
+            "lb": slider_value[0],
+            "ub": slider_value[1] if len(slider_value) == 2 else np.nan,
+            "unit": slider_id["unit"],
+        }
+        for slider_value, slider_id in zip(slider_values, slider_ids, strict=True)
+    }
 
 
 def create_app(indexed_recommendations: pd.DataFrame, products_and_prices: pd.DataFrame) -> Dash:
@@ -193,12 +207,12 @@ def create_app(indexed_recommendations: pd.DataFrame, products_and_prices: pd.Da
 
     indexed_recommendations = indexed_recommendations.loc[used_nutrients]
 
-    nutrient_slider_table_body = html.Tbody([get_row(nutrient, data) for nutrient, data in indexed_recommendations.iterrows()])  # noqa: FURB140
-
-    optimized_meal_table = [html.Thead(html.Tr([html.Th("Food Item")])), html.Tbody([])]
+    nutrient_slider_table_body = html.Tbody([
+        get_nutrient_slider_row(nutrient, data) for nutrient, data in indexed_recommendations.iterrows()
+    ])
 
     app.layout = html.Div([
-        dbc.Navbar(dbc.Container([html.H1("Nutrition Dashboard"), dbc.Button("Optimize", id=OPTIMIZE_BUTTON_ID)])),
+        dbc.Navbar(dbc.Container(html.H1("Nutrition Dashboard"))),
         dbc.Container(
             dbc.Row([
                 dbc.Col(
@@ -219,7 +233,7 @@ def create_app(indexed_recommendations: pd.DataFrame, products_and_prices: pd.Da
                             html.H4("Optimized Meal"),
                             html.P("The recommended food items and quantities to meet your nutrient targets."),
                         ]),
-                        dbc.CardBody(dbc.Table(optimized_meal_table, bordered=True, hover=True, responsive=True, striped=True)),
+                        dbc.CardBody(id=RESULT_TABLE_ID),
                     ]),
                     md=6,
                 ),
@@ -228,18 +242,46 @@ def create_app(indexed_recommendations: pd.DataFrame, products_and_prices: pd.Da
         ),
     ])
 
+    @app.callback(
+        Output(RESULT_TABLE_ID, "children"),
+        Input({"type": SLIDER_TYPE_ID, "nutrient": ALL, "unit": ALL}, "value"),
+        State({"type": SLIDER_TYPE_ID, "nutrient": ALL, "unit": ALL}, "id"),
+    )
+    def optimize(slider_values: list[list[float]], slider_ids: list[dict[str, str]]):
+        recommendations = extract_recommendations(slider_values, slider_ids)
+        lb, ub = get_recommendations_upper_and_lower_bounds(recommendations, products_and_prices)
+        result = solve_optimization(A_nutrients, lb, ub, c_costs)
+        if result.x is None:
+            return html.H4("No solution")
+        result_table = pd.DataFrame({
+            "product_code": products_and_prices["product_code"],
+            "product_name": products_and_prices["product_name"],
+            "location": products_and_prices["location"],
+            "quantity_g": (100 * result.x).round(2),
+            "price_chf": (c_costs * result.x).round(2),
+        })
+        # Filter on only included products and sort by weight
+        result_table = result_table[result_table["quantity_g"] > 0].sort_values(by="quantity_g", ascending=False)
+        return [
+            html.H5(f"Price per day: {round(result.fun, 4)} CHF"),
+            dbc.Table.from_dataframe(result_table, striped=True, bordered=True, hover=True),
+        ]
+
     return app
 
 
 if __name__ == "__main__":
     prices = pd.read_csv(DATA_DIR / "prices.csv")
     products = pd.read_csv(DATA_DIR / "products.csv")
-    recommendations = pd.read_csv(DATA_DIR / "recommendations.csv")
-
     relevant_products = filter_products(products)
     fixed_prices = fix_prices(prices)
     products_and_prices = pd.merge(relevant_products, fixed_prices, how="inner", on=["product_code", "product_name"])
 
+    A_nutrients = products_and_prices[[n + "_value" for n in used_nutrients]].values
+
+    c_costs = 0.1 * products_and_prices["price_chf"].values.astype("float")  # to price per kg to price per 100g
+
+    recommendations = pd.read_csv(DATA_DIR / "recommendations.csv")
     indexed_recommendations = add_hardcoded_additional_recommendations(recommendations)
 
     app = create_app(indexed_recommendations, products_and_prices)
