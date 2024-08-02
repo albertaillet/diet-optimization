@@ -197,6 +197,12 @@ def create_csv(file, items: list[dict[str, Any]], ciqual_lookup: dict[str, dict[
         # NOTE: The OFF estimated nutrients are not used as the unit have not been checked.
 
         ciqual_code = item["product"]["categories_properties"].get("ciqual_food_code:en")
+        if ciqual_code is None:
+            # try to use agribalyse_food_code:en instead
+            ciqual_code = item["product"]["categories_properties"].get("agribalyse_food_code:en")
+        if ciqual_code is None:
+            # try to use agribalyse_proxy_food_code:en instead
+            ciqual_code = item["product"]["categories_properties"].get("agribalyse_proxy_food_code:en")
         ciqual_nutrients = ciqual_lookup[ciqual_code]["nutrients"] if ciqual_code is not None else {}
 
         nutrients = {}
