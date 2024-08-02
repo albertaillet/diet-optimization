@@ -43,5 +43,8 @@ recommendations: recommendations-fetch recommendations-extract recommendations-s
 optimize:
 	DATA_DIR=$(DATA_DIR) python scripts/combine_and_optimize.py
 
+dashboard:
+	DATA_DIR=$(DATA_DIR) python scripts/app.py
+
 clean:
 	rm -r $(DATA_DIR)/*.csv
