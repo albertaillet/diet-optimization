@@ -1,3 +1,15 @@
+"""This script combines the different summarized csv files and creates a dashboard to interact
+with linear optimization to get the optimal quantities of food products.
+
+Usage of script DATA_DIR=<data directory> python scripts/app.py
+
+TODO: Use both EUR and CHF
+TODO: Choose which nutrients to include.
+TODO: Include other objectives than price minimization with tunable hyperparameters.
+TODO: Choose to include maximum values even when they are not available in recommendations.
+TODO: Minimize the use of pandas (I don't like pandas).
+"""
+
 import math
 import os
 from pathlib import Path
@@ -14,7 +26,7 @@ DATA_DIR = Path(os.getenv("DATA_DIR", ""))
 SLIDER_TYPE_ID = "slider"
 RESULT_TABLE_ID = "result-table"
 
-used_nutrients = [
+USED_NUTRIENTS = [
     # "alcohol",
     # "beta-carotene",
     "calcium",
@@ -63,7 +75,7 @@ used_nutrients = [
 ]
 
 
-def filter_products(products: pd.DataFrame) -> pd.DataFrame:
+def filter_products(products: pd.DataFrame, used_nutrients: list[str]) -> pd.DataFrame:
     """Filters to only the relevant nutrients and drops all products with missing values."""
     cols = ["product_code", "product_name", "ciqual_code"]
     nutrient_cols = [name + suffix for name in used_nutrients for suffix in ("_value", "_unit", "_source")]
@@ -93,10 +105,8 @@ def fix_prices(prices: pd.DataFrame) -> pd.DataFrame:
     return latest_prices.rename(columns={"price": "price_chf"}).drop(columns=["currency"])
 
 
-def add_hardcoded_additional_recommendations(recommendations: pd.DataFrame) -> pd.DataFrame:
-    indexed_recommendations = recommendations.set_index("nutrient")
-
-    # Adding macronutrients to the micronutrient dataframe.
+def add_hardcoded_additional_recommendations(recommendations: dict[str, dict[str, float | str]]) -> None:
+    """Adds macronutrients to the micronutrient recommendation dict."""
     # NOTE: same for males and females
     additional_recommendations_lb_ub_unit = {
         "carbohydrates": (0, np.nan, "g"),
@@ -108,28 +118,33 @@ def add_hardcoded_additional_recommendations(recommendations: pd.DataFrame) -> p
         "salt": (1, 2.3, "g"),
     }
     for nutrient, (lb, ub, unit) in additional_recommendations_lb_ub_unit.items():
-        indexed_recommendations.loc[nutrient] = [unit, None, lb, lb, ub]
-
-    return indexed_recommendations
+        recommendations[nutrient] = {"value_males": lb, "value_females": lb, "value_upper_intake": ub, "unit": unit}
 
 
-def get_recommendations_upper_and_lower_bounds(
-    recommendations: dict[str, dict[str, float | str]], products_and_prices: pd.DataFrame
-) -> tuple[np.ndarray, np.ndarray]:
+def get_arrays(
+    bounds: dict[str, dict[str, float | str]], products_and_prices: pd.DataFrame, used_nutrients: list[str]
+) -> tuple[np.ndarray, ...]:
+    """From dict of"""
     # Check that the upper and lower bounds nutrients use the same units as the product nutrients.
     for nutrient in used_nutrients:
         product_unique_units = set(products_and_prices[nutrient + "_unit"].unique())
-        recommendation_unit = recommendations[nutrient]["unit"]
+        recommendation_unit = bounds[nutrient]["unit"]
         assert product_unique_units == {recommendation_unit}, (nutrient, product_unique_units, recommendation_unit)
 
+    # Nutrients of each product
+    A_nutrients = products_and_prices[[n + "_value" for n in used_nutrients]].values
+
+    # Costs of each product
+    c_costs = 0.1 * products_and_prices["price_chf"].values.astype("float")  # to price per kg to price per 100g
+
     # Lower bounds for nutrients
-    lb = np.array([recommendations[nutrient]["lb"] for nutrient in used_nutrients])
+    lb = np.array([bounds[nutrient]["lb"] for nutrient in used_nutrients])
 
     # Upper bounds for nutrients
-    ub = np.array([recommendations[nutrient]["ub"] for nutrient in used_nutrients])
+    ub = np.array([bounds[nutrient]["ub"] for nutrient in used_nutrients])
 
     # lb.shape, ub.shape  # (n_nutrients,)
-    return lb, ub
+    return A_nutrients, lb, ub, c_costs
 
 
 def solve_optimization(A, lb, ub, c):
@@ -154,7 +169,7 @@ def convert_to_int_if_possible(x: float) -> float | int:
     return x if np.isnan(x) else int(x) if x == int(x) else x
 
 
-def create_rangeslider(nutrient: str, data: pd.Series) -> dcc.RangeSlider:
+def create_rangeslider(nutrient: str, data: dict[str, float | str]) -> dcc.RangeSlider:
     """Create the rangeslider of the given nutrient with the given data."""
     value_key = "value_males"  # "value_females"  # NOTE: using male values
     lower = convert_to_int_if_possible(data[value_key])
@@ -182,14 +197,14 @@ def create_rangeslider(nutrient: str, data: pd.Series) -> dcc.RangeSlider:
     )
 
 
-def get_nutrient_slider_row(nutrient: str, data: pd.Series) -> html.Tr:
+def get_nutrient_slider_row(nutrient: str, data: dict[str, float | str]) -> html.Tr:
     return html.Tr([
         html.Td(nutrient, style={"width": "20%"}),
         html.Td(create_rangeslider(nutrient, data), style={"width": "80%"}),
     ])
 
 
-def extract_recommendations(
+def extract_slider_values(
     slider_values: list[list[float]], slider_ids: list[dict[str, str]]
 ) -> dict[str, dict[str, float | str]]:
     return {
@@ -202,24 +217,22 @@ def extract_recommendations(
     }
 
 
-def create_app(indexed_recommendations: pd.DataFrame, products_and_prices: pd.DataFrame) -> Dash:
+def create_app(recommendations: dict[str, dict[str, float | str]], products_and_prices: pd.DataFrame) -> Dash:
     app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-    indexed_recommendations = indexed_recommendations.loc[used_nutrients]
-
     nutrient_slider_table_body = html.Tbody([
-        get_nutrient_slider_row(nutrient, data) for nutrient, data in indexed_recommendations.iterrows()
+        get_nutrient_slider_row(nutrient, recommendations[nutrient]) for nutrient in USED_NUTRIENTS
     ])
 
     app.layout = html.Div([
-        dbc.Navbar(dbc.Container(html.H1("Nutrition Dashboard"))),
+        dbc.Navbar(dbc.Container(html.H1("Dashboard"))),
         dbc.Container(
             dbc.Row([
                 dbc.Col(
                     dbc.Card([
                         dbc.CardHeader([
                             dbc.CardBody([
-                                html.H4("Nutrient Targets"),
+                                html.H4("Targets"),
                                 html.P("Adjust your nutrient targets to optimize your diet."),
                             ])
                         ]),
@@ -248,8 +261,8 @@ def create_app(indexed_recommendations: pd.DataFrame, products_and_prices: pd.Da
         State({"type": SLIDER_TYPE_ID, "nutrient": ALL, "unit": ALL}, "id"),
     )
     def optimize(slider_values: list[list[float]], slider_ids: list[dict[str, str]]):
-        recommendations = extract_recommendations(slider_values, slider_ids)
-        lb, ub = get_recommendations_upper_and_lower_bounds(recommendations, products_and_prices)
+        chosen_bounds = extract_slider_values(slider_values, slider_ids)
+        A_nutrients, lb, ub, c_costs = get_arrays(chosen_bounds, products_and_prices, USED_NUTRIENTS)
         result = solve_optimization(A_nutrients, lb, ub, c_costs)
         if result.x is None:
             return html.H4("No solution")
@@ -273,16 +286,12 @@ def create_app(indexed_recommendations: pd.DataFrame, products_and_prices: pd.Da
 if __name__ == "__main__":
     prices = pd.read_csv(DATA_DIR / "prices.csv")
     products = pd.read_csv(DATA_DIR / "products.csv")
-    relevant_products = filter_products(products)
+    relevant_products = filter_products(products, USED_NUTRIENTS)
     fixed_prices = fix_prices(prices)
     products_and_prices = pd.merge(relevant_products, fixed_prices, how="inner", on=["product_code", "product_name"])
 
-    A_nutrients = products_and_prices[[n + "_value" for n in used_nutrients]].values
+    recommendations = pd.read_csv(DATA_DIR / "recommendations.csv").set_index("nutrient").to_dict("index")
+    add_hardcoded_additional_recommendations(recommendations)
 
-    c_costs = 0.1 * products_and_prices["price_chf"].values.astype("float")  # to price per kg to price per 100g
-
-    recommendations = pd.read_csv(DATA_DIR / "recommendations.csv")
-    indexed_recommendations = add_hardcoded_additional_recommendations(recommendations)
-
-    app = create_app(indexed_recommendations, products_and_prices)
+    app = create_app(recommendations, products_and_prices)
     app.run_server(debug=True)
