@@ -126,7 +126,7 @@ def make_price_per_kg(item: dict[str, Any]) -> float | None:
         product_quantity_unit = "g"
     assert product_quantity_unit == "g", product_identification
 
-    return 1000 * float(item["price"]) / product_quantity_numerical
+    return round(1000 * float(item["price"]) / product_quantity_numerical, 2)
 
 
 def fix_micrograms(unit: str) -> str:
@@ -134,39 +134,20 @@ def fix_micrograms(unit: str) -> str:
     return unit.replace("μ", "µ")  # noqa: RUF001
 
 
-def create_prices_lookup(items: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
-    prices_lookup = {}
-    for item in items:
-        # Get price per kg and skip the price if it returns None.
-        price = make_price_per_kg(item)
-        if item["product_code"] in prices_lookup:
-            print("DUPLICATE", item["product_code"])
-            continue
-        prices_lookup[item["product_code"]] = {
-            "currency": item["currency"],
-            "price": price,
-            "price_date": item["date"],
-            "location": item["location"]["osm_name"],
-            "location_osm_id": item["location"]["osm_id"],
-        }
-    return prices_lookup
-
-
-def adapt_ciqual_column_name(name: str) -> str | None:
+def ciqual_adapt_column_name(name: str) -> str | None:
+    """Adapt the nutrint names in CIQUAL table to those used in this project."""
     if name in HARDCODED:
         new_name = HARDCODED[name]
-        if new_name is None:
-            return None
     else:
         new_name = name.lower()
         if " or " in new_name:
             new_name = new_name.split(" or ")[1]
         new_name = new_name.replace(" ", "-")
-    assert new_name in ALL_ESTIMATED_NUTRIENTS, (name, new_name)
+    assert new_name in ALL_ESTIMATED_NUTRIENTS or new_name is None, (name, new_name)
     return new_name
 
 
-def get_ciqual_nutrient_keys(header: list[str]) -> dict[str, tuple[str, str]]:
+def ciqual_nutrient_keys(header: list[str]) -> dict[str, tuple[str, str]]:
     """Extract which columns to keep and match the keys to those from OFF (see all_estimated_nutrients)."""
     key_pattern = re.compile(r"(.+)\s+\(((\w*g)|kj|kcal)\/100g\)")
     nutrient_keys = {}
@@ -175,46 +156,48 @@ def get_ciqual_nutrient_keys(header: list[str]) -> dict[str, tuple[str, str]]:
         if pattern_match is None:
             continue
         name = pattern_match.group(1)
-        unit = fix_micrograms(pattern_match.group(2))  # TODO: check that the right unit is used.
-        new_col = adapt_ciqual_column_name(name)
+        unit = fix_micrograms(pattern_match.group(2))
+        new_col = ciqual_adapt_column_name(name)
         if new_col is None:
             continue
         nutrient_keys[col] = (new_col, unit)
     return nutrient_keys
 
 
-def to_value(value: str) -> float | None:
+def ciqual_entry_to_value(value: str) -> float:
     """Transform the ciqual string values to numerical values."""
     # Replace comma with dots 2,4 -> 2.4
     value = value.replace(",", ".")
-    # Set unknown values to None
+    # Set unknown values to 0.
     if value in {"", "-"}:
         return 0
     # Set values with traces to 0. Similar to:
     # https://github.com/openfoodfacts/openfoodfacts-server/blob/main/lib/ProductOpener/NutritionCiqual.pm#L194
     if "traces" in value:
         return 0.0
-    # Set values with < to their upper bound
-    # NOTE: There could be a better way to do this, as this overestimates certain nutrients.
+    # Set values with < to their upper bound divided by two.
+    # Same method as in the CIQUAL CALNUT table
+    # https://ciqual.anses.fr/cms/sites/default/files/inline-files/Table%20CALNUT%202020_doc_FR_2020%2007%2007.pdf
+    # NOTE: There could be a better way to do this, as this may give a wrong estimation of nutrients.
     if "<" in value:
-        return float(value.replace("<", ""))
+        return float(value.replace("<", "")) / 2
     return float(value)
 
 
-def load_ciqual_database(file) -> dict[str, dict[str, Any]]:
+def ciqual_load_table(file) -> dict[str, dict[str, Any]]:
     reader = csv.reader(file, delimiter="\t")
     header = next(reader)
-    nutrient_keys = get_ciqual_nutrient_keys(header)
+    nutrient_keys = ciqual_nutrient_keys(header)
 
-    ciqual_data = {}
+    ciqual_table = {}
     for row in reader:
         row = dict(zip(header, row, strict=True))
         ciqual_id = row["alim_code"]
-        ciqual_data[ciqual_id] = {"ciqual_name": row["alim_nom_eng"]}
+        ciqual_table[ciqual_id] = {"ciqual_name": row["alim_nom_eng"]}
         for col, (new_col, col_unit) in nutrient_keys.items():
-            ciqual_data[ciqual_id][new_col + "_value"] = to_value(row[col])
-            ciqual_data[ciqual_id][new_col + "_unit"] = col_unit
-    return ciqual_data
+            ciqual_table[ciqual_id][new_col + "_value"] = ciqual_entry_to_value(row[col])
+            ciqual_table[ciqual_id][new_col + "_unit"] = col_unit
+    return ciqual_table
 
 
 def create_nutrient_row(
@@ -237,7 +220,7 @@ def create_nutrient_row(
 
 
 def create_csv(
-    file, items: list[dict[str, Any]], ciqual_lookup: dict[str, dict[str, Any]], prices_dict: dict[str, dict[str, Any]]
+    file, price_items: list[dict[str, Any]], products_dict: dict[str, dict[str, Any]], ciqual_table: dict[str, dict[str, Any]]
 ):
     product_cols = ["product_code", "product_name", "ciqual_code", "ciqual_name"]
     price_cols = ["price", "currency", "price_date", "location", "location_osm_id"]
@@ -248,45 +231,50 @@ def create_csv(
     writer.writerow(header)  # Write the header
 
     # Write the data rows
-    for item in items:
-        reported_nutrients = item["product"]["nutriments"]
+    for price_item in price_items:
+        product_code = price_item["product_code"]
+        product_item = products_dict[product_code]
+
+        # Get price per kg and skip the price if it returns None.
+        reported_nutrients = product_item["product"]["nutriments"]
 
         # NOTE: The OFF estimated nutrients in item["product"].get("nutriments_estimated")
         # are not used as the units have not been checked.
 
         # NOTE: when the ciqual_food_code:en is not available, the agribalyse_food_code:en or agribalyse_proxy_food_code:en is
         # used instead, which may not really match the true nutritional values of the product.
-        ciqual_code = item["product"]["categories_properties"].get("ciqual_food_code:en")
+        ciqual_code = product_item["product"]["categories_properties"].get("ciqual_food_code:en")
         if ciqual_code is None:
-            ciqual_code = item["product"]["categories_properties"].get("agribalyse_food_code:en")
+            ciqual_code = product_item["product"]["categories_properties"].get("agribalyse_food_code:en")
         if ciqual_code is None:
-            ciqual_code = item["product"]["categories_properties"].get("agribalyse_proxy_food_code:en")
-        ciqual_nutrients = ciqual_lookup[ciqual_code] if ciqual_code is not None else {}
-        ciqual_name = ciqual_lookup[ciqual_code]["ciqual_name"] if ciqual_code is not None else None
-
-        nutrients = create_nutrient_row(reported_nutrients, ciqual_nutrients)
+            ciqual_code = product_item["product"]["categories_properties"].get("agribalyse_proxy_food_code:en")
+        ciqual_nutrients = ciqual_table[ciqual_code] if ciqual_code is not None else {}
+        ciqual_name = ciqual_table[ciqual_code]["ciqual_name"] if ciqual_code is not None else None
 
         row_dict = {
-            "product_name": item["product"].get("product_name"),
-            "product_code": item["code"],
+            "product_name": product_item["product"].get("product_name"),
+            "product_code": product_item["code"],
             "ciqual_code": ciqual_code,
             "ciqual_name": ciqual_name,
-            **prices_dict[item["code"]],
-            **nutrients,
+            "currency": price_item["currency"],
+            "price": make_price_per_kg(price_item),
+            "price_date": price_item["date"],
+            "location": price_item["location"]["osm_name"],
+            "location_osm_id": price_item["location"]["osm_id"],
+            **create_nutrient_row(reported_nutrients, ciqual_nutrients),
         }
         writer.writerow([row_dict.get(col) for col in header])
 
 
 if __name__ == "__main__":
     with (DATA_DIR / "prices.json").open("r") as file:
-        prices = json.load(file)
-    prices_dict = create_prices_lookup(prices["items"])
+        price_items = json.load(file)["items"]
 
     with (DATA_DIR / "products.json").open("r") as file:
-        products = json.load(file)
+        products_dict = json.load(file)
 
     with (DATA_DIR / "ciqual2020.csv").open("r") as file:
-        ciqual_lookup = load_ciqual_database(file)
+        ciqual_table = ciqual_load_table(file)
 
     with (DATA_DIR / "product_prices_and_nutrients.csv").open("w", newline="", encoding="utf-8") as file:
-        create_csv(file, products, ciqual_lookup, prices_dict)
+        create_csv(file, price_items, products_dict, ciqual_table)
