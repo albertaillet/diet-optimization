@@ -13,7 +13,7 @@ from typing import Any
 DATA_DIR = Path(os.getenv("DATA_DIR", ""))
 
 
-all_estimated_nutrients = [
+ALL_ESTIMATED_NUTRIENTS = [
     "alcohol",
     "beta-carotene",
     "calcium",
@@ -25,6 +25,7 @@ all_estimated_nutrients = [
     "energy",
     "fat",
     "fiber",
+    "folate",
     "fructose",
     "galactose",
     "glucose",
@@ -34,12 +35,14 @@ all_estimated_nutrients = [
     "magnesium",
     "maltose",
     "manganese",
+    "niacin",
     "pantothenic-acid",
     "phosphorus",
     "phylloquinone",
     "polyols",
     "potassium",
     "proteins",
+    "riboflavin",
     "salt",
     "saturated-fat",
     "selenium",
@@ -47,12 +50,10 @@ all_estimated_nutrients = [
     "starch",
     "sucrose",
     "sugars",
+    "thiamin",
     "vitamin-a",
     "vitamin-b12",
-    "vitamin-b1",
-    "vitamin-b2",
     "vitamin-b6",
-    "vitamin-b9",
     "vitamin-c",
     "vitamin-d",
     "vitamin-e",
@@ -61,17 +62,11 @@ all_estimated_nutrients = [
     "zinc",
 ]
 
-# For getting it at the moment of looking at them replace main with the permalink:
-# main -> ab5c4410cd0f3017803cdfe4304f91dfa7636034
-# For looking at the code for nutrition estimation, look here.
+# The nutrition estimation of OFF is located here.
 # https://github.com/openfoodfacts/openfoodfacts-server/blob/main/lib/ProductOpener/NutritionCiqual.pm
 # https://github.com/openfoodfacts/openfoodfacts-server/blob/main/lib/ProductOpener/NutritionEstimation.pm
-
-
-def fix_micrograms(unit: str) -> str:
-    # both `µ` (MICRO SIGN) and `μ` (GREEK SMALL LETTER MU) are used # noqa: RUF003
-    return unit.replace("μ", "µ")  # noqa: RUF001
-
+# The consulted repository version is available using the same URL, but replacing main with the permalink:
+# main -> ab5c4410cd0f3017803cdfe4304f91dfa7636034
 
 # None discards the column while a key gives it a custom key.
 HARDCODED = {
@@ -102,12 +97,8 @@ HARDCODED = {
     "FA 22:6 4c,7c,10c,13c,16c,19c (n-3) DHA": None,  # fa-22:6-4c,7c,10c,13c,16c,19c-(n-3)-dha
     "Chloride": None,  # chloride
     "Retinol": None,  # retinol
-    "Vitamin K1": None,  # vitamin-k1  # TODO: incorporate these in the future as they are in recommendations
+    "Vitamin K1": None,  # vitamin-k1  # TODO: incorporate k vitamins in the future as they are in recommendations
     "Vitamin K2": None,  # vitamin-k2
-    "Vitamin B1 or Thiamin": None,  # thiamin
-    "Vitamin B2 or Riboflavin": None,  # riboflavin
-    "Vitamin B3 or Niacin": None,  # niacin
-    "Vitamin B9 or Folate": None,  # folate
 }
 
 
@@ -138,6 +129,11 @@ def make_price_per_kg(item: dict[str, Any]) -> float | None:
     return 1000 * float(item["price"]) / product_quantity_numerical
 
 
+def fix_micrograms(unit: str) -> str:
+    """Both `µ` (MICRO SIGN) and `μ` (GREEK SMALL LETTER MU) are used, setting all to `µ` (MICRO SIGN)."""  # noqa: RUF002
+    return unit.replace("μ", "µ")  # noqa: RUF001
+
+
 def create_prices_lookup(items: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     prices_lookup = {}
     for item in items:
@@ -166,7 +162,7 @@ def adapt_ciqual_column_name(name: str) -> str | None:
         if " or " in new_name:
             new_name = new_name.split(" or ")[1]
         new_name = new_name.replace(" ", "-")
-    assert new_name in all_estimated_nutrients, (name, new_name)
+    assert new_name in ALL_ESTIMATED_NUTRIENTS, (name, new_name)
     return new_name
 
 
@@ -225,7 +221,7 @@ def create_nutrient_row(
     reported_nutrients: dict[str, float | str], ciqual_nutrients: dict[str, float | str]
 ) -> dict[str, float | str]:
     nutrients = {}
-    for nurtient_name in all_estimated_nutrients:
+    for nurtient_name in ALL_ESTIMATED_NUTRIENTS:
         nurtient_value = nurtient_name + "_value"
         nurtient_unit = nurtient_name + "_unit"
         nutrient_source = nurtient_name + "_source"
@@ -245,7 +241,7 @@ def create_csv(
 ):
     product_cols = ["product_code", "product_name", "ciqual_code", "ciqual_name"]
     price_cols = ["price", "currency", "price_date", "location", "location_osm_id"]
-    nutrient_cols = [name + suffix for name in all_estimated_nutrients for suffix in ("_value", "_unit", "_source")]
+    nutrient_cols = [name + suffix for name in ALL_ESTIMATED_NUTRIENTS for suffix in ("_value", "_unit", "_source")]
     header = product_cols + price_cols + nutrient_cols
 
     writer = csv.writer(file)

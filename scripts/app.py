@@ -41,6 +41,7 @@ USED_NUTRIENTS = [
     # "energy",
     "fat",
     "fiber",
+    "folate",
     # "fructose",
     # "galactose",
     # "glucose",
@@ -50,6 +51,7 @@ USED_NUTRIENTS = [
     "magnesium",
     # "maltose",
     # "manganese",
+    # "niacin",
     # "pantothenic-acid",  # has multiple units
     # "phosphorus",  # has multiple units
     # "phylloquinone",
@@ -63,12 +65,10 @@ USED_NUTRIENTS = [
     # "starch",
     # "sucrose",
     # "sugars",
+    "thiamin",
     # "vitamin-a",
     "vitamin-b12",
-    # "vitamin-b1",
-    # "vitamin-b2",
     "vitamin-b6",
-    # "vitamin-b9",
     "vitamin-c",
     # "vitamin-d",  # has multiple units
     "vitamin-e",

@@ -53,7 +53,7 @@ def extract_upper_intake_table(file) -> dict[str, dict[str, Any]]:
 
 
 def fix_micrograms(unit: str) -> str:
-    # both `µ` (MICRO SIGN) and `μ` (GREEK SMALL LETTER MU) are used # noqa: RUF003
+    """Both `µ` (MICRO SIGN) and `μ` (GREEK SMALL LETTER MU) are used, setting all to `µ` (MICRO SIGN)."""  # noqa: RUF002
     return unit.replace("μ", "µ")  # noqa: RUF001
 
 
