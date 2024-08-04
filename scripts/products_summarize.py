@@ -208,8 +208,8 @@ def create_nutrient_row(
         nurtient_value = nurtient_name + "_value"
         nurtient_unit = nurtient_name + "_unit"
         nutrient_source = nurtient_name + "_source"
-        if nurtient_name in reported_nutrients:
-            nutrients[nurtient_value] = reported_nutrients[nurtient_name]
+        if nurtient_value in reported_nutrients:
+            nutrients[nurtient_value] = reported_nutrients[nurtient_value]
             nutrients[nurtient_unit] = reported_nutrients[nurtient_unit]
             nutrients[nutrient_source] = "reported"
         elif nurtient_value in ciqual_nutrients:
