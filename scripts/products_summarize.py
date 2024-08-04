@@ -102,31 +102,41 @@ HARDCODED = {
 }
 
 
-def make_price_per_kg(item: dict[str, Any]) -> float | None:
-    """Make the price per 1kg."""
-    product_identification = f"{item['product_code']}, {item['product']['product_name']}"
+def make_price_per_kg_or_l(price_item: dict[str, Any], product_item: dict[str, Any]) -> float | None:
+    """Make the price per 1kg or 1L."""
+    product_identification = f"{price_item['product_code']}, {price_item['product']['product_name']}"
 
     # Check that product_quantity is available.
-    product_quantity = item["product"]["product_quantity"]
+    product_quantity = product_item["product"].get("product_quantity")
+    price_product_quantity = price_item["product"]["product_quantity"]
     if product_quantity is None:
+        assert price_product_quantity is None
         print("Missing product_quantity:", product_identification)
         return None
 
     # Check that the product quantity is larger than zero.
-    product_quantity_numerical = float(product_quantity)
-    if product_quantity_numerical <= 0:
+    product_quantity = float(product_quantity)
+    assert float(price_product_quantity) == product_quantity, (price_product_quantity, product_quantity)
+    if product_quantity <= 0:
         print("Zero product_quantity:", product_identification)
         return None
 
     # Check that the product_quantity_unit is in g.
     # NOTE: it is assumed that it is grams if not available
-    product_quantity_unit = item["product"]["product_quantity_unit"]
+    product_quantity_unit = product_item["product"].get("product_quantity_unit")
+    price_product_quantity_unit = price_item["product"]["product_quantity_unit"]
+
+    # NOTE: sometime the product_quantity_unit is available in product_item but not in price_item
+    # assert price_product_quantity_unit == product_quantity_unit, (price_product_quantity_unit, product_quantity_unit)
+    if product_quantity_unit != price_product_quantity_unit:
+        print("Mismatch unit", price_product_quantity_unit, product_quantity_unit, product_identification)
     if product_quantity_unit is None:
         print("Missing product_quantity_unit:", product_identification)
         product_quantity_unit = "g"
-    assert product_quantity_unit == "g", product_identification
+    assert product_quantity_unit in {"g", "ml"}, product_identification
 
-    return round(1000 * float(item["price"]) / product_quantity_numerical, 2)
+    # Divide the price by the quantity, multiply by 1000 and round to 2 decimals.
+    return round(1000 * float(price_item["price"]) / product_quantity, 2)
 
 
 def fix_micrograms(unit: str) -> str:
@@ -257,7 +267,7 @@ def create_csv(
             "ciqual_code": ciqual_code,
             "ciqual_name": ciqual_name,
             "currency": price_item["currency"],
-            "price": make_price_per_kg(price_item),
+            "price": make_price_per_kg_or_l(price_item, product_item),
             "price_date": price_item["date"],
             "location": price_item["location"]["osm_name"],
             "location_osm_id": price_item["location"]["osm_id"],
