@@ -17,9 +17,9 @@ DATA_DIR = Path(os.getenv("DATA_DIR", ""))
 URL = "https://world.openfoodfacts.org/api/v0/product/"
 
 
-def load_product_codes_from_prices() -> list[str]:
+def load_product_codes_from_prices() -> set[str]:
     with (DATA_DIR / "prices.json").open("r") as file:
-        return [item["product_code"] for item in json.load(file)["items"]]
+        return {item["product_code"] for item in json.load(file)["items"]}
 
 
 def fetch_product_info(product_code: str) -> dict[str, Any]:
@@ -29,7 +29,7 @@ def fetch_product_info(product_code: str) -> dict[str, Any]:
 if __name__ == "__main__":
     product_codes = load_product_codes_from_prices()
 
-    data = [fetch_product_info(product_code) for product_code in tqdm(product_codes)]
+    data = {product_code: fetch_product_info(product_code) for product_code in tqdm(product_codes)}
 
     with (DATA_DIR / "products.json").open("w") as file:
         json.dump(data, file, indent=2)
