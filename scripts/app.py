@@ -80,10 +80,12 @@ USED_NUTRIENTS = [
 
 def filter_products(products: pd.DataFrame, used_nutrients: list[str]) -> pd.DataFrame:
     """Filters to only the relevant nutrients and drops all products with missing values."""
-    cols = ["product_code", "product_name", "ciqual_code"]
+    product_cols = ["product_code", "product_name", "ciqual_code", "ciqual_name"]
+    price_cols = ["price", "currency", "price_date", "location", "location_osm_id"]
     nutrient_cols = [name + suffix for name in used_nutrients for suffix in ("_value", "_unit", "_source")]
-    relevant_products = products[cols + nutrient_cols].dropna()
-    assert relevant_products.shape[1] == len(nutrient_cols) + 3, (relevant_products.shape, len(nutrient_cols) + 3)
+    cols = product_cols + price_cols + nutrient_cols
+    relevant_products = products[cols].dropna()
+    assert relevant_products.shape[1] == len(nutrient_cols) + 9, (relevant_products.shape, len(nutrient_cols) + 9)
 
     # Check that all columns have the same unit and source between rows.
     for nutient in used_nutrients:
@@ -100,12 +102,9 @@ def fix_prices(prices: pd.DataFrame) -> pd.DataFrame:
     """Set all prices to the same currency: CHF. Also removes duplicate prices of the same location."""
     EUR_TO_CHF = 0.96  # TODO: fetch this from the internet.
     assert all(c in {"EUR", "CHF"} for c in prices["currency"].unique()), prices["currency"].unique()
-    prices["price"] = prices.apply(lambda row: EUR_TO_CHF * row["price"] if row["currency"] == "EUR" else row["price"], axis=1)
-    # check the "date column" and take the latest price from each product with individual product_id and location_osm_id
-    prices["date"] = pd.to_datetime(prices["date"])
-    latest_prices = prices.sort_values("date").drop_duplicates(subset=["product_code", "location_osm_id"], keep="last")
-    # rename price to price_chf and drop the currency column
-    return latest_prices.rename(columns={"price": "price_chf"}).drop(columns=["currency"])
+    prices["price_chf"] = prices.apply(lambda r: r["price"] * EUR_TO_CHF if r["currency"] == "EUR" else r["price"], axis=1)
+    prices["price_eur"] = prices.apply(lambda r: r["price"] / EUR_TO_CHF if r["currency"] == "CHF" else r["price"], axis=1)
+    return prices
 
 
 def add_hardcoded_additional_recommendations(recommendations: dict[str, dict[str, float | str]]) -> None:
@@ -301,11 +300,9 @@ def create_app(recommendations: dict[str, dict[str, float | str]], products_and_
 
 
 if __name__ == "__main__":
-    prices = pd.read_csv(DATA_DIR / "prices.csv")
-    products = pd.read_csv(DATA_DIR / "products.csv")
-    relevant_products = filter_products(products, USED_NUTRIENTS)
-    fixed_prices = fix_prices(prices)
-    products_and_prices = pd.merge(relevant_products, fixed_prices, how="inner", on=["product_code", "product_name"])
+    products_and_prices = pd.read_csv(DATA_DIR / "product_prices_and_nutrients.csv")
+    products_and_prices = filter_products(products_and_prices, USED_NUTRIENTS)
+    products_and_prices = fix_prices(products_and_prices)
 
     recommendations = pd.read_csv(DATA_DIR / "recommendations.csv").set_index("nutrient").to_dict("index")  # type: ignore
     add_hardcoded_additional_recommendations(recommendations)

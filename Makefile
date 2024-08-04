@@ -5,15 +5,12 @@ OFF_USERNAME = "albert27"
 
 all-fetch: prices-fetch products-fetch ciqual-fetch recommendations-fetch
 
-all: prices-summarize products-summarize recommendations-extract recommendations-summarize-general optimize
+all: products-summarize recommendations-extract recommendations-summarize-general optimize
 
 prices-fetch:
 	DATA_DIR=$(DATA_DIR) OWNER=$(OFF_USERNAME) SIZE=100 python scripts/prices_fetch.py
 
-prices-summarize:
-	DATA_DIR=$(DATA_DIR) python scripts/prices_summarize.py
-
-prices: prices-fetch prices-summarize
+prices: prices-fetch
 
 products-fetch:
 	DATA_DIR=$(DATA_DIR) python scripts/products_fetch.py

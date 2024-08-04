@@ -36,7 +36,7 @@ all_estimated_nutrients = [
     "manganese",
     "pantothenic-acid",
     "phosphorus",
-    # "phylloquinone",
+    "phylloquinone",
     "polyols",
     "potassium",
     "proteins",
@@ -111,6 +111,51 @@ HARDCODED = {
 }
 
 
+def make_price_per_kg(item: dict[str, Any]) -> float | None:
+    """Make the price per 1kg."""
+    product_identification = f"{item['product_code']}, {item['product']['product_name']}"
+
+    # Check that product_quantity is available.
+    product_quantity = item["product"]["product_quantity"]
+    if product_quantity is None:
+        print("Missing product_quantity:", product_identification)
+        return None
+
+    # Check that the product quantity is larger than zero.
+    product_quantity_numerical = float(product_quantity)
+    if product_quantity_numerical <= 0:
+        print("Zero product_quantity:", product_identification)
+        return None
+
+    # Check that the product_quantity_unit is in g.
+    # NOTE: it is assumed that it is grams if not available
+    product_quantity_unit = item["product"]["product_quantity_unit"]
+    if product_quantity_unit is None:
+        print("Missing product_quantity_unit:", product_identification)
+        product_quantity_unit = "g"
+    assert product_quantity_unit == "g", product_identification
+
+    return 1000 * float(item["price"]) / product_quantity_numerical
+
+
+def create_prices_lookup(items: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    prices_lookup = {}
+    for item in items:
+        # Get price per kg and skip the price if it returns None.
+        price = make_price_per_kg(item)
+        if item["product_code"] in prices_lookup:
+            print("DUPLICATE", item["product_code"])
+            continue
+        prices_lookup[item["product_code"]] = {
+            "currency": item["currency"],
+            "price": price,
+            "price_date": item["date"],
+            "location": item["location"]["osm_name"],
+            "location_osm_id": item["location"]["osm_id"],
+        }
+    return prices_lookup
+
+
 def adapt_ciqual_column_name(name: str) -> str | None:
     if name in HARDCODED:
         new_name = HARDCODED[name]
@@ -160,7 +205,7 @@ def to_value(value: str) -> float | None:
     return float(value)
 
 
-def load_ciqual_database(file):
+def load_ciqual_database(file) -> dict[str, dict[str, Any]]:
     reader = csv.reader(file, delimiter="\t")
     header = next(reader)
     nutrient_keys = get_ciqual_nutrient_keys(header)
@@ -169,18 +214,39 @@ def load_ciqual_database(file):
     for row in reader:
         row = dict(zip(header, row, strict=True))
         ciqual_id = row["alim_code"]
-        name = row["alim_nom_eng"]
-        nutrients = {}
+        ciqual_data[ciqual_id] = {"ciqual_name": row["alim_nom_eng"]}
         for col, (new_col, col_unit) in nutrient_keys.items():
-            nutrients[new_col + "_value"] = to_value(row[col])
-            nutrients[new_col + "_unit"] = col_unit
-        ciqual_data[ciqual_id] = {"name": name, "nutrients": nutrients}
+            ciqual_data[ciqual_id][new_col + "_value"] = to_value(row[col])
+            ciqual_data[ciqual_id][new_col + "_unit"] = col_unit
     return ciqual_data
 
 
-def create_csv(file, items: list[dict[str, Any]], ciqual_lookup: dict[str, dict[str, Any]]):
-    nutrient_header = [name + suffix for name in all_estimated_nutrients for suffix in ("_value", "_unit", "_source")]
-    header = ["product_code", "product_name", "ciqual_code", *nutrient_header]
+def create_nutrient_row(
+    reported_nutrients: dict[str, float | str], ciqual_nutrients: dict[str, float | str]
+) -> dict[str, float | str]:
+    nutrients = {}
+    for nurtient_name in all_estimated_nutrients:
+        nurtient_value = nurtient_name + "_value"
+        nurtient_unit = nurtient_name + "_unit"
+        nutrient_source = nurtient_name + "_source"
+        if nurtient_name in reported_nutrients:
+            nutrients[nurtient_value] = reported_nutrients[nurtient_name]
+            nutrients[nurtient_unit] = reported_nutrients[nurtient_unit]
+            nutrients[nutrient_source] = "reported"
+        elif nurtient_value in ciqual_nutrients:
+            nutrients[nurtient_value] = ciqual_nutrients[nurtient_value]
+            nutrients[nurtient_unit] = ciqual_nutrients[nurtient_unit]
+            nutrients[nutrient_source] = "ciqual"
+    return nutrients
+
+
+def create_csv(
+    file, items: list[dict[str, Any]], ciqual_lookup: dict[str, dict[str, Any]], prices_dict: dict[str, dict[str, Any]]
+):
+    product_cols = ["product_code", "product_name", "ciqual_code", "ciqual_name"]
+    price_cols = ["price", "currency", "price_date", "location", "location_osm_id"]
+    nutrient_cols = [name + suffix for name in all_estimated_nutrients for suffix in ("_value", "_unit", "_source")]
+    header = product_cols + price_cols + nutrient_cols
 
     writer = csv.writer(file)
     writer.writerow(header)  # Write the header
@@ -189,51 +255,42 @@ def create_csv(file, items: list[dict[str, Any]], ciqual_lookup: dict[str, dict[
     for item in items:
         reported_nutrients = item["product"]["nutriments"]
 
-        # Check that all estimated nutrients seem to have the same keys
-        # estimated_nutrients = item["product"].get("nutriments_estimated")
-        # if estimated_nutrients is not None:
-        #     assert set(estimated_nutrients.keys()) == set(name + "_value" for name in all_estimated_nutrients)
-        # phylloquinone is also present in the OFF estimated_nutrients.
-        # NOTE: The OFF estimated nutrients are not used as the unit have not been checked.
+        # NOTE: The OFF estimated nutrients in item["product"].get("nutriments_estimated")
+        # are not used as the units have not been checked.
 
+        # NOTE: when the ciqual_food_code:en is not available, the agribalyse_food_code:en or agribalyse_proxy_food_code:en is
+        # used instead, which may not really match the true nutritional values of the product.
         ciqual_code = item["product"]["categories_properties"].get("ciqual_food_code:en")
         if ciqual_code is None:
-            # try to use agribalyse_food_code:en instead
             ciqual_code = item["product"]["categories_properties"].get("agribalyse_food_code:en")
         if ciqual_code is None:
-            # try to use agribalyse_proxy_food_code:en instead
             ciqual_code = item["product"]["categories_properties"].get("agribalyse_proxy_food_code:en")
-        ciqual_nutrients = ciqual_lookup[ciqual_code]["nutrients"] if ciqual_code is not None else {}
+        ciqual_nutrients = ciqual_lookup[ciqual_code] if ciqual_code is not None else {}
+        ciqual_name = ciqual_lookup[ciqual_code]["ciqual_name"] if ciqual_code is not None else None
 
-        nutrients = {}
-        for nurtient_name in all_estimated_nutrients:
-            nurtient_value = nurtient_name + "_value"
-            nurtient_unit = nurtient_name + "_unit"
-            nutrient_source = nurtient_name + "_source"
-            if nurtient_name in reported_nutrients:
-                nutrients[nurtient_value] = reported_nutrients[nurtient_name]
-                nutrients[nurtient_unit] = reported_nutrients[nurtient_unit]
-                nutrients[nutrient_source] = "reported"
-            elif nurtient_value in ciqual_nutrients:
-                nutrients[nurtient_value] = ciqual_nutrients[nurtient_value]
-                nutrients[nurtient_unit] = ciqual_nutrients[nurtient_unit]
-                nutrients[nutrient_source] = "ciqual"
+        nutrients = create_nutrient_row(reported_nutrients, ciqual_nutrients)
 
         row_dict = {
             "product_name": item["product"].get("product_name"),
             "product_code": item["code"],
             "ciqual_code": ciqual_code,
+            "ciqual_name": ciqual_name,
+            **prices_dict[item["code"]],
             **nutrients,
         }
         writer.writerow([row_dict.get(col) for col in header])
 
 
 if __name__ == "__main__":
+    with (DATA_DIR / "prices.json").open("r") as file:
+        prices = json.load(file)
+    prices_dict = create_prices_lookup(prices["items"])
+
     with (DATA_DIR / "products.json").open("r") as file:
-        data = json.load(file)
+        products = json.load(file)
 
     with (DATA_DIR / "ciqual2020.csv").open("r") as file:
         ciqual_lookup = load_ciqual_database(file)
 
-    with (DATA_DIR / "products.csv").open("w", newline="", encoding="utf-8") as file:
-        create_csv(file, data, ciqual_lookup)
+    with (DATA_DIR / "product_prices_and_nutrients.csv").open("w", newline="", encoding="utf-8") as file:
+        create_csv(file, products, ciqual_lookup, prices_dict)
