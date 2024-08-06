@@ -8,7 +8,6 @@ TODO: Use both EUR and CHF
 TODO: Include other objectives than price minimization with tunable hyperparameters.
 TODO: Choose to include maximum values even when they are not available in recommendations.
 TODO: Minimize the use of pandas (I don't like pandas).
-TODO: Button to reset dropdown to all available nutrients and another to only macronutrients
 """
 
 import math
@@ -24,23 +23,29 @@ from scipy.optimize import linprog
 
 DATA_DIR = Path(os.getenv("DATA_DIR", ""))
 
-DROPDOWN_CHOICE_ID = "dropdown-choice"
+MACRONUTRIENT_RESET_ID = "button-macronutrient-reset"
+DROPDOWN_MACRONUTRIENT_CHOICE_ID = "dropdown-macronutrient-choice"
+MICRONUTRIENT_RESET_ID = "button-micronutrient-reset"
+DROPDOWN_MICRONUTRIENT_CHOICE_ID = "dropdown-micronutrient-choice"
 SLIDER_TABLE_ID = "slider-table"
 SLIDER_TYPE_ID = "slider"
 RESULT_TABLE_ID = "result-table"
 
-USED_NUTRIENTS = [
+USED_MACRONUTRIENTS = [
+    "energy-kcal",
+    # "energy-kj",
+    # "energy","carbohydrates",
+    "proteins",
+    "fat",
+    "saturated-fat",
+    "fiber",
+]
+USED_MICRONUTRIENTS = [
     # "alcohol",
     # "beta-carotene",
     "calcium",
-    "carbohydrates",
     # "cholesterol",
     "copper",
-    "energy-kcal",
-    # "energy-kj",
-    # "energy",
-    "fat",
-    "fiber",
     "folate",
     # "fructose",
     # "galactose",
@@ -57,9 +62,7 @@ USED_NUTRIENTS = [
     # "phylloquinone",
     # "polyols",
     "potassium",
-    "proteins",
     "salt",
-    "saturated-fat",
     "selenium",
     # "sodium",  # has multiple units
     # "starch",
@@ -152,7 +155,7 @@ def convert_to_int_if_possible(x: float) -> float | int:
     return x if np.isnan(x) else int(x) if x == int(x) else x
 
 
-def create_rangeslider(data: dict[str, float | str]) -> dcc.RangeSlider:
+def create_rangeslider(data: dict[str, float | str], *, micro=False) -> dcc.RangeSlider:
     """Create the rangeslider of the given nutrient with the given data."""
     value_key = "value_males"  # "value_females"  # NOTE: using male values
     lower = convert_to_int_if_possible(data[value_key])  # type: ignore
@@ -164,10 +167,11 @@ def create_rangeslider(data: dict[str, float | str]) -> dcc.RangeSlider:
     unit = data["unit"]
     marks = {
         _min: {"label": f"{_min}{unit}"},
-        lower: {"label": f"{lower}{unit}", "style": {"color": "#369c36"}},
         _max: {"label": f"{_max}{unit}"},
     }
-    if not np.isnan(upper):
+    if micro:
+        marks[lower] = {"label": f"{lower}{unit}", "style": {"color": "#369c36"}}
+    if micro and not np.isnan(upper):
         marks[upper] = {"label": f"{upper}{unit}", "style": {"color": "#f53d3d"}}
     return dcc.RangeSlider(
         min=_min,
@@ -176,23 +180,16 @@ def create_rangeslider(data: dict[str, float | str]) -> dcc.RangeSlider:
         tooltip={"placement": "bottom", "always_visible": False, "template": f"{{value}}{unit}"},
         marks=marks,
         allowCross=False,
-        id={"type": SLIDER_TYPE_ID, "nutrient": data["nutrient_id"], "unit": unit},
+        id={"type": SLIDER_TYPE_ID, "nutrient_id": data["nutrient_id"], "unit": unit},
         persistence=True,
     )
-
-
-def get_nutrient_slider_row(data: dict[str, float | str]) -> html.Tr:
-    return html.Tr([
-        html.Td(data.get("nutrient"), style={"width": "20%"}),
-        html.Td(create_rangeslider(data), style={"width": "80%"}),
-    ])
 
 
 def extract_slider_values(
     slider_values: list[list[float]], slider_ids: list[dict[str, str]]
 ) -> dict[str, dict[str, float | str]]:
     return {
-        slider_id["nutrient"]: {
+        slider_id["nutrient_id"]: {
             "lb": slider_value[0],
             "ub": slider_value[1] if len(slider_value) == 2 else np.nan,
             "unit": slider_id["unit"],
@@ -201,20 +198,40 @@ def extract_slider_values(
     }
 
 
-def create_app(recommendations: list[dict[str, float | str]], products_and_prices: pd.DataFrame) -> Dash:
+def create_app(
+    macro_recommendations: list[dict[str, float | str]],
+    micro_recommendations: list[dict[str, float | str]],
+    products_and_prices: pd.DataFrame,
+) -> Dash:
     app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-    dropdown = dcc.Dropdown(
-        options=USED_NUTRIENTS,
-        value=USED_NUTRIENTS,
+    macronutrient_reset_button = dbc.Button("Reset", id=MACRONUTRIENT_RESET_ID)
+    macronutrient_dropdown = dcc.Dropdown(
+        options=USED_MACRONUTRIENTS,
+        value=USED_MACRONUTRIENTS,
         placeholder="Choose nutrients",
         multi=True,
         persistence=True,
-        id=DROPDOWN_CHOICE_ID,
+        id=DROPDOWN_MACRONUTRIENT_CHOICE_ID,
+    )
+    micronutrient_reset_button = dbc.Button("Reset", id=MICRONUTRIENT_RESET_ID)
+    micronutrient_dropdown = dcc.Dropdown(
+        options=USED_MICRONUTRIENTS,
+        value=USED_MICRONUTRIENTS,
+        placeholder="Choose nutrients",
+        multi=True,
+        persistence=True,
+        id=DROPDOWN_MICRONUTRIENT_CHOICE_ID,
     )
 
     app.layout = html.Div([
-        dbc.Navbar([dbc.Container(html.H1("Dashboard")), dropdown]),
+        dbc.Navbar([
+            dbc.Container(html.H1("Dashboard")),
+            macronutrient_reset_button,
+            macronutrient_dropdown,
+            micronutrient_reset_button,
+            micronutrient_dropdown,
+        ]),
         dbc.Container(
             dbc.Row([
                 dbc.Col(
@@ -247,16 +264,52 @@ def create_app(recommendations: list[dict[str, float | str]], products_and_price
     ])
 
     @app.callback(
-        Output(SLIDER_TABLE_ID, "children"),
-        Input(DROPDOWN_CHOICE_ID, "value"),
+        Output(DROPDOWN_MACRONUTRIENT_CHOICE_ID, "value"),
+        Input(MACRONUTRIENT_RESET_ID, "n_clicks"),
     )
-    def create_chosen_sliders(chosen_nutrients: list[str]):
-        return html.Tbody([get_nutrient_slider_row(r) for r in recommendations if r["nutrient_id"] in chosen_nutrients])
+    def reset_macro_dropdown(n_clicks: int):
+        return USED_MACRONUTRIENTS
+
+    @app.callback(
+        Output(DROPDOWN_MICRONUTRIENT_CHOICE_ID, "value"),
+        Input(MICRONUTRIENT_RESET_ID, "n_clicks"),
+    )
+    def reset_micro_dropdown(n_clicks: int):
+        return USED_MICRONUTRIENTS
+
+    @app.callback(
+        Output(SLIDER_TABLE_ID, "children"),
+        Input(DROPDOWN_MACRONUTRIENT_CHOICE_ID, "value"),
+        Input(DROPDOWN_MICRONUTRIENT_CHOICE_ID, "value"),
+    )
+    def create_chosen_sliders(chosen_macronutrients: list[str], chosen_micronutrients: list[str]) -> html.Tbody:
+        macro_rows = [
+            html.Tr([
+                html.Td(macro["nutrient"], style={"width": "20%"}),
+                html.Td(create_rangeslider(macro), style={"width": "80%"}),
+            ])
+            for macro in macro_recommendations
+            if macro["nutrient_id"] in chosen_macronutrients
+        ]
+        micro_rows = [
+            html.Tr([
+                html.Td(micro["nutrient"], style={"width": "20%"}),
+                html.Td(create_rangeslider(micro, micro=True), style={"width": "80%"}),
+            ])
+            for micro in micro_recommendations
+            if micro["nutrient_id"] in chosen_micronutrients
+        ]
+        return html.Tbody([
+            html.Tr(html.Th("Macronutrients")),
+            *macro_rows,
+            html.Tr(html.Th("Micronutrients")),
+            *micro_rows,
+        ])
 
     @app.callback(
         Output(RESULT_TABLE_ID, "children"),
-        Input({"type": SLIDER_TYPE_ID, "nutrient": ALL, "unit": ALL}, "value"),
-        State({"type": SLIDER_TYPE_ID, "nutrient": ALL, "unit": ALL}, "id"),
+        Input({"type": SLIDER_TYPE_ID, "nutrient_id": ALL, "unit": ALL}, "value"),
+        State({"type": SLIDER_TYPE_ID, "nutrient_id": ALL, "unit": ALL}, "id"),
         prevent_initial_call=True,
     )
     def optimize(slider_values: list[list[float]], slider_ids: list[dict[str, str]]):
@@ -284,12 +337,11 @@ def create_app(recommendations: list[dict[str, float | str]], products_and_price
 
 if __name__ == "__main__":
     products_and_prices = pd.read_csv(DATA_DIR / "product_prices_and_nutrients.csv")
-    products_and_prices = filter_products(products_and_prices, USED_NUTRIENTS)
+    products_and_prices = filter_products(products_and_prices, USED_MACRONUTRIENTS + USED_MICRONUTRIENTS)
     products_and_prices = fix_prices(products_and_prices)
 
-    micro_recommendations: list[dict[str, float | str]] = pd.read_csv(DATA_DIR / "recommendations_nnr2023.csv").to_dict("records")  # type: ignore
     macro_recommendations: list[dict[str, float | str]] = pd.read_csv(DATA_DIR / "recommendations_macro.csv").to_dict("records")  # type: ignore
-    recommendations = macro_recommendations + micro_recommendations
+    micro_recommendations: list[dict[str, float | str]] = pd.read_csv(DATA_DIR / "recommendations_nnr2023.csv").to_dict("records")  # type: ignore
 
-    app = create_app(recommendations, products_and_prices)
+    app = create_app(macro_recommendations, micro_recommendations, products_and_prices)
     app.run_server(debug=True)
