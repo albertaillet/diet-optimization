@@ -1,6 +1,6 @@
 """This script extracts the html tables in the fetched webpage with the Nordic Nutrition Recommendations 2023 to csv.
 
-Usage of script DATA_DIR=<data directory> python scripts/recommendations_extract_tables.py
+Usage of script DATA_DIR=<path to data directory> python recommendations_extract_tables.py
 """
 
 import csv

@@ -1,6 +1,6 @@
 """This script fetches the prices reported by the specified user using the openfoodfacts prices API.
 
-Usage of script DATA_DIR=<data directory> OWNER=<yourusername> python scripts/prices_fetch.py
+Usage of script DATA_DIR=<path to data directory> OWNER=<yourusername> python prices_fetch.py
 The api documentation used: https://prices.openfoodfacts.org/api/docs.
 """
 

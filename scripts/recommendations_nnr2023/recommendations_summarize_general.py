@@ -1,6 +1,6 @@
 """This script summarizes the extracted csv tables from the Nordic Nutrition Recommendations 2023.
 
-Usage of script DATA_DIR=<data directory> python scripts/recommendations_summarize_general.py
+Usage of script DATA_DIR=<path to data directory> python recommendations_summarize_general.py
 """
 
 import csv

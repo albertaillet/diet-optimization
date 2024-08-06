@@ -1,6 +1,6 @@
 """This script fetches the product information of the products present in prices.json from the Open Food Facts database.
 
-Usage of script DATA_DIR=<data directory> python scripts/products_fetch.py
+Usage of script DATA_DIR=<path to data directory> python products_fetch.py
 The api documentation used: https://openfoodfacts.org/api/docs.
 """
 

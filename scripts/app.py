@@ -1,7 +1,7 @@
 """This script combines the different summarized csv files and creates a dashboard to interact
 with linear optimization to get the optimal quantities of food products.
 
-Usage of script DATA_DIR=<data directory> python scripts/app.py
+Usage of script DATA_DIR=<path to data directory> python app.py
 
 TODO: show levels of current of diet on the slider markers.
 TODO: Use both EUR and CHF

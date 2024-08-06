@@ -1,6 +1,6 @@
 """This script summarizes the fetched product information into a csv file.
 
-Usage of script DATA_DIR=<data directory> python scripts/products_summarize.py
+Usage of script DATA_DIR=<path to data directory> python products_summarize.py
 """
 
 import csv
