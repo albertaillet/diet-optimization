@@ -3,7 +3,6 @@ with linear optimization to get the optimal quantities of food products.
 
 Usage of script DATA_DIR=<path to data directory> python app.py
 
-TODO: show levels of current of diet on the slider markers.
 TODO: Use both EUR and CHF
 TODO: Include other objectives than price minimization with tunable hyperparameters.
 TODO: Choose to include maximum values even when they are not available in recommendations.
@@ -308,29 +307,52 @@ def create_app(
 
     @app.callback(
         Output(RESULT_TABLE_ID, "children"),
+        Output({"type": SLIDER_TYPE_ID, "nutrient_id": ALL, "unit": ALL}, "marks"),
         Input({"type": SLIDER_TYPE_ID, "nutrient_id": ALL, "unit": ALL}, "value"),
         State({"type": SLIDER_TYPE_ID, "nutrient_id": ALL, "unit": ALL}, "id"),
+        State({"type": SLIDER_TYPE_ID, "nutrient_id": ALL, "unit": ALL}, "marks"),
         prevent_initial_call=True,
     )
-    def optimize(slider_values: list[list[float]], slider_ids: list[dict[str, str]]):
+    def optimize(
+        slider_values: list[list[float]], slider_ids: list[dict[str, str]], slider_marks: list[dict[str | float, dict[str, str]]]
+    ):
+        level_label = "▲"
+
+        # Remove previous level markers
+        for slider_mark in slider_marks:
+            pop_mark = None
+            for mark in slider_mark:
+                if slider_mark[mark]["label"] == level_label:
+                    pop_mark = mark
+                    break
+            if pop_mark is not None:
+                slider_mark.pop(mark)
+
         chosen_bounds = extract_slider_values(slider_values, slider_ids)
         A_nutrients, lb, ub, c_costs = get_arrays(chosen_bounds, products_and_prices)
         result = solve_optimization(A_nutrients, lb, ub, c_costs)
         if result.x is None:
-            return html.H4("No solution")
+            return html.H4("No solution"), slider_marks
         result_table = pd.DataFrame({
             "product_code": products_and_prices["product_code"],
-            "product_name": products_and_prices["product_name"],
+            "ciqual_name": products_and_prices["ciqual_name"],
             "location": products_and_prices["location"],
             "quantity_g": (100 * result.x).round(2),
             "price_chf": (c_costs * result.x).round(2),
         })
         # Filter on only included products and sort by weight
         result_table = result_table[result_table["quantity_g"] > 0].sort_values(by="quantity_g", ascending=False)
+
+        nutrients_levels = A_nutrients.T @ result.x
+
+        # Add marks to the slider to show the current value of that nutrient.
+        for slider_mark, nutrients_level in zip(slider_marks, nutrients_levels, strict=True):
+            slider_mark[convert_to_int_if_possible(nutrients_level)] = {"label": level_label}
+
         return [
             html.H5(f"Price per day: {round(result.fun, 4)} CHF"),
             dbc.Table.from_dataframe(result_table, striped=True, bordered=True, hover=True),  # type: ignore
-        ]
+        ], slider_marks
 
     return app
 
