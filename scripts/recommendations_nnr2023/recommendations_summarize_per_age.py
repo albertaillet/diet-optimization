@@ -44,7 +44,7 @@ def extract_table(file):
 
 
 if __name__ == "__main__":
-    for file_path in (DATA_DIR / "recommendations").glob("*.csv"):
+    for file_path in (DATA_DIR / "recommendations_nnr2023").glob("*.csv"):
         if not file_path.stem.endswith(("AI", "AR", "PAR", "RI")):
             assert "levels" in file_path.stem
             continue

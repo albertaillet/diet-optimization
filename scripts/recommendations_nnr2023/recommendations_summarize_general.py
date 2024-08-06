@@ -119,16 +119,16 @@ def fix_nutrient_key(nutrient: str) -> str:
 
 
 if __name__ == "__main__":
-    with (DATA_DIR / "recommendations/levels_comparison_summary.csv").open("r", encoding="utf-8") as file:
+    with (DATA_DIR / "recommendations_nnr2023/levels_comparison_summary.csv").open("r", encoding="utf-8") as file:
         comparison_summary_table = extract_summary_table(file)
 
-    with (DATA_DIR / "recommendations/levels_upper_intake.csv").open("r", encoding="utf-8") as file:
+    with (DATA_DIR / "recommendations_nnr2023/levels_upper_intake.csv").open("r", encoding="utf-8") as file:
         upper_intake_table = extract_upper_intake_table(file)
 
     summary_table = merge_tables(comparison_summary_table, upper_intake_table)
 
     header = "nutrient", "unit", "RI_or_AI", "value_males", "value_females", "value_upper_intake"
-    with (DATA_DIR / "recommendations.csv").open("w", encoding="utf-8") as file:
+    with (DATA_DIR / "recommendations_nnr2023.csv").open("w", encoding="utf-8") as file:
         writer = csv.writer(file)
         writer.writerow(header)
         for nutrient in sorted(summary_table):

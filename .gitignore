@@ -7,10 +7,21 @@ venv/
 # temporary folder
 tmp/
 
-# All data in json, html and csv files
-data/*.json
-data/**/*.csv
-data/*.html
+# Data to exclude
+# Fetched price data
+data/prices.json
+# Fetched product data
+data/products.json
+# Fetched and extracted NNR2023 data
+data/recommendations_nnr2023/*.csv
+data/recommendations_nnr2023.html
+# Ciqual 2020 table
+data/ciqual2020.csv
+# Summarize product prices and nutrients table
+data/product_prices_and_nutrients.csv
 
 # All python cache files
 *.pyc
+
+# Mac hidden files
+.DS_Store

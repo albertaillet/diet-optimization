@@ -304,7 +304,7 @@ if __name__ == "__main__":
     products_and_prices = filter_products(products_and_prices, USED_NUTRIENTS)
     products_and_prices = fix_prices(products_and_prices)
 
-    recommendations = pd.read_csv(DATA_DIR / "recommendations.csv").set_index("nutrient").to_dict("index")  # type: ignore
+    recommendations = pd.read_csv(DATA_DIR / "recommendations_nnr2023.csv").set_index("nutrient").to_dict("index")  # type: ignore
     add_hardcoded_additional_recommendations(recommendations)
 
     app = create_app(recommendations, products_and_prices)

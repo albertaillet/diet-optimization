@@ -16,4 +16,4 @@ URL = "https://pub.norden.org/nord2023-003/recommendations.html"
 
 if __name__ == "__main__":
     data = requests.get(URL)
-    (DATA_DIR / "recommendations.html").write_bytes(data.content)
+    (DATA_DIR / "recommendations_nnr2023.html").write_bytes(data.content)

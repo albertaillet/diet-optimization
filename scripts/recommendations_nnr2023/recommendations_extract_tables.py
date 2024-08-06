@@ -51,15 +51,15 @@ def extract_table(table: BeautifulSoup, file):
 
 
 if __name__ == "__main__":
-    with (DATA_DIR / "recommendations.html").open("r") as file:
+    with (DATA_DIR / "recommendations_nnr2023.html").open("r") as file:
         content = file.read()
     soup = BeautifulSoup(content, "html.parser")
 
-    (DATA_DIR / "recommendations").mkdir(exist_ok=True)
+    (DATA_DIR / "recommendations_nnr2023").mkdir(exist_ok=True)
 
     for i, table in enumerate(soup.find_all("tbody")):
         if i not in TABLES:
             continue
         filename, title = TABLES[i]
-        with (DATA_DIR / f"recommendations/{filename}.csv").open("w") as file:
+        with (DATA_DIR / f"recommendations_nnr2023/{filename}.csv").open("w") as file:
             extract_table(table, file)
