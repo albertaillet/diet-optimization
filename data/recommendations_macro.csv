@@ -1,0 +1,8 @@
+nutrient,nutrient_id,unit,RI_or_AI,value_males,value_females,value_upper_intake
+Energy,energy-kcal,kcal,,2500,2500,3000
+Protein,proteins,g,,150,150,300
+Carbs,carbohydrates,g,,0,0,400
+Fat,fat,g,,70,70,200
+Saturated fat,saturated-fat,g,,0,0,20
+Fiber,fiber,g,,40,40,70
+Salt,salt,g,,1,1,2.3

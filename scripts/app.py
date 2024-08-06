@@ -107,24 +107,7 @@ def fix_prices(prices: pd.DataFrame) -> pd.DataFrame:
     return prices
 
 
-def add_hardcoded_additional_recommendations(recommendations: dict[str, dict[str, float | str]]) -> None:
-    """Adds macronutrients to the micronutrient recommendation dict."""
-    # NOTE: same for males and females
-    additional_recommendations_lb_ub_unit = {
-        "carbohydrates": (0, np.nan, "g"),
-        "fiber": (40, 70, "g"),
-        "energy-kcal": (2_500, 3_000, "kcal"),
-        "fat": (70, np.nan, "g"),
-        "saturated-fat": (0, np.nan, "g"),
-        "proteins": (150, np.nan, "g"),
-        "salt": (1, 2.3, "g"),
-    }
-    for nutrient, (lb, ub, unit) in additional_recommendations_lb_ub_unit.items():
-        recommendations[nutrient] = {"value_males": lb, "value_females": lb, "value_upper_intake": ub, "unit": unit}
-
-
 def get_arrays(bounds: dict[str, dict[str, float | str]], products_and_prices: pd.DataFrame) -> tuple[np.ndarray, ...]:
-    """From dict of"""
     # Check that the upper and lower bounds nutrients use the same units as the product nutrients.
     for nutrient in bounds:
         product_unique_units = set(products_and_prices[nutrient + "_unit"].unique())
@@ -169,13 +152,13 @@ def convert_to_int_if_possible(x: float) -> float | int:
     return x if np.isnan(x) else int(x) if x == int(x) else x
 
 
-def create_rangeslider(nutrient: str, data: dict[str, float | str]) -> dcc.RangeSlider:
+def create_rangeslider(data: dict[str, float | str]) -> dcc.RangeSlider:
     """Create the rangeslider of the given nutrient with the given data."""
     value_key = "value_males"  # "value_females"  # NOTE: using male values
-    lower = convert_to_int_if_possible(data[value_key])
-    upper = convert_to_int_if_possible(data["value_upper_intake"])
+    lower = convert_to_int_if_possible(data[value_key])  # type: ignore
+    upper = convert_to_int_if_possible(data["value_upper_intake"])  # type: ignore
     assert not np.isnan(lower), lower
-    _min = 0 if nutrient != "energy-kcal" else 1000
+    _min = 0 if data["nutrient_id"] != "energy-kcal" else 1000
     _max = 4 * lower if np.isnan(upper) else math.ceil(upper + (lower - _min))
     _max = _min + 100 if _max == _min else _max
     unit = data["unit"]
@@ -193,15 +176,15 @@ def create_rangeslider(nutrient: str, data: dict[str, float | str]) -> dcc.Range
         tooltip={"placement": "bottom", "always_visible": False, "template": f"{{value}}{unit}"},
         marks=marks,
         allowCross=False,
-        id={"type": SLIDER_TYPE_ID, "nutrient": nutrient, "unit": unit},
+        id={"type": SLIDER_TYPE_ID, "nutrient": data["nutrient_id"], "unit": unit},
         persistence=True,
     )
 
 
-def get_nutrient_slider_row(nutrient: str, data: dict[str, float | str]) -> html.Tr:
+def get_nutrient_slider_row(data: dict[str, float | str]) -> html.Tr:
     return html.Tr([
-        html.Td(nutrient, style={"width": "20%"}),
-        html.Td(create_rangeslider(nutrient, data), style={"width": "80%"}),
+        html.Td(data.get("nutrient"), style={"width": "20%"}),
+        html.Td(create_rangeslider(data), style={"width": "80%"}),
     ])
 
 
@@ -218,7 +201,7 @@ def extract_slider_values(
     }
 
 
-def create_app(recommendations: dict[str, dict[str, float | str]], products_and_prices: pd.DataFrame) -> Dash:
+def create_app(recommendations: list[dict[str, float | str]], products_and_prices: pd.DataFrame) -> Dash:
     app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
     dropdown = dcc.Dropdown(
@@ -268,7 +251,7 @@ def create_app(recommendations: dict[str, dict[str, float | str]], products_and_
         Input(DROPDOWN_CHOICE_ID, "value"),
     )
     def create_chosen_sliders(chosen_nutrients: list[str]):
-        return html.Tbody([get_nutrient_slider_row(nutrient, recommendations[nutrient]) for nutrient in chosen_nutrients])
+        return html.Tbody([get_nutrient_slider_row(r) for r in recommendations if r["nutrient_id"] in chosen_nutrients])
 
     @app.callback(
         Output(RESULT_TABLE_ID, "children"),
@@ -293,7 +276,7 @@ def create_app(recommendations: dict[str, dict[str, float | str]], products_and_
         result_table = result_table[result_table["quantity_g"] > 0].sort_values(by="quantity_g", ascending=False)
         return [
             html.H5(f"Price per day: {round(result.fun, 4)} CHF"),
-            dbc.Table.from_dataframe(result_table, striped=True, bordered=True, hover=True),
+            dbc.Table.from_dataframe(result_table, striped=True, bordered=True, hover=True),  # type: ignore
         ]
 
     return app
@@ -304,8 +287,9 @@ if __name__ == "__main__":
     products_and_prices = filter_products(products_and_prices, USED_NUTRIENTS)
     products_and_prices = fix_prices(products_and_prices)
 
-    recommendations = pd.read_csv(DATA_DIR / "recommendations_nnr2023.csv").set_index("nutrient").to_dict("index")  # type: ignore
-    add_hardcoded_additional_recommendations(recommendations)
+    micro_recommendations: list[dict[str, float | str]] = pd.read_csv(DATA_DIR / "recommendations_nnr2023.csv").to_dict("records")  # type: ignore
+    macro_recommendations: list[dict[str, float | str]] = pd.read_csv(DATA_DIR / "recommendations_macro.csv").to_dict("records")  # type: ignore
+    recommendations = macro_recommendations + micro_recommendations
 
     app = create_app(recommendations, products_and_prices)
     app.run_server(debug=True)

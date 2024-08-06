@@ -113,7 +113,7 @@ def merge_tables(table_1: dict[str, dict[str, Any]], table_2: dict[str, dict[str
     return table
 
 
-def fix_nutrient_key(nutrient: str) -> str:
+def to_nutrient_id(nutrient: str) -> str:
     """Renames nutrient names in the tables to the ones present in OFF."""
     return nutrient.lower().replace(" ", "-")
 
@@ -127,9 +127,10 @@ if __name__ == "__main__":
 
     summary_table = merge_tables(comparison_summary_table, upper_intake_table)
 
-    header = "nutrient", "unit", "RI_or_AI", "value_males", "value_females", "value_upper_intake"
+    nutrient_cols = "nutrient", "nutrient_id"
+    data_cols = "unit", "RI_or_AI", "value_males", "value_females", "value_upper_intake"
     with (DATA_DIR / "recommendations_nnr2023.csv").open("w", encoding="utf-8") as file:
         writer = csv.writer(file)
-        writer.writerow(header)
+        writer.writerow(nutrient_cols + data_cols)
         for nutrient in sorted(summary_table):
-            writer.writerow([fix_nutrient_key(nutrient)] + [summary_table[nutrient].get(col) for col in header[1:]])
+            writer.writerow([nutrient, to_nutrient_id(nutrient)] + [summary_table[nutrient].get(col) for col in data_cols])

@@ -1,32 +1,32 @@
-nutrient,unit,RI_or_AI,value_males,value_females,value_upper_intake
-biotin,µg,AI,40.0,40.0,
-boron,mg,,,,10.0
-calcium,mg,RI,950.0,950.0,2500.0
-choline,mg,AI,400.0,400.0,
-copper,mg,RI,0.9,0.9,5.0
-fluoride,µg,AI,3.7,3.2,7000.0
-folate,µg,RI,330.0,330.0,
-folic-acid-(synthetic),µg,,,,1000.0
-iodine,µg,AI,150.0,150.0,600.0
-iron,mg,RI,9.0,15.0,60.0
-magnesium,mg,AI,350.0,300.0,
-manganese,mg,AI,3.0,3.0,
-molybdenum,µg,AI,65.0,65.0,600.0
-niacin,NE,RI,18.0,14.0,
-nicotinamide,mg,,,,900.0
-nicotinic-acid,mg,,,,10.0
-pantothenic-acid,mg,AI,5.0,5.0,
-phosphorus,mg,AI,520.0,520.0,3000.0
-potassium,mg,AI,3500.0,3500.0,
-riboflavin,mg,RI,1.6,1.6,
-selenium,µg,AI,90.0,75.0,255.0
-sodium,g,AI,1.5,1.5,
-thiamin,mg,RI,1.1,0.9,
-vitamin-a,RE,RI,800.0,700.0,3000.0
-vitamin-b12,µg,AI,4.0,4.0,
-vitamin-b6,mg,RI,1.8,1.6,12.0
-vitamin-c,mg,RI,110.0,95.0,
-vitamin-d,µg,RI,10.0,10.0,100.0
-vitamin-e,mg,AI,16.5,15.0,300.0
-vitamin-k,µg,AI,75.0,65.0,
-zinc,mg,RI,12.7,9.7,25.0
+nutrient,nutrient_id,unit,RI_or_AI,value_males,value_females,value_upper_intake
+Biotin,biotin,µg,AI,40.0,40.0,
+Boron,boron,mg,,,,10.0
+Calcium,calcium,mg,RI,950.0,950.0,2500.0
+Choline,choline,mg,AI,400.0,400.0,
+Copper,copper,mg,RI,0.9,0.9,5.0
+Fluoride,fluoride,µg,AI,3.7,3.2,7000.0
+Folate,folate,µg,RI,330.0,330.0,
+Folic acid (synthetic),folic-acid-(synthetic),µg,,,,1000.0
+Iodine,iodine,µg,AI,150.0,150.0,600.0
+Iron,iron,mg,RI,9.0,15.0,60.0
+Magnesium,magnesium,mg,AI,350.0,300.0,
+Manganese,manganese,mg,AI,3.0,3.0,
+Molybdenum,molybdenum,µg,AI,65.0,65.0,600.0
+Niacin,niacin,NE,RI,18.0,14.0,
+Nicotinamide,nicotinamide,mg,,,,900.0
+Nicotinic acid,nicotinic-acid,mg,,,,10.0
+Pantothenic acid,pantothenic-acid,mg,AI,5.0,5.0,
+Phosphorus,phosphorus,mg,AI,520.0,520.0,3000.0
+Potassium,potassium,mg,AI,3500.0,3500.0,
+Riboflavin,riboflavin,mg,RI,1.6,1.6,
+Selenium,selenium,µg,AI,90.0,75.0,255.0
+Sodium,sodium,g,AI,1.5,1.5,
+Thiamin,thiamin,mg,RI,1.1,0.9,
+Vitamin A,vitamin-a,RE,RI,800.0,700.0,3000.0
+Vitamin B12,vitamin-b12,µg,AI,4.0,4.0,
+Vitamin B6,vitamin-b6,mg,RI,1.8,1.6,12.0
+Vitamin C,vitamin-c,mg,RI,110.0,95.0,
+Vitamin D,vitamin-d,µg,RI,10.0,10.0,100.0
+Vitamin E,vitamin-e,mg,AI,16.5,15.0,300.0
+Vitamin K,vitamin-k,µg,AI,75.0,65.0,
+Zinc,zinc,mg,RI,12.7,9.7,25.0
