@@ -33,7 +33,8 @@ RESULT_TABLE_ID = "result-table"
 USED_MACRONUTRIENTS = [
     "energy-kcal",
     # "energy-kj",
-    # "energy","carbohydrates",
+    # "energy",
+    "carbohydrates",
     "proteins",
     "fat",
     "saturated-fat",
