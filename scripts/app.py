@@ -6,11 +6,11 @@ Usage of script DATA_DIR=<path to data directory> python app.py
 TODO: Use both EUR and CHF
 TODO: Include other objectives than price minimization with tunable hyperparameters.
 TODO: Choose to include maximum values even when they are not available in recommendations.
-TODO: Minimize the use of pandas (I don't like pandas).
 """
 
 import csv
 import math
+import operator
 import os
 from pathlib import Path
 
@@ -121,7 +121,6 @@ def fix_prices(prices: dict[str, list[str | float]]):
     assert all(c in {"EUR", "CHF"} for c in set(prices["currency"])), set(prices["currency"])
     prices["price_chf"] = [v * EUR_TO_CHF if c == "EUR" else v for v, c in zip(prices["price"], prices["currency"], strict=True)]  # type: ignore
     prices["price_eur"] = [v / EUR_TO_CHF if c == "CHF" else v for v, c in zip(prices["price"], prices["currency"], strict=True)]  # type: ignore
-    return prices
 
 
 def get_arrays(
@@ -212,6 +211,58 @@ def extract_slider_values(
     }
 
 
+def create_result_table(result, products_and_prices: dict[str, list[str | float]], c_costs: np.ndarray) -> html.Tbody:
+    data_dict_of_lists = {
+        "product_code": products_and_prices["product_code"],
+        "product_name": products_and_prices["product_name"],
+        "ciqual_name": products_and_prices["ciqual_name"],
+        "ciqual_code": products_and_prices["ciqual_code"],
+        "location": products_and_prices["location"],
+        "location_osm_id": products_and_prices["location_osm_id"],
+        "quantity_g": (100 * result.x).round(1),
+        "price": (c_costs * result.x).round(2),
+    }
+    cols = data_dict_of_lists.keys()
+    data_list_of_dicts = [dict(zip(cols, t, strict=True)) for t in zip(*[data_dict_of_lists[col] for col in cols], strict=True)]
+
+    # Filter on only included products and sort by weight
+    sort_by = "quantity_g"
+    shown_cols = "Product name", "Ciqual Name", "Location", "Quantity", "Price"
+    html_rows = [
+        html.Tr([
+            html.Td(
+                html.A(
+                    row_data["product_name"],
+                    href=f'https://world.openfoodfacts.org/product/{row_data["product_code"]}',
+                    target="_blank",
+                    style={"color": "black"},
+                )
+            ),
+            html.Td(
+                html.A(
+                    row_data["ciqual_name"],
+                    href=f'https://ciqual.anses.fr/#/aliments/{row_data["ciqual_code"]}',
+                    target="_blank",
+                    style={"color": "black"},
+                )
+            ),
+            html.Td(
+                html.A(
+                    row_data["location"],
+                    href=f'https://www.openstreetmap.org/way/{row_data["location_osm_id"]}',
+                    target="_blank",
+                    style={"color": "black"},
+                )
+            ),
+            html.Td(row_data["quantity_g"]),
+            html.Td(row_data["price"]),
+        ])
+        for row_data in sorted(data_list_of_dicts, key=operator.itemgetter(sort_by), reverse=True)
+        if row_data[sort_by] > 0
+    ]
+    return html.Tbody([html.Tr([html.Th(col) for col in shown_cols]), *html_rows])
+
+
 def create_app(
     macro_recommendations: list[dict[str, float | str]],
     micro_recommendations: list[dict[str, float | str]],
@@ -280,6 +331,7 @@ def create_app(
     @app.callback(
         Output(DROPDOWN_MACRONUTRIENT_CHOICE_ID, "value"),
         Input(MACRONUTRIENT_RESET_ID, "n_clicks"),
+        prevent_initial_call=True,
     )
     def reset_macro_dropdown(n_clicks: int):
         return USED_MACRONUTRIENTS
@@ -287,6 +339,7 @@ def create_app(
     @app.callback(
         Output(DROPDOWN_MICRONUTRIENT_CHOICE_ID, "value"),
         Input(MICRONUTRIENT_RESET_ID, "n_clicks"),
+        prevent_initial_call=True,
     )
     def reset_micro_dropdown(n_clicks: int):
         return USED_MICRONUTRIENTS
@@ -346,29 +399,19 @@ def create_app(
         chosen_bounds = extract_slider_values(slider_values, slider_ids)
         A_nutrients, lb, ub, c_costs = get_arrays(chosen_bounds, products_and_prices)
         result = solve_optimization(A_nutrients, lb, ub, c_costs)
-        if result.x is None:
+        if result.status != 0:
             return html.H4("No solution"), slider_marks
-        import pandas as pd
 
-        result_table = pd.DataFrame({
-            "product_code": products_and_prices["product_code"],
-            "ciqual_name": products_and_prices["ciqual_name"],
-            "location": products_and_prices["location"],
-            "quantity_g": (100 * result.x).round(2),
-            "price_chf": (c_costs * result.x).round(2),
-        })
-        # Filter on only included products and sort by weight
-        result_table = result_table[result_table["quantity_g"] > 0].sort_values(by="quantity_g", ascending=False)
-
+        # Caluculate nutrient levels
         nutrients_levels = A_nutrients @ result.x
 
-        # Add marks to the slider to show the current value of that nutrient.
+        # Add marks to the slider to show the current level of that nutrient.
         for slider_mark, nutrients_level in zip(slider_marks, nutrients_levels, strict=True):
             slider_mark[convert_to_int_if_possible(nutrients_level)] = {"label": level_label}
 
         return [
-            html.H5(f"Price per day: {round(result.fun, 4)} CHF"),
-            dbc.Table.from_dataframe(result_table, striped=True, bordered=True, hover=True),  # type: ignore
+            html.H5(f"Total price per day: {round(result.fun, 2)}CHF"),
+            dbc.Table(create_result_table(result, products_and_prices, c_costs), striped=True, bordered=False, borderless=True),
         ], slider_marks
 
     return app
@@ -377,7 +420,7 @@ def create_app(
 if __name__ == "__main__":
     with (DATA_DIR / "product_prices_and_nutrients.csv").open("r") as file:
         products_and_prices = load_and_filter_products(file, USED_MACRONUTRIENTS + USED_MICRONUTRIENTS)
-    products_and_prices = fix_prices(products_and_prices)
+    fix_prices(products_and_prices)
 
     with (DATA_DIR / "recommendations_macro.csv").open("r") as file:
         macro_recommendations = list(csv.DictReader(file))
