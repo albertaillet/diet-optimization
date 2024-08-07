@@ -1,6 +1,6 @@
 """This script summarizes the fetched product information into a csv file.
 
-Usage of script DATA_DIR=<path to data directory> python products_summarize.py
+Usage of script DATA_DIR=<path to data directory> OFF_USERNAME=<yourusername> python products_summarize.py
 """
 
 import csv
@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 DATA_DIR = Path(os.getenv("DATA_DIR", ""))
+OFF_USERNAME = os.getenv("OFF_USERNAME")
 
 
 ALL_ESTIMATED_NUTRIENTS = [
@@ -277,14 +278,16 @@ def create_csv(
 
 
 if __name__ == "__main__":
-    with (DATA_DIR / "prices.json").open("r") as file:
+    assert OFF_USERNAME is not None, f"Set OFF_USERNAME env variable {OFF_USERNAME=}"
+
+    with (DATA_DIR / "user_data" / OFF_USERNAME / "prices.json").open("r") as file:
         price_items = json.load(file)["items"]
 
-    with (DATA_DIR / "products.json").open("r") as file:
+    with (DATA_DIR / "user_data" / OFF_USERNAME / "products.json").open("r") as file:
         products_dict = json.load(file)
 
     with (DATA_DIR / "ciqual2020.csv").open("r") as file:
         ciqual_table = ciqual_load_table(file)
 
-    with (DATA_DIR / "product_prices_and_nutrients.csv").open("w", newline="", encoding="utf-8") as file:
+    with (DATA_DIR / "user_data" / OFF_USERNAME / "product_prices_and_nutrients.csv").open("w") as file:
         create_csv(file, price_items, products_dict, ciqual_table)

@@ -1,6 +1,5 @@
 SHELL := /bin/bash
 DATA_DIR = $(shell realpath data)
-OFF_USERNAME = "albert27"
 
 
 all-fetch: prices-fetch products-fetch ciqual-fetch
@@ -8,7 +7,7 @@ all-fetch: prices-fetch products-fetch ciqual-fetch
 all: products-summarize
 
 prices-fetch:
-	DATA_DIR=$(DATA_DIR) OWNER=$(OFF_USERNAME) SIZE=100 python scripts/prices_fetch.py
+	DATA_DIR=$(DATA_DIR) SIZE=100 python scripts/prices_fetch.py
 
 products-fetch:
 	DATA_DIR=$(DATA_DIR) python scripts/products_fetch.py
@@ -18,8 +17,6 @@ ciqual-fetch:
 
 products-summarize:
 	DATA_DIR=$(DATA_DIR) python scripts/products_summarize.py
-
-products: products-fetch ciqual-fetch products-summarize
 
 recommendations-fetch:
 	DATA_DIR=$(DATA_DIR) python scripts/recommendations_nnr2023/recommendations_fetch.py

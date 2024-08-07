@@ -1,7 +1,7 @@
 """This script combines the different summarized csv files and creates a dashboard to interact
 with linear optimization to get the optimal quantities of food products.
 
-Usage of script DATA_DIR=<path to data directory> python app.py
+Usage of script DATA_DIR=<path to data directory> OFF_USERNAME=<yourusername> python app.py
 
 TODO: Use both EUR and CHF
 TODO: Include other objectives than price minimization with tunable hyperparameters.
@@ -21,6 +21,7 @@ from dash import ALL, Dash, Input, Output, State, dcc, html
 from scipy.optimize import linprog
 
 DATA_DIR = Path(os.getenv("DATA_DIR", ""))
+OFF_USERNAME = os.getenv("OFF_USERNAME")
 
 MACRONUTRIENT_RESET_ID = "button-macronutrient-reset"
 DROPDOWN_MACRONUTRIENT_CHOICE_ID = "dropdown-macronutrient-choice"
@@ -418,7 +419,9 @@ def create_app(
 
 
 if __name__ == "__main__":
-    with (DATA_DIR / "product_prices_and_nutrients.csv").open("r") as file:
+    assert OFF_USERNAME is not None, f"Set OFF_USERNAME env variable {OFF_USERNAME=}"
+
+    with (DATA_DIR / "user_data" / OFF_USERNAME / "product_prices_and_nutrients.csv").open("r") as file:
         products_and_prices = load_and_filter_products(file, USED_MACRONUTRIENTS + USED_MICRONUTRIENTS)
     fix_prices(products_and_prices)
 
