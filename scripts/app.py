@@ -17,7 +17,6 @@ from pathlib import Path
 import dash
 import dash_bootstrap_components as dbc
 import numpy as np
-import pandas as pd
 from dash import ALL, Dash, Input, Output, State, dcc, html
 from scipy.optimize import linprog
 
@@ -82,65 +81,80 @@ USED_MICRONUTRIENTS = [
 ]
 
 
-def filter_products(products: pd.DataFrame, used_nutrients: list[str]) -> pd.DataFrame:
+def load_and_filter_products(file, used_nutrients: list[str]) -> dict[str, list[str | float]]:
     """Filters to only the relevant nutrients and drops all products with missing values."""
-    product_cols = ["product_code", "product_name", "ciqual_code", "ciqual_name"]
-    price_cols = ["price", "currency", "price_date", "location", "location_osm_id"]
-    nutrient_cols = [name + suffix for name in used_nutrients for suffix in ("_value", "_unit", "_source")]
-    cols = product_cols + price_cols + nutrient_cols
-    relevant_products = products[cols].dropna()
-    print(relevant_products.shape)  # relevant_products.shape == (30, 69)
+    product_cols = {"product_code": str, "product_name": str, "ciqual_code": str, "ciqual_name": str}
+    price_cols = {"price": float, "currency": str, "price_date": str, "location": str, "location_osm_id": str}
+    nutrient_cols = {
+        name + suffix: _type for name in used_nutrients for suffix, _type in (("_value", float), ("_unit", str), ("_source", str))
+    }
+    cols = product_cols | price_cols | nutrient_cols
+
+    reader = csv.DictReader(file)
+    products = {col: [] for col in cols}
+    for row in reader:
+        if any(row[col] == "" for col in cols):
+            continue
+        for col, _type in cols.items():
+            products[col].append(_type(row[col]))
+
+    n_rows = len(products["product_code"])
+    assert all(len(products[col]) == n_rows for col in products)  # check that all columns have all the rows.
 
     # Check that all columns have the same unit and source between rows.
     for nutient in used_nutrients:
-        unique_units = relevant_products[nutient + "_unit"].unique()
+        unique_units = set(products[nutient + "_unit"])
         assert len(unique_units) == 1, (nutient, unique_units)
-        if nutient not in ("fiber", "calcium", "salt"):
-            unique_sources = relevant_products[nutient + "_source"].unique()
-            assert len(unique_sources) == 1, (nutient, unique_sources)
+        unique_sources = set(products[nutient + "_source"])
+        # Fiber, calcium and salt are sometimes reported and sometimes estimated by ciqual
+        if nutient in ("fiber", "calcium", "salt"):
+            assert unique_sources == {"reported", "ciqual"}, (nutient, unique_sources)
+            continue
+        assert len(unique_sources) == 1, (nutient, unique_sources)
 
-    return relevant_products
+    return products
 
 
-def fix_prices(prices: pd.DataFrame) -> pd.DataFrame:
+def fix_prices(prices: dict[str, list[str | float]]):
     """Set all prices to the same currency: CHF. Also removes duplicate prices of the same location."""
     EUR_TO_CHF = 0.96  # TODO: fetch this from the internet.
-    assert all(c in {"EUR", "CHF"} for c in prices["currency"].unique()), prices["currency"].unique()
-    prices["price_chf"] = prices.apply(lambda r: r["price"] * EUR_TO_CHF if r["currency"] == "EUR" else r["price"], axis=1)
-    prices["price_eur"] = prices.apply(lambda r: r["price"] / EUR_TO_CHF if r["currency"] == "CHF" else r["price"], axis=1)
+    assert all(c in {"EUR", "CHF"} for c in set(prices["currency"])), set(prices["currency"])
+    prices["price_chf"] = [v * EUR_TO_CHF if c == "EUR" else v for v, c in zip(prices["price"], prices["currency"], strict=True)]  # type: ignore
+    prices["price_eur"] = [v / EUR_TO_CHF if c == "CHF" else v for v, c in zip(prices["price"], prices["currency"], strict=True)]  # type: ignore
     return prices
 
 
-def get_arrays(bounds: dict[str, dict[str, float | str]], products_and_prices: pd.DataFrame) -> tuple[np.ndarray, ...]:
+def get_arrays(
+    bounds: dict[str, dict[str, float | str]], products_and_prices: dict[str, list[str | float]]
+) -> tuple[np.ndarray, ...]:
     # Check that the upper and lower bounds nutrients use the same units as the product nutrients.
     for nutrient in bounds:
-        product_unique_units = set(products_and_prices[nutrient + "_unit"].unique())
+        product_unique_units = set(products_and_prices[nutrient + "_unit"])
         recommendation_unit = bounds[nutrient]["unit"]
         assert product_unique_units == {recommendation_unit}, (nutrient, product_unique_units, recommendation_unit)
 
     # Nutrients of each product
-    A_nutrients = products_and_prices[[nutrient + "_value" for nutrient in bounds]].values
+    A_nutrients = np.array([products_and_prices[nutrient + "_value"] for nutrient in bounds], dtype=np.float32)
 
     # Costs of each product
-    c_costs = 0.1 * products_and_prices["price_chf"].values.astype("float")  # to price per kg to price per 100g
+    c_costs = 0.1 * np.array(products_and_prices["price_chf"], dtype=np.float32)  # to price per kg to price per 100g
 
     # Lower bounds for nutrients
-    lb = np.array([bounds[nutrient]["lb"] for nutrient in bounds])
+    lb = np.array([bounds[nutrient]["lb"] for nutrient in bounds], dtype=np.float32)
 
     # Upper bounds for nutrients
-    ub = np.array([bounds[nutrient]["ub"] for nutrient in bounds])
+    ub = np.array([bounds[nutrient]["ub"] for nutrient in bounds], dtype=np.float32)
 
-    # lb.shape, ub.shape  # (n_nutrients,)
     return A_nutrients, lb, ub, c_costs
 
 
 def solve_optimization(A, lb, ub, c):
     # Constraints for lower bounds
-    A_ub_lb = -A.T
-    b_ub_lb = -lb
+    A_ub_lb = -A[~np.isnan(lb)]
+    b_ub_lb = -lb[~np.isnan(lb)]
 
     # Constraints for upper bounds
-    A_ub_ub = A.T[~np.isnan(ub)]
+    A_ub_ub = A[~np.isnan(ub)]
     b_ub_ub = ub[~np.isnan(ub)]
 
     # Concatenate both constraints
@@ -201,7 +215,7 @@ def extract_slider_values(
 def create_app(
     macro_recommendations: list[dict[str, float | str]],
     micro_recommendations: list[dict[str, float | str]],
-    products_and_prices: pd.DataFrame,
+    products_and_prices: dict[str, list[str | float]],
 ) -> Dash:
     app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
@@ -334,6 +348,8 @@ def create_app(
         result = solve_optimization(A_nutrients, lb, ub, c_costs)
         if result.x is None:
             return html.H4("No solution"), slider_marks
+        import pandas as pd
+
         result_table = pd.DataFrame({
             "product_code": products_and_prices["product_code"],
             "ciqual_name": products_and_prices["ciqual_name"],
@@ -344,7 +360,7 @@ def create_app(
         # Filter on only included products and sort by weight
         result_table = result_table[result_table["quantity_g"] > 0].sort_values(by="quantity_g", ascending=False)
 
-        nutrients_levels = A_nutrients.T @ result.x
+        nutrients_levels = A_nutrients @ result.x
 
         # Add marks to the slider to show the current value of that nutrient.
         for slider_mark, nutrients_level in zip(slider_marks, nutrients_levels, strict=True):
@@ -359,8 +375,8 @@ def create_app(
 
 
 if __name__ == "__main__":
-    products_and_prices = pd.read_csv(DATA_DIR / "product_prices_and_nutrients.csv")
-    products_and_prices = filter_products(products_and_prices, USED_MACRONUTRIENTS + USED_MICRONUTRIENTS)
+    with (DATA_DIR / "product_prices_and_nutrients.csv").open("r") as file:
+        products_and_prices = load_and_filter_products(file, USED_MACRONUTRIENTS + USED_MICRONUTRIENTS)
     products_and_prices = fix_prices(products_and_prices)
 
     with (DATA_DIR / "recommendations_macro.csv").open("r") as file:
