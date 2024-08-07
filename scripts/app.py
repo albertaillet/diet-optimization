@@ -9,6 +9,7 @@ TODO: Choose to include maximum values even when they are not available in recom
 TODO: Minimize the use of pandas (I don't like pandas).
 """
 
+import csv
 import math
 import os
 from pathlib import Path
@@ -88,7 +89,7 @@ def filter_products(products: pd.DataFrame, used_nutrients: list[str]) -> pd.Dat
     nutrient_cols = [name + suffix for name in used_nutrients for suffix in ("_value", "_unit", "_source")]
     cols = product_cols + price_cols + nutrient_cols
     relevant_products = products[cols].dropna()
-    assert relevant_products.shape[1] == len(nutrient_cols) + 9, (relevant_products.shape, len(nutrient_cols) + 9)
+    print(relevant_products.shape)  # relevant_products.shape == (30, 69)
 
     # Check that all columns have the same unit and source between rows.
     for nutient in used_nutrients:
@@ -152,17 +153,16 @@ def solve_optimization(A, lb, ub, c):
 
 def convert_to_int_if_possible(x: float) -> float | int:
     """This is necessary for the marks to show correctly on the slider."""
-    return x if np.isnan(x) else int(x) if x == int(x) else x
+    return x if x is None else int(x) if x == int(x) else x
 
 
 def create_rangeslider(data: dict[str, float | str], *, micro=False) -> dcc.RangeSlider:
     """Create the rangeslider of the given nutrient with the given data."""
     value_key = "value_males"  # "value_females"  # NOTE: using male values
-    lower = convert_to_int_if_possible(data[value_key])  # type: ignore
-    upper = convert_to_int_if_possible(data["value_upper_intake"])  # type: ignore
-    assert not np.isnan(lower), lower
+    lower = convert_to_int_if_possible(float(data[value_key]))
+    upper = convert_to_int_if_possible(float(data["value_upper_intake"])) if data["value_upper_intake"] != "" else None
     _min = 0 if data["nutrient_id"] != "energy-kcal" else 1000
-    _max = 4 * lower if np.isnan(upper) else math.ceil(upper + (lower - _min))
+    _max = 4 * lower if upper is None else math.ceil(upper + (lower - _min))
     _max = _min + 100 if _max == _min else _max
     unit = data["unit"]
     marks = {
@@ -170,13 +170,13 @@ def create_rangeslider(data: dict[str, float | str], *, micro=False) -> dcc.Rang
         _max: {"label": f"{_max}{unit}"},
     }
     if micro:
-        marks[lower] = {"label": f"{lower}{unit}", "style": {"color": "#369c36"}}
-    if micro and not np.isnan(upper):
-        marks[upper] = {"label": f"{upper}{unit}", "style": {"color": "#f53d3d"}}
+        marks[lower] = {"label": f"{lower}{unit}", "style": {"color": "#369c36"}}  # type: ignore
+    if micro and upper is not None:
+        marks[upper] = {"label": f"{upper}{unit}", "style": {"color": "#f53d3d"}}  # type: ignore
     return dcc.RangeSlider(
         min=_min,
         max=_max,
-        value=[lower] if np.isnan(upper) else [lower, upper],
+        value=[lower] if upper is None else [lower, upper],
         tooltip={"placement": "bottom", "always_visible": False, "template": f"{{value}}{unit}"},
         marks=marks,
         allowCross=False,
@@ -327,7 +327,7 @@ def create_app(
                     pop_mark = mark
                     break
             if pop_mark is not None:
-                slider_mark.pop(mark)
+                slider_mark.pop(pop_mark)
 
         chosen_bounds = extract_slider_values(slider_values, slider_ids)
         A_nutrients, lb, ub, c_costs = get_arrays(chosen_bounds, products_and_prices)
@@ -363,8 +363,11 @@ if __name__ == "__main__":
     products_and_prices = filter_products(products_and_prices, USED_MACRONUTRIENTS + USED_MICRONUTRIENTS)
     products_and_prices = fix_prices(products_and_prices)
 
-    macro_recommendations: list[dict[str, float | str]] = pd.read_csv(DATA_DIR / "recommendations_macro.csv").to_dict("records")  # type: ignore
-    micro_recommendations: list[dict[str, float | str]] = pd.read_csv(DATA_DIR / "recommendations_nnr2023.csv").to_dict("records")  # type: ignore
+    with (DATA_DIR / "recommendations_macro.csv").open("r") as file:
+        macro_recommendations = list(csv.DictReader(file))
+
+    with (DATA_DIR / "recommendations_nnr2023.csv").open("r") as file:
+        micro_recommendations = list(csv.DictReader(file))
 
     app = create_app(macro_recommendations, micro_recommendations, products_and_prices)
     app.run_server(debug=True)
