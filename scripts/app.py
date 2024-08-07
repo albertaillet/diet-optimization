@@ -92,11 +92,15 @@ def load_and_filter_products(file, used_nutrients: list[str]) -> dict[str, list[
     }
     cols = product_cols | price_cols | nutrient_cols
 
-    reader = csv.DictReader(file)
-    products = {col: [] for col in cols}
-    for row in reader:
+    products = {col: [] for col in cols}  # Column-oriented dict.
+    for row in csv.DictReader(file):
+        # Filter out rows where any values are missing.
         if any(row[col] == "" for col in cols):
             continue
+        # Filter out rows with unsupported currencies.
+        if row["currency"] not in POSSIBLE_CURRENCIES:
+            continue
+        # Append each of the row values to the correct col, while casting it to _type.
         for col, _type in cols.items():
             products[col].append(_type(row[col]))
 
