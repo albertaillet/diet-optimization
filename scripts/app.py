@@ -3,7 +3,6 @@ with linear optimization to get the optimal quantities of food products.
 
 Usage of script DATA_DIR=<path to data directory> OFF_USERNAME=<yourusername> python app.py
 
-TODO: Use both EUR and CHF
 TODO: Include other objectives than price minimization with tunable hyperparameters.
 TODO: Choose to include maximum values even when they are not available in recommendations.
 """
@@ -23,6 +22,7 @@ from scipy.optimize import linprog
 DATA_DIR = Path(os.getenv("DATA_DIR", ""))
 OFF_USERNAME = os.getenv("OFF_USERNAME")
 
+CURRENCY_DROPDOWN_ID = "currency-dropdown"
 MACRONUTRIENT_RESET_ID = "button-macronutrient-reset"
 DROPDOWN_MACRONUTRIENT_CHOICE_ID = "dropdown-macronutrient-choice"
 MICRONUTRIENT_RESET_ID = "button-micronutrient-reset"
@@ -31,6 +31,7 @@ SLIDER_TABLE_ID = "slider-table"
 SLIDER_TYPE_ID = "slider"
 RESULT_TABLE_ID = "result-table"
 
+POSSIBLE_CURRENCIES = ["EUR", "CHF"]
 USED_MACRONUTRIENTS = [
     "energy-kcal",
     # "energy-kj",
@@ -119,13 +120,13 @@ def load_and_filter_products(file, used_nutrients: list[str]) -> dict[str, list[
 def fix_prices(prices: dict[str, list[str | float]]):
     """Set all prices to the same currency: CHF. Also removes duplicate prices of the same location."""
     EUR_TO_CHF = 0.96  # TODO: fetch this from the internet.
-    assert all(c in {"EUR", "CHF"} for c in set(prices["currency"])), set(prices["currency"])
+    assert all(c in POSSIBLE_CURRENCIES for c in set(prices["currency"])), set(prices["currency"])
     prices["price_chf"] = [v * EUR_TO_CHF if c == "EUR" else v for v, c in zip(prices["price"], prices["currency"], strict=True)]  # type: ignore
     prices["price_eur"] = [v / EUR_TO_CHF if c == "CHF" else v for v, c in zip(prices["price"], prices["currency"], strict=True)]  # type: ignore
 
 
 def get_arrays(
-    bounds: dict[str, dict[str, float | str]], products_and_prices: dict[str, list[str | float]]
+    bounds: dict[str, dict[str, float | str]], products_and_prices: dict[str, list[str | float]], currency: str
 ) -> tuple[np.ndarray, ...]:
     # Check that the upper and lower bounds nutrients use the same units as the product nutrients.
     for nutrient in bounds:
@@ -136,8 +137,8 @@ def get_arrays(
     # Nutrients of each product
     A_nutrients = np.array([products_and_prices[nutrient + "_value"] for nutrient in bounds], dtype=np.float32)
 
-    # Costs of each product
-    c_costs = 0.1 * np.array(products_and_prices["price_chf"], dtype=np.float32)  # to price per kg to price per 100g
+    # Costs of each product (* 0.1 to go from price per kg to price per 100g)
+    c_costs = 0.1 * np.array(products_and_prices[f"price_{currency.lower()}"], dtype=np.float32)
 
     # Lower bounds for nutrients
     lb = np.array([bounds[nutrient]["lb"] for nutrient in bounds], dtype=np.float32)
@@ -271,6 +272,10 @@ def create_app(
 ) -> Dash:
     app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
+    currency_dropdown = dcc.Dropdown(
+        options=POSSIBLE_CURRENCIES, value=POSSIBLE_CURRENCIES[0], persistence=True, id=CURRENCY_DROPDOWN_ID, clearable=False
+    )
+
     macronutrient_reset_button = dbc.Button("Reset", id=MACRONUTRIENT_RESET_ID)
     macronutrient_dropdown = dcc.Dropdown(
         options=USED_MACRONUTRIENTS,
@@ -293,6 +298,7 @@ def create_app(
     app.layout = html.Div([
         dbc.Navbar([
             dbc.Container(html.H1("Dashboard")),
+            currency_dropdown,
             macronutrient_reset_button,
             macronutrient_dropdown,
             micronutrient_reset_button,
@@ -316,7 +322,7 @@ def create_app(
                     dbc.Card([
                         dbc.CardHeader([
                             dbc.CardBody([
-                                html.H4("Optimized Meal"),
+                                html.H4("Optimized Food"),
                                 html.P("The recommended food items and quantities to meet your nutrient targets."),
                             ])
                         ]),
@@ -377,13 +383,17 @@ def create_app(
     @app.callback(
         Output(RESULT_TABLE_ID, "children"),
         Output({"type": SLIDER_TYPE_ID, "nutrient_id": ALL, "unit": ALL}, "marks"),
+        Input(CURRENCY_DROPDOWN_ID, "value"),
         Input({"type": SLIDER_TYPE_ID, "nutrient_id": ALL, "unit": ALL}, "value"),
         State({"type": SLIDER_TYPE_ID, "nutrient_id": ALL, "unit": ALL}, "id"),
         State({"type": SLIDER_TYPE_ID, "nutrient_id": ALL, "unit": ALL}, "marks"),
         prevent_initial_call=True,
     )
     def optimize(
-        slider_values: list[list[float]], slider_ids: list[dict[str, str]], slider_marks: list[dict[str | float, dict[str, str]]]
+        currency: str,
+        slider_values: list[list[float]],
+        slider_ids: list[dict[str, str]],
+        slider_marks: list[dict[str | float, dict[str, str]]],
     ):
         level_label = "▲"
 
@@ -398,7 +408,7 @@ def create_app(
                 slider_mark.pop(pop_mark)
 
         chosen_bounds = extract_slider_values(slider_values, slider_ids)
-        A_nutrients, lb, ub, c_costs = get_arrays(chosen_bounds, products_and_prices)
+        A_nutrients, lb, ub, c_costs = get_arrays(chosen_bounds, products_and_prices, currency)
         result = solve_optimization(A_nutrients, lb, ub, c_costs)
         if result.status != 0:
             return html.H4("No solution"), slider_marks
@@ -411,7 +421,7 @@ def create_app(
             slider_mark[convert_to_int_if_possible(nutrients_level)] = {"label": level_label}
 
         return [
-            html.H5(f"Total price per day: {round(result.fun, 2)}CHF"),
+            html.H5(f"Total price per day: {round(result.fun, 2)} {currency}"),
             dbc.Table(create_result_table(result, products_and_prices, c_costs), striped=True, bordered=False, borderless=True),
         ], slider_marks
 
