@@ -117,8 +117,11 @@ def make_price_per_kg_or_l(price_item: dict[str, Any], product_item: dict[str, A
 
     # Check that the product quantity is larger than zero.
     product_quantity = float(product_quantity)
-    assert float(price_product_quantity) == product_quantity, (price_product_quantity, product_quantity)
-    if product_quantity <= 0:
+    price_product_quantity = float(price_product_quantity)
+    if price_product_quantity != product_quantity:
+        print("WARNING product quantity mismatch", price_product_quantity, product_quantity, product_identification)
+        product_quantity = min(price_product_quantity, product_quantity)  # NOTE: Taking the smallest value if they differ
+    if product_quantity <= 0 or price_product_quantity <= 0:
         print("Zero product_quantity:", product_identification)
         return None
 
@@ -203,11 +206,11 @@ def ciqual_load_table(file) -> dict[str, dict[str, Any]]:
     ciqual_table = {}
     for row in reader:
         row = dict(zip(header, row, strict=True))
-        ciqual_id = row["alim_code"]
-        ciqual_table[ciqual_id] = {"ciqual_name": row["alim_nom_eng"]}
+        ciqual_code = row["alim_code"]
+        ciqual_table[ciqual_code] = {"ciqual_name": row["alim_nom_eng"]}
         for col, (new_col, col_unit) in nutrient_keys.items():
-            ciqual_table[ciqual_id][new_col + "_value"] = ciqual_entry_to_value(row[col])
-            ciqual_table[ciqual_id][new_col + "_unit"] = col_unit
+            ciqual_table[ciqual_code][new_col + "_value"] = ciqual_entry_to_value(row[col])
+            ciqual_table[ciqual_code][new_col + "_unit"] = col_unit
     return ciqual_table
 
 
@@ -244,9 +247,14 @@ def create_csv(
     # Write the data rows
     for price_item in price_items:
         product_code = price_item["product_code"]
+        if product_code not in products_dict:
+            print(product_code, "not found in products_dict")
+            continue
         product_item = products_dict[product_code]
 
-        # Get price per kg and skip the price if it returns None.
+        if "product" not in product_item:
+            print(product_code, " missing product key")
+            continue
         reported_nutrients = product_item["product"]["nutriments"]
 
         # NOTE: The OFF estimated nutrients in item["product"].get("nutriments_estimated")
@@ -259,8 +267,13 @@ def create_csv(
             ciqual_code = product_item["product"]["categories_properties"].get("agribalyse_food_code:en")
         if ciqual_code is None:
             ciqual_code = product_item["product"]["categories_properties"].get("agribalyse_proxy_food_code:en")
-        ciqual_nutrients = ciqual_table[ciqual_code] if ciqual_code is not None else {}
-        ciqual_name = ciqual_table[ciqual_code]["ciqual_name"] if ciqual_code is not None else None
+
+        ciqual_name = None
+        ciqual_nutrients = ciqual_table.get(ciqual_code, {})
+        if ciqual_nutrients == {}:
+            print("ciqual_code", ciqual_code, "is missing for product", product_code, product_item["product"].get("product_name"))
+        else:
+            ciqual_name = ciqual_table[ciqual_code]["ciqual_name"] if ciqual_code is not None else None
 
         row_dict = {
             "product_name": product_item["product"].get("product_name"),
