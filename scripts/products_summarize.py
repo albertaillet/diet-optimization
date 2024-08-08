@@ -108,36 +108,49 @@ def make_price_per_kg_or_l(price_item: dict[str, Any], product_item: dict[str, A
     product_identification = f"{price_item['product_code']}, {price_item['product']['product_name']}"
 
     # Check that product_quantity is available.
-    product_quantity = product_item["product"].get("product_quantity")
-    price_product_quantity = price_item["product"]["product_quantity"]
-    if product_quantity is None:
-        assert price_product_quantity is None
-        print("Missing product_quantity:", product_identification)
+    product_reported_quantity = product_item["product"].get("product_quantity")
+    price_reported_quantity = price_item["product"]["product_quantity"]
+    if product_reported_quantity is None and price_reported_quantity is None:
+        print("Missing product_quantit:", product_identification)
+        return None
+    if price_reported_quantity is None:
+        print("Missing product_quantity in price:", product_identification)
+        quantity = float(product_reported_quantity)
+    elif product_reported_quantity is None:
+        print("Missing product_quantity in product:", product_identification)
+        quantity = float(price_reported_quantity)
+    elif float(product_reported_quantity) != float(price_reported_quantity):
+        print("WARNING product quantity mismatch", price_reported_quantity, product_reported_quantity, product_identification)
+        # NOTE: Taking the smallest value if they differ
+        quantity = min(float(price_reported_quantity), float(product_reported_quantity))
+    elif float(product_reported_quantity) == float(price_reported_quantity):
+        quantity = float(product_reported_quantity)
+    else:
+        raise ValueError("Unreachable branch reached    ")
+
+    # Check that the quantity is larger than zero.
+    if quantity <= 0:
+        print("Zero product_quantity:", product_identification, quantity)
         return None
 
-    # Check that the product quantity is larger than zero.
-    product_quantity = float(product_quantity)
-    assert float(price_product_quantity) == product_quantity, (price_product_quantity, product_quantity)
-    if product_quantity <= 0:
-        print("Zero product_quantity:", product_identification)
-        return None
-
-    # Check that the product_quantity_unit is in g.
-    # NOTE: it is assumed that it is grams if not available
     product_quantity_unit = product_item["product"].get("product_quantity_unit")
-    price_product_quantity_unit = price_item["product"]["product_quantity_unit"]
-
+    price_quantity_unit = price_item["product"]["product_quantity_unit"]
     # NOTE: sometime the product_quantity_unit is available in product_item but not in price_item
-    # assert price_product_quantity_unit == product_quantity_unit, (price_product_quantity_unit, product_quantity_unit)
-    if product_quantity_unit != price_product_quantity_unit:
-        print("Mismatch unit", price_product_quantity_unit, product_quantity_unit, product_identification)
+    if product_quantity_unit != price_quantity_unit:
+        print("Mismatch unit", price_quantity_unit, product_quantity_unit, product_identification)
+
+    # NOTE: using quantity unit reported in product
+    quantity_unit = product_quantity_unit
     if product_quantity_unit is None:
         print("Missing product_quantity_unit:", product_identification)
-        product_quantity_unit = "g"
-    assert product_quantity_unit in {"g", "ml"}, product_identification
+        # NOTE: it is assumed that it is grams if not available
+        quantity_unit = "g"
+
+    # Check that the unit is either grams or ml
+    assert quantity_unit in {"g", "ml"}, product_identification
 
     # Divide the price by the quantity, multiply by 1000 and round to 2 decimals.
-    return round(1000 * float(price_item["price"]) / product_quantity, 2)
+    return round(1000 * float(price_item["price"]) / quantity, 2)
 
 
 def fix_micrograms(unit: str) -> str:
@@ -203,11 +216,11 @@ def ciqual_load_table(file) -> dict[str, dict[str, Any]]:
     ciqual_table = {}
     for row in reader:
         row = dict(zip(header, row, strict=True))
-        ciqual_id = row["alim_code"]
-        ciqual_table[ciqual_id] = {"ciqual_name": row["alim_nom_eng"]}
+        ciqual_code = row["alim_code"]
+        ciqual_table[ciqual_code] = {"ciqual_name": row["alim_nom_eng"]}
         for col, (new_col, col_unit) in nutrient_keys.items():
-            ciqual_table[ciqual_id][new_col + "_value"] = ciqual_entry_to_value(row[col])
-            ciqual_table[ciqual_id][new_col + "_unit"] = col_unit
+            ciqual_table[ciqual_code][new_col + "_value"] = ciqual_entry_to_value(row[col])
+            ciqual_table[ciqual_code][new_col + "_unit"] = col_unit
     return ciqual_table
 
 
@@ -244,9 +257,14 @@ def create_csv(
     # Write the data rows
     for price_item in price_items:
         product_code = price_item["product_code"]
+        if product_code not in products_dict:
+            print(product_code, "not found in products_dict")
+            continue
         product_item = products_dict[product_code]
 
-        # Get price per kg and skip the price if it returns None.
+        if "product" not in product_item:
+            print(product_code, " missing product key")
+            continue
         reported_nutrients = product_item["product"]["nutriments"]
 
         # NOTE: The OFF estimated nutrients in item["product"].get("nutriments_estimated")
@@ -259,8 +277,13 @@ def create_csv(
             ciqual_code = product_item["product"]["categories_properties"].get("agribalyse_food_code:en")
         if ciqual_code is None:
             ciqual_code = product_item["product"]["categories_properties"].get("agribalyse_proxy_food_code:en")
-        ciqual_nutrients = ciqual_table[ciqual_code] if ciqual_code is not None else {}
-        ciqual_name = ciqual_table[ciqual_code]["ciqual_name"] if ciqual_code is not None else None
+
+        ciqual_name = None
+        ciqual_nutrients = ciqual_table.get(ciqual_code, {})
+        if ciqual_nutrients == {}:
+            print("ciqual_code", ciqual_code, "is missing for product", product_code, product_item["product"].get("product_name"))
+        else:
+            ciqual_name = ciqual_table[ciqual_code]["ciqual_name"] if ciqual_code is not None else None
 
         row_dict = {
             "product_name": product_item["product"].get("product_name"),
