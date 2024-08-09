@@ -6,6 +6,7 @@ The api documentation used: https://openfoodfacts.org/api/docs.
 
 import json
 import os
+import time
 from pathlib import Path
 from typing import Any
 
@@ -32,7 +33,17 @@ if __name__ == "__main__":
     with (DATA_DIR / "user_data" / OFF_USERNAME / "prices.json").open("r") as file:
         product_codes = load_product_codes_from_prices(file)
 
-    data = {product_code: fetch_product_info(product_code) for product_code in tqdm(sorted(product_codes))}
+    if len(product_codes) < 100:
+        data = {product_code: fetch_product_info(product_code) for product_code in tqdm(sorted(product_codes))}
+    else:
+        # See https://openfoodfacts.github.io/openfoodfacts-server/api/#rate-limits
+        # Rate limit: 100 req/min for all read product queries (GET /api/v*/product requests or product page).
+        data = {}
+        for product_code in tqdm(sorted(product_codes)):
+            data[product_code] = fetch_product_info(product_code)
+            with (DATA_DIR / "user_data" / OFF_USERNAME / "products.json").open("w") as file:
+                json.dump(data, file, indent=2)
+            time.sleep(0.6)
 
     with (DATA_DIR / "user_data" / OFF_USERNAME / "products.json").open("w") as file:
         json.dump(data, file, indent=2)
