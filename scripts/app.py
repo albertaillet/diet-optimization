@@ -41,6 +41,8 @@ USED_MACRONUTRIENTS = [
     "fat",
     "saturated-fat",
     "fiber",
+    "salt",
+    "water",
 ]
 USED_MICRONUTRIENTS = [
     # "alcohol",
@@ -57,28 +59,26 @@ USED_MICRONUTRIENTS = [
     # "lactose",
     "magnesium",
     # "maltose",
-    # "manganese",
-    # "niacin",
-    # "pantothenic-acid",  # has multiple units
-    # "phosphorus",  # has multiple units
+    "manganese",
+    # "niacin",  # TODO: has to be converted from NE to mg
+    "pantothenic-acid",
+    "phosphorus",
     # "phylloquinone",
     # "polyols",
     "potassium",
-    "salt",
     "selenium",
-    # "sodium",  # has multiple units
+    # "sodium",  # TODO: has to be converted from mg to g
     # "starch",
     # "sucrose",
     # "sugars",
     "thiamin",
-    # "vitamin-a",
+    # "vitamin-a",  # TODO: also named retinol
     "vitamin-b12",
     "vitamin-b6",
     "vitamin-c",
-    # "vitamin-d",  # has multiple units
+    "vitamin-d",
     "vitamin-e",
     # "vitamin-pp",
-    # "water",
     "zinc",
 ]
 
@@ -107,16 +107,12 @@ def load_and_filter_products(file, used_nutrients: list[str]) -> dict[str, list[
     n_rows = len(products["product_code"])
     assert all(len(products[col]) == n_rows for col in products)  # check that all columns have all the rows.
 
-    # Check that all columns have the same unit and source between rows.
+    # Check that all columns have the same unit and that the source are either reported or ciqual.
     for nutient in used_nutrients:
         unique_units = set(products[nutient + "_unit"])
         assert len(unique_units) == 1, (nutient, unique_units)
         unique_sources = set(products[nutient + "_source"])
-        # Fiber, calcium and salt are sometimes reported and sometimes estimated by ciqual
-        if nutient in ("fiber", "calcium", "salt"):
-            assert unique_sources == {"reported", "ciqual"}, (nutient, unique_sources)
-            continue
-        assert len(unique_sources) == 1, (nutient, unique_sources)
+        assert unique_sources.issubset({"reported", "ciqual"}), (nutient, unique_sources)
 
     return products
 
