@@ -32,55 +32,6 @@ SLIDER_TYPE_ID = "slider"
 RESULT_TABLE_ID = "result-table"
 
 POSSIBLE_CURRENCIES = ["EUR", "CHF"]
-USED_MACRONUTRIENTS = [
-    "energy-kcal",
-    # "energy-kj",
-    # "energy",
-    "carbohydrates",
-    "proteins",
-    "fat",
-    "saturated-fat",
-    "fiber",
-    "salt",
-    "water",
-]
-USED_MICRONUTRIENTS = [
-    # "alcohol",
-    # "beta-carotene",
-    "calcium",
-    # "cholesterol",
-    "copper",
-    "folate",
-    # "fructose",
-    # "galactose",
-    # "glucose",
-    # "iodine",
-    "iron",
-    # "lactose",
-    "magnesium",
-    # "maltose",
-    "manganese",
-    # "niacin",  # TODO: has to be converted from NE to mg
-    "pantothenic-acid",
-    "phosphorus",
-    # "phylloquinone",
-    # "polyols",
-    "potassium",
-    "selenium",
-    # "sodium",  # TODO: has to be converted from mg to g
-    # "starch",
-    # "sucrose",
-    # "sugars",
-    "thiamin",
-    # "vitamin-a",  # TODO: also named retinol
-    "vitamin-b12",
-    "vitamin-b6",
-    "vitamin-c",
-    "vitamin-d",
-    "vitamin-e",
-    # "vitamin-pp",
-    "zinc",
-]
 
 
 def load_and_filter_products(file, used_nutrients: list[str]) -> dict[str, list[str | float]]:
@@ -269,12 +220,15 @@ def create_app(
     macro_recommendations: list[dict[str, float | str]],
     micro_recommendations: list[dict[str, float | str]],
     products_and_prices: dict[str, list[str | float]],
+    nutrient_map: dict[str, dict[str, str]],
 ) -> Dash:
     app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
     currency_dropdown = dcc.Dropdown(
         options=POSSIBLE_CURRENCIES, value=POSSIBLE_CURRENCIES[0], persistence=True, id=CURRENCY_DROPDOWN_ID, clearable=False
     )
+    USED_MACRONUTRIENTS = [nutrient_id for nutrient_id, row_dict in nutrient_map.items() if row_dict["nutrient_type"] == "macro"]
+    USED_MICRONUTRIENTS = [nutrient_id for nutrient_id, row_dict in nutrient_map.items() if row_dict["nutrient_type"] == "micro"]
 
     macronutrient_reset_button = dbc.Button("Reset", id=MACRONUTRIENT_RESET_ID)
     macronutrient_dropdown = dcc.Dropdown(
@@ -431,15 +385,29 @@ def create_app(
 if __name__ == "__main__":
     assert OFF_USERNAME is not None, f"Set OFF_USERNAME env variable {OFF_USERNAME=}"
 
+    with (DATA_DIR / "nutrient_map.csv").open("r") as file:
+        nutrient_map = {
+            row_dict["off_id"]: row_dict
+            for row_dict in csv.DictReader(file)
+            if row_dict["off_id"] != "" and row_dict["ciqual_id"] != "" and row_dict["disabled"] == ""
+        }
+
     with (DATA_DIR / "user_data" / OFF_USERNAME / "product_prices_and_nutrients.csv").open("r") as file:
-        products_and_prices = load_and_filter_products(file, USED_MACRONUTRIENTS + USED_MICRONUTRIENTS)
+        products_and_prices = load_and_filter_products(file, list(nutrient_map.keys()))
     fix_prices(products_and_prices)
 
     with (DATA_DIR / "recommendations_macro.csv").open("r") as file:
         macro_recommendations = list(csv.DictReader(file))
 
+    nnr2023_to_nutrient_id = {
+        row_dict["nnr2023_id"]: nutrient_id for nutrient_id, row_dict in nutrient_map.items() if row_dict["nnr2023_id"]
+    }
     with (DATA_DIR / "recommendations_nnr2023.csv").open("r") as file:
-        micro_recommendations = list(csv.DictReader(file))
+        micro_recommendations = [
+            (row_dict | {"nutrient_id": nnr2023_to_nutrient_id[row_dict["nutrient"]]})
+            for row_dict in csv.DictReader(file)
+            if row_dict["nutrient"] in nnr2023_to_nutrient_id
+        ]
 
-    app = create_app(macro_recommendations, micro_recommendations, products_and_prices)
+    app = create_app(macro_recommendations, micro_recommendations, products_and_prices, nutrient_map)
     app.run_server(debug=True)
