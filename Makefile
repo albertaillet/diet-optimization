@@ -15,6 +15,12 @@ products-fetch:
 ciqual-fetch:
 	DATA_DIR=$(DATA_DIR) python scripts/ciqual_fetch.py
 
+nutrient-map-fetch:
+	DATA_DIR=$(DATA_DIR) python scripts/nutrient_map_fetch.py
+
+nutrient-map-reformat:
+	DATA_DIR=$(DATA_DIR) python scripts/nutrient_map_reformat.py
+
 products-summarize:
 	DATA_DIR=$(DATA_DIR) python scripts/products_summarize.py
 

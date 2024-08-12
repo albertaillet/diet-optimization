@@ -19,6 +19,9 @@ tmp/
 */ciqual2020.csv
 # Summarized product prices and nutrients table
 **/product_prices_and_nutrients.csv
+# Fetched nutrient_map
+**/nutrient_map_recipe_estimator.csv
+
 
 # All python cache files
 *.pyc
