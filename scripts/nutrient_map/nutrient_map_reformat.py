@@ -42,6 +42,13 @@ def create_reformatted_csv(file, ciqual_cols: Generator[tuple[str, str, str]], p
                 writer.writerow([row_dict.get(col) for col in header])
         else:
             row_dict = {"ciqual_id": ciqual_id, "ciqual_unit": ciqual_unit, "ciqual_name": ciqual_name}
+            # Find possible off_id match and add it.
+            for possible_match_row_dict in prev_nutrient_map:
+                if ciqual_name.lower() == possible_match_row_dict["off_id"]:
+                    print("Adding matched", ciqual_name, possible_match_row_dict["off_id"])
+                    row_dict["off_id"] = possible_match_row_dict["off_id"]
+                    row_dict["countprep"] = possible_match_row_dict["countprep"]
+                    break
             writer.writerow([row_dict.get(col) for col in header])
     # Then write possible other rows (with comments).
     for row_dict in prev_nutrient_map:
