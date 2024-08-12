@@ -14,3 +14,14 @@
 
 -   Would be nice to be able to also minimize certain nutrients with some sort of hyperparameter.
     For example saturated fat or carbs at the same time as price.
+
+## Notes about nutrition estimation
+
+The nutrition estimation of OFF is located here.
+
+https://github.com/openfoodfacts/openfoodfacts-server/blob/main/lib/ProductOpener/NutritionCiqual.pm
+
+https://github.com/openfoodfacts/openfoodfacts-server/blob/main/lib/ProductOpener/NutritionEstimation.pm
+
+The consulted repository version is available using the same URL, but replacing main with the permalink:
+main -> ab5c4410cd0f3017803cdfe4304f91dfa7636034
