@@ -20,6 +20,8 @@ import numpy as np
 from dash import ALL, Dash, Input, Output, State, dcc, html
 from scipy.optimize import linprog
 
+from utils.table import inner_merge
+
 DATA_DIR = Path(os.getenv("DATA_DIR", ""))
 OFF_USERNAME = os.getenv("OFF_USERNAME")
 
@@ -128,7 +130,7 @@ def create_rangeslider(data: dict[str, str], *, micro=False) -> dcc.RangeSlider:
     value_key = "value_males"  # "value_females"  # NOTE: using male values
     lower = convert_to_int_if_possible(float(data[value_key]))
     upper = convert_to_int_if_possible(float(data["value_upper_intake"])) if data["value_upper_intake"] != "" else None
-    _min = 0 if data["nutrient_id"] != "energy-kcal" else 1000
+    _min = 0 if data["off_id"] != "energy-kcal" else 1000
     _max = 4 * lower if upper is None else math.ceil(upper + (lower - _min))
     _max = _min + 100 if _max == _min else _max
     unit = data["unit"]
@@ -147,7 +149,7 @@ def create_rangeslider(data: dict[str, str], *, micro=False) -> dcc.RangeSlider:
         tooltip={"placement": "bottom", "always_visible": False, "template": f"{{value}}{unit}"},
         marks=marks,
         allowCross=False,
-        id={"type": SLIDER_TYPE_ID, "nutrient_id": data["nutrient_id"], "unit": unit},
+        id={"type": SLIDER_TYPE_ID, "off_id": data["off_id"], "unit": unit},
         persistence=True,
     )
 
@@ -156,7 +158,7 @@ def extract_slider_values(
     slider_values: list[list[float]], slider_ids: list[dict[str, str]]
 ) -> dict[str, dict[str, float | str]]:
     return {
-        slider_id["nutrient_id"]: {
+        slider_id["off_id"]: {
             "lb": slider_value[0],
             "ub": slider_value[1] if len(slider_value) == 2 else np.nan,
             "unit": slider_id["unit"],
@@ -220,7 +222,7 @@ def create_result_table(result, products_and_prices: dict[str, list[str | float]
 def filter_nutrients(
     nutrient_map: list[dict[str, str]], recommendations: list[dict[str, str]]
 ) -> tuple[list[dict[str, str]], list[str]]:
-    available_recommendations = {rec["nutrient_id"] for rec in recommendations}
+    available_recommendations = {rec["off_id"] for rec in recommendations}
     filtered_nutrient_map = [row for row in nutrient_map if row["off_id"] in available_recommendations]
     used = [{"label": row["ciqual_name"], "value": row["off_id"], "search": row["ciqual_id"]} for row in filtered_nutrient_map]
     default_values = [row_dict["off_id"] for row_dict in filtered_nutrient_map]
@@ -324,11 +326,11 @@ def create_app(
     def create_chosen_sliders(chosen_macronutrients: list[str], chosen_micronutrients: list[str]) -> html.Tbody:
         macro_rows = [
             html.Tr([
-                html.Td(macro["nutrient"], className="name-col"),
+                html.Td(macro["ciqual_name"], className="name-col"),
                 html.Td(create_rangeslider(macro), className="slider-col"),
             ])
             for macro in macro_recommendations
-            if macro["nutrient_id"] in chosen_macronutrients
+            if macro["off_id"] in chosen_macronutrients
         ]
         micro_rows = [
             html.Tr([
@@ -336,7 +338,7 @@ def create_app(
                 html.Td(create_rangeslider(micro, micro=True), className="slider-col"),
             ])
             for micro in micro_recommendations
-            if micro["nutrient_id"] in chosen_micronutrients
+            if micro["off_id"] in chosen_micronutrients
         ]
         return html.Tbody([
             html.Tr(html.Th("Macronutrients")),
@@ -347,11 +349,11 @@ def create_app(
 
     @app.callback(
         Output(RESULT_TABLE_ID, "children"),
-        Output({"type": SLIDER_TYPE_ID, "nutrient_id": ALL, "unit": ALL}, "marks"),
+        Output({"type": SLIDER_TYPE_ID, "off_id": ALL, "unit": ALL}, "marks"),
         Input(CURRENCY_DROPDOWN_ID, "value"),
-        Input({"type": SLIDER_TYPE_ID, "nutrient_id": ALL, "unit": ALL}, "value"),
-        State({"type": SLIDER_TYPE_ID, "nutrient_id": ALL, "unit": ALL}, "id"),
-        State({"type": SLIDER_TYPE_ID, "nutrient_id": ALL, "unit": ALL}, "marks"),
+        Input({"type": SLIDER_TYPE_ID, "off_id": ALL, "unit": ALL}, "value"),
+        State({"type": SLIDER_TYPE_ID, "off_id": ALL, "unit": ALL}, "id"),
+        State({"type": SLIDER_TYPE_ID, "off_id": ALL, "unit": ALL}, "marks"),
         prevent_initial_call=True,
     )
     def optimize(
@@ -408,17 +410,10 @@ if __name__ == "__main__":
 
     # TODO: fix this to merge the recommendations and nutrient_map correctly
     with (DATA_DIR / "recommendations_macro.csv").open("r") as file:
-        macro_recommendations = [
-            (row_dict | {"nutrient": row_dict["nutrient_id"].capitalize()}) for row_dict in csv.DictReader(file)
-        ]
+        macro_recommendations = inner_merge(list(csv.DictReader(file)), nutrient_map, left_key="off_id", right_key="off_id")
 
-    nnr2023_to_nutrient_id = {row_dict["nnr2023_id"]: row_dict["off_id"] for row_dict in nutrient_map if row_dict["nnr2023_id"]}
     with (DATA_DIR / "recommendations_nnr2023.csv").open("r") as file:
-        micro_recommendations = [
-            (row_dict | {"nutrient_id": nnr2023_to_nutrient_id[row_dict["nutrient"]]})
-            for row_dict in csv.DictReader(file)
-            if row_dict["nutrient"] in nnr2023_to_nutrient_id
-        ]
+        micro_recommendations = inner_merge(list(csv.DictReader(file)), nutrient_map, left_key="nutrient", right_key="nnr2023_id")
 
     app = create_app(macro_recommendations, micro_recommendations, products_and_prices, nutrient_map)
     app.run_server(debug=True)

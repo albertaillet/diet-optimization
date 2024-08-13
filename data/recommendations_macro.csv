@@ -1,4 +1,4 @@
-nutrient_id,unit,value_males,value_females,value_upper_intake
+off_id,unit,value_males,value_females,value_upper_intake
 energy-kcal,kcal,2500,2500,3000
 proteins,g,150,150,300
 carbohydrates,g,0,0,400
