@@ -83,25 +83,24 @@ def ciqual_entry_to_value(value: str) -> float:
     return float(value)
 
 
-def ciqual_load_table(file, nutrient_map: dict[str, tuple[str, str]]) -> dict[str, dict[str, Any]]:
-    reader = csv.reader(file, delimiter="\t")
-    header = next(reader)
+def ciqual_load_table(file, nutrient_map: list[dict[str, str]]) -> dict[str, dict[str, Any]]:
     ciqual_table = {}
-    for ciqual_row in reader:
-        ciqual_row = dict(zip(header, ciqual_row, strict=True))
+    for ciqual_row in csv.DictReader(file, delimiter="\t"):
         ciqual_code = ciqual_row["alim_code"]
-        ciqual_table[ciqual_code] = {"ciqual_name": ciqual_row["alim_nom_eng"]}
-        for nutrient_off_id, (ciqual_id, unit) in nutrient_map.items():
-            ciqual_table[ciqual_code][nutrient_off_id + "_value"] = ciqual_entry_to_value(ciqual_row[ciqual_id])
-            ciqual_table[ciqual_code][nutrient_off_id + "_unit"] = unit
+        ciqual_table[ciqual_code] = {"ciqual_code": ciqual_row["alim_code"], "ciqual_name": ciqual_row["alim_nom_eng"]}
+        for nmr in nutrient_map:
+            nutrient_off_id = nmr["off_id"]
+            ciqual_table[ciqual_code][nutrient_off_id + "_value"] = ciqual_entry_to_value(ciqual_row[nmr["ciqual_id"]])
+            ciqual_table[ciqual_code][nutrient_off_id + "_unit"] = nmr["ciqual_unit"]
     return ciqual_table
 
 
 def create_nutrient_row(
-    reported_nutrients: dict[str, float | str], ciqual_nutrients: dict[str, float | str], nutrient_map: dict[str, tuple[str, str]]
+    reported_nutrients: dict[str, float | str], ciqual_nutrients: dict[str, float | str], nutrient_map: list[dict[str, str]]
 ) -> dict[str, float | str]:
     nutrients = {}
-    for nutrient_off_id in nutrient_map:
+    for nutrient_map_row in nutrient_map:
+        nutrient_off_id = nutrient_map_row["off_id"]
         nurtient_value = nutrient_off_id + "_value"
         nurtient_unit = nutrient_off_id + "_unit"
         nutrient_source = nutrient_off_id + "_source"
@@ -121,11 +120,11 @@ def create_csv(
     price_items: list[dict[str, Any]],
     products_dict: dict[str, dict[str, Any]],
     ciqual_table: dict[str, dict[str, Any]],
-    nutrient_map: dict[str, tuple[str, str]],
+    nutrient_map: list[dict[str, str]],
 ):
     product_cols = ["product_code", "product_name", "ciqual_code", "ciqual_name"]
     price_cols = ["price", "currency", "price_date", "location", "location_osm_id"]
-    nutrient_cols = [name + suffix for name in nutrient_map for suffix in ("_value", "_unit", "_source")]
+    nutrient_cols = [d["off_id"] + suffix for d in nutrient_map for suffix in ("_value", "_unit", "_source")]
     header = product_cols + price_cols + nutrient_cols
 
     writer = csv.writer(file)
@@ -187,11 +186,7 @@ if __name__ == "__main__":
         products_dict = json.load(file)
 
     with (DATA_DIR / "nutrient_map.csv").open("r") as file:
-        nutrient_map = {
-            row_dict["off_id"]: (row_dict["ciqual_id"], row_dict["ciqual_unit"])
-            for row_dict in csv.DictReader(file)
-            if row_dict["off_id"] != "" and row_dict["ciqual_id"] != ""
-        }
+        nutrient_map = [row_dict for row_dict in csv.DictReader(file) if not row_dict["disabled"]]
 
     with (DATA_DIR / "ciqual2020.csv").open("r") as file:
         ciqual_table = ciqual_load_table(file, nutrient_map)
