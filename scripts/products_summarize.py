@@ -1,6 +1,8 @@
 """This script summarizes the fetched product information into a csv file.
 
 Usage of script DATA_DIR=<path to data directory> OFF_USERNAME=<yourusername> python products_summarize.py
+
+NOTE: This file could be simplified by first creating intermediary tables and then using inner_merge.
 """
 
 import csv
@@ -186,7 +188,7 @@ if __name__ == "__main__":
         products_dict = json.load(file)
 
     with (DATA_DIR / "nutrient_map.csv").open("r") as file:
-        nutrient_map = [row_dict for row_dict in csv.DictReader(file) if not row_dict["disabled"]]
+        nutrient_map = [nmr for nmr in csv.DictReader(file) if nmr["ciqual_id"] and nmr["off_id"]]
 
     with (DATA_DIR / "ciqual2020.csv").open("r") as file:
         ciqual_table = ciqual_load_table(file, nutrient_map)

@@ -408,7 +408,6 @@ if __name__ == "__main__":
         products_and_prices = load_and_filter_products(file, used_nutrients=[row_dict["off_id"] for row_dict in nutrient_map])
     fix_prices(products_and_prices)
 
-    # TODO: fix this to merge the recommendations and nutrient_map correctly
     with (DATA_DIR / "recommendations_macro.csv").open("r") as file:
         macro_recommendations = inner_merge(list(csv.DictReader(file)), nutrient_map, left_key="off_id", right_key="off_id")
 

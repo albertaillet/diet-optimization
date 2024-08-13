@@ -64,7 +64,7 @@ if __name__ == "__main__":
     OFF_USERNAME = "ciqual2020"
 
     with (DATA_DIR / "nutrient_map.csv").open("r") as file:
-        nutrient_map = [row_dict for row_dict in csv.DictReader(file) if not row_dict["disabled"]]
+        nutrient_map = [nmr for nmr in csv.DictReader(file) if nmr["ciqual_id"] and nmr["off_id"]]
 
     (DATA_DIR / "user_data" / OFF_USERNAME).mkdir(parents=True, exist_ok=True)
 
