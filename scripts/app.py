@@ -324,16 +324,16 @@ def create_app(
     def create_chosen_sliders(chosen_macronutrients: list[str], chosen_micronutrients: list[str]) -> html.Tbody:
         macro_rows = [
             html.Tr([
-                html.Td(macro["nutrient"], style={"width": "20%"}),
-                html.Td(create_rangeslider(macro), style={"width": "80%"}),
+                html.Td(macro["nutrient"], className="name-col"),
+                html.Td(create_rangeslider(macro), className="slider-col"),
             ])
             for macro in macro_recommendations
             if macro["nutrient_id"] in chosen_macronutrients
         ]
         micro_rows = [
             html.Tr([
-                html.Td(micro["nutrient"], style={"width": "20%"}),
-                html.Td(create_rangeslider(micro, micro=True), style={"width": "80%"}),
+                html.Td(micro["nutrient"], className="name-col"),
+                html.Td(create_rangeslider(micro, micro=True), className="slider-col"),
             ])
             for micro in micro_recommendations
             if micro["nutrient_id"] in chosen_micronutrients
@@ -374,12 +374,12 @@ def create_app(
 
         chosen_bounds = extract_slider_values(slider_values, slider_ids)
         if len(chosen_bounds) == 0:
-            return html.H4("No bounds chosen"), slider_marks
+            return html.H4("No bounds chosen", className="result-text"), slider_marks
 
         A_nutrients, lb, ub, c_costs = get_arrays(chosen_bounds, products_and_prices, currency)
         result = solve_optimization(A_nutrients, lb, ub, c_costs)
         if result.status != 0:
-            return html.H4("No solution"), slider_marks
+            return html.H4("No solution", className="result-text"), slider_marks
 
         # Caluculate nutrient levels
         nutrients_levels = A_nutrients @ result.x
@@ -389,7 +389,7 @@ def create_app(
             slider_mark[convert_to_int_if_possible(nutrients_level)] = {"label": level_label}
 
         return [
-            html.H5(f"Total price per day: {round(result.fun, 2)} {currency}"),
+            html.H5(f"Total price per day: {round(result.fun, 2)} {currency}", className="result-text"),
             dbc.Table(create_result_table(result, products_and_prices, c_costs), striped=True, bordered=False, borderless=True),
         ], slider_marks
 
