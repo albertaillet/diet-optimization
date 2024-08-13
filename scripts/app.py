@@ -5,6 +5,7 @@ Usage of script DATA_DIR=<path to data directory> OFF_USERNAME=<yourusername> py
 
 TODO: Include other objectives than price minimization with tunable hyperparameters.
 TODO: Choose to include maximum values even when they are not available in recommendations.
+TODO: Include breakdown source of each nutrient (either in popup, other page or in generated pdf).
 """
 
 import csv
@@ -77,7 +78,7 @@ def fix_prices(prices: dict[str, list[str | float]]):
 
 
 def get_arrays(
-    bounds: dict[str, dict[str, float | str]], products_and_prices: dict[str, list[str | float]], currency: str
+    bounds: dict[str, dict[str, str | float]], products_and_prices: dict[str, list[str | float]], currency: str
 ) -> tuple[np.ndarray, ...]:
     # Check that the upper and lower bounds nutrients use the same units as the product nutrients.
     for nutrient in bounds:
@@ -122,7 +123,7 @@ def convert_to_int_if_possible(x: float) -> float | int:
     return x if x is None else int(x) if x == int(x) else x
 
 
-def create_rangeslider(data: dict[str, float | str], *, micro=False) -> dcc.RangeSlider:
+def create_rangeslider(data: dict[str, str], *, micro=False) -> dcc.RangeSlider:
     """Create the rangeslider of the given nutrient with the given data."""
     value_key = "value_males"  # "value_females"  # NOTE: using male values
     lower = convert_to_int_if_possible(float(data[value_key]))
@@ -216,34 +217,44 @@ def create_result_table(result, products_and_prices: dict[str, list[str | float]
     return html.Tbody([html.Tr([html.Th(col) for col in shown_cols]), *html_rows])
 
 
+def filter_nutrients(
+    nutrient_map: list[dict[str, str]], recommendations: list[dict[str, str]]
+) -> tuple[list[dict[str, str]], list[str]]:
+    available_recommendations = {rec["nutrient_id"] for rec in recommendations}
+    filtered_nutrient_map = [row for row in nutrient_map if row["off_id"] in available_recommendations]
+    used = [{"label": row["ciqual_name"], "value": row["off_id"], "search": row["ciqual_id"]} for row in filtered_nutrient_map]
+    default_values = [row_dict["off_id"] for row_dict in filtered_nutrient_map]
+    return used, default_values
+
+
 def create_app(
-    macro_recommendations: list[dict[str, float | str]],
-    micro_recommendations: list[dict[str, float | str]],
+    macro_recommendations: list[dict[str, str]],
+    micro_recommendations: list[dict[str, str]],
     products_and_prices: dict[str, list[str | float]],
-    nutrient_map: dict[str, dict[str, str]],
+    nutrient_map: list[dict[str, str]],
 ) -> Dash:
     app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
     currency_dropdown = dcc.Dropdown(
         options=POSSIBLE_CURRENCIES, value=POSSIBLE_CURRENCIES[0], persistence=True, id=CURRENCY_DROPDOWN_ID, clearable=False
     )
-    USED_MACRONUTRIENTS = [nutrient_id for nutrient_id, row_dict in nutrient_map.items() if row_dict["nutrient_type"] == "macro"]
-    USED_MICRONUTRIENTS = [nutrient_id for nutrient_id, row_dict in nutrient_map.items() if row_dict["nutrient_type"] == "micro"]
 
     macronutrient_reset_button = dbc.Button("Reset", id=MACRONUTRIENT_RESET_ID)
+    used_macronutrients, default_used_macronutrients_values = filter_nutrients(nutrient_map, macro_recommendations)
     macronutrient_dropdown = dcc.Dropdown(
-        options=USED_MACRONUTRIENTS,
-        value=USED_MACRONUTRIENTS,
-        placeholder="Choose nutrients",
+        options=used_macronutrients,
+        value=default_used_macronutrients_values,
+        placeholder="Choose macronutrients",
         multi=True,
         persistence=True,
         id=DROPDOWN_MACRONUTRIENT_CHOICE_ID,
     )
     micronutrient_reset_button = dbc.Button("Reset", id=MICRONUTRIENT_RESET_ID)
+    used_micronutrients, default_used_micronutrients_values = filter_nutrients(nutrient_map, micro_recommendations)
     micronutrient_dropdown = dcc.Dropdown(
-        options=USED_MICRONUTRIENTS,
-        value=USED_MICRONUTRIENTS,
-        placeholder="Choose nutrients",
+        options=used_micronutrients,
+        value=default_used_micronutrients_values,
+        placeholder="Choose micronutrients",
         multi=True,
         persistence=True,
         id=DROPDOWN_MICRONUTRIENT_CHOICE_ID,
@@ -294,16 +305,16 @@ def create_app(
         Input(MACRONUTRIENT_RESET_ID, "n_clicks"),
         prevent_initial_call=True,
     )
-    def reset_macro_dropdown(n_clicks: int):
-        return USED_MACRONUTRIENTS
+    def reset_macro_dropdown(n_clicks: int) -> list[str]:
+        return default_used_macronutrients_values
 
     @app.callback(
         Output(DROPDOWN_MICRONUTRIENT_CHOICE_ID, "value"),
         Input(MICRONUTRIENT_RESET_ID, "n_clicks"),
         prevent_initial_call=True,
     )
-    def reset_micro_dropdown(n_clicks: int):
-        return USED_MICRONUTRIENTS
+    def reset_micro_dropdown(n_clicks: int) -> list[str]:
+        return default_used_micronutrients_values
 
     @app.callback(
         Output(SLIDER_TABLE_ID, "children"),
@@ -362,6 +373,9 @@ def create_app(
                 slider_mark.pop(pop_mark)
 
         chosen_bounds = extract_slider_values(slider_values, slider_ids)
+        if len(chosen_bounds) == 0:
+            return html.H4("No bounds chosen"), slider_marks
+
         A_nutrients, lb, ub, c_costs = get_arrays(chosen_bounds, products_and_prices, currency)
         result = solve_optimization(A_nutrients, lb, ub, c_costs)
         if result.status != 0:
@@ -386,22 +400,19 @@ if __name__ == "__main__":
     assert OFF_USERNAME is not None, f"Set OFF_USERNAME env variable {OFF_USERNAME=}"
 
     with (DATA_DIR / "nutrient_map.csv").open("r") as file:
-        nutrient_map = {
-            row_dict["off_id"]: row_dict
-            for row_dict in csv.DictReader(file)
-            if row_dict["off_id"] != "" and row_dict["ciqual_id"] != "" and row_dict["disabled"] == ""
-        }
+        nutrient_map = [row_dict for row_dict in csv.DictReader(file) if not row_dict["disabled"]]
 
     with (DATA_DIR / "user_data" / OFF_USERNAME / "product_prices_and_nutrients.csv").open("r") as file:
-        products_and_prices = load_and_filter_products(file, list(nutrient_map.keys()))
+        products_and_prices = load_and_filter_products(file, used_nutrients=[row_dict["off_id"] for row_dict in nutrient_map])
     fix_prices(products_and_prices)
 
+    # TODO: fix this to merge the recommendations and nutrient_map correctly
     with (DATA_DIR / "recommendations_macro.csv").open("r") as file:
-        macro_recommendations = list(csv.DictReader(file))
+        macro_recommendations = [
+            (row_dict | {"nutrient": row_dict["nutrient_id"].capitalize()}) for row_dict in csv.DictReader(file)
+        ]
 
-    nnr2023_to_nutrient_id = {
-        row_dict["nnr2023_id"]: nutrient_id for nutrient_id, row_dict in nutrient_map.items() if row_dict["nnr2023_id"]
-    }
+    nnr2023_to_nutrient_id = {row_dict["nnr2023_id"]: row_dict["off_id"] for row_dict in nutrient_map if row_dict["nnr2023_id"]}
     with (DATA_DIR / "recommendations_nnr2023.csv").open("r") as file:
         micro_recommendations = [
             (row_dict | {"nutrient_id": nnr2023_to_nutrient_id[row_dict["nutrient"]]})
