@@ -18,6 +18,13 @@ repos:
         args: [ --fix ]
       - id: ruff-format  # formatter
         types_or: [ python, pyi, jupyter ]
+  - repo: local
+    hooks:
+    - id: validate-staged-csv-data
+      name: validate-staged-csv-data
+      entry: python scripts/validate_staged_csv_data.py
+      language: system
+      types: [ csv ]
   - repo: https://github.com/RobertCraigie/pyright-python
     rev: v1.1.370
     hooks:
