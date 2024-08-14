@@ -3,7 +3,7 @@ name = "diet-optimization"
 version = "0.0.0"
 readme = "README.md"
 requires-python = "~=3.11"
-dependencies = ["requests", "tqdm", "bs4", "scipy"]
+dependencies = ["requests", "tqdm", "scipy"]
 
 [project.optional-dependencies]
 dev = ["pre-commit"]

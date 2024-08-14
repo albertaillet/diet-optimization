@@ -10,19 +10,12 @@ pip install -e ".[dev]"
 
 ## Usage
 
-To fetch everything use:
+To run the app, and fetch all needed files do
 
 ```
-make all-fetch
+export OFF_USERNAME=<a Open Food Facts username>
+make app
 ```
-
-to the process the fetched data and optimize use:
-
-```
-make all
-```
-
-Else the individual make commands can be used.
 
 ## Data sources
 
@@ -106,7 +99,7 @@ Here is the combined table listing the availability of different nutrients in th
 
 ### Data source for nutrition recommendations
 
-[Nordic Nutrition Recommendations 2023](https://pub.norden.org/nord2023-003/recommendations.html), which contains the following for a select number of nurtients.
+[Nordic Nutrition Recommendations 2023](https://pub.norden.org/nord2023-003/recommendations.html) (NNR2023), which contains the following for a select number of nurtients.
 
 | Term                                             | Definition                                                                                                                                                                                                              |
 | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
