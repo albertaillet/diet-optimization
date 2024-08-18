@@ -11,7 +11,7 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.5.1
+    rev: v0.6.1
     hooks:
       - id: ruff  # linter
         types_or: [ python, pyi, jupyter ]
@@ -26,7 +26,7 @@ repos:
       language: system
       types: [ csv ]
   - repo: https://github.com/RobertCraigie/pyright-python
-    rev: v1.1.370
+    rev: v1.1.376
     hooks:
     - id: pyright
       language: system

@@ -16,6 +16,10 @@ build-backend = "hatchling.build"
 include = ["*"]
 
 [tool.ruff]
+line-length = 130
+preview = true
+
+[tool.ruff.lint]
 select = [
     "F",    # flake8 (pyflakes)
     "E",    # pycodestyle errors
@@ -38,9 +42,7 @@ select = [
     "FURB", # refurb
     "RUF",  # ruff-specific rules
 ]
-line-length = 130
 ignore = ["E731"] # Allow named lambdas
-preview = true
 
 [tool.pyright]
 reportIncompatibleMethodOverride = true
