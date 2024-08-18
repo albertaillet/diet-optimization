@@ -15,13 +15,15 @@ import argparse
 import base64
 import json
 import os
-import pathlib
 import sys
 import time
+from pathlib import Path
 
 import requests
 
 API_KEY = os.getenv("CLOUD_VISION_API_KEY")
+DATA_DIR = Path(os.getenv("DATA_DIR", ""))
+BASE_IMAGE_DIR = DATA_DIR / "exported_images"
 
 if not API_KEY:
     sys.exit("missing Google Cloud CLOUD_VISION_API_KEY as envvar")
@@ -29,15 +31,8 @@ if not API_KEY:
 
 CLOUD_VISION_URL = f"https://vision.googleapis.com/v1/images:annotate?key={API_KEY}"
 
-BASE_IMAGE_DIR = pathlib.Path("/srv/off/html/images/products")
-session = requests.Session()
 
-
-def get_base64_image_from_url(
-    image_url: str,
-    error_raise: bool = False,
-    session: requests.Session | None = None,
-) -> str | None:
+def get_base64_image_from_url(image_url: str, error_raise: bool = False, session: requests.Session | None = None) -> str | None:
     r = session.get(image_url) if session else requests.get(image_url)
 
     if error_raise:
@@ -49,18 +44,9 @@ def get_base64_image_from_url(
     return base64.b64encode(r.content).decode("utf-8")
 
 
-def get_base64_image_from_path(
-    image_path: pathlib.Path,
-    error_raise: bool = False,
-) -> str | None:
-    try:
-        with image_path.open("rb") as f:
-            return base64.b64encode(f.read()).decode("utf-8")
-    except Exception as e:
-        if error_raise:
-            raise e
-        print(e)
-        return None
+def get_base64_image_from_path(image_path: Path) -> str:
+    with image_path.open("rb") as f:
+        return base64.b64encode(f.read()).decode("utf-8")
 
 
 def run_ocr_on_image_batch(base64_images: list[str]) -> requests.Response:
@@ -97,7 +83,7 @@ def run_ocr_on_image_urls(image_urls: list[str]):
     return [(images_content[i][0], responses[i]) for i in range(len(images_content))]
 
 
-def run_ocr_on_image_paths(image_paths: list[pathlib.Path], override: bool = False):
+def run_ocr_on_image_paths(image_paths: list[Path], override: bool = False):
     images_content = []
     for image_path in image_paths:
         json_path = image_path.with_suffix(".json")
@@ -131,16 +117,11 @@ def run_ocr_on_image_paths(image_paths: list[pathlib.Path], override: bool = Fal
     )
 
 
-def run_ocr(
-    data_path: pathlib.Path,
-    batch_size: int = 1,
-    sleep: float = 0.0,
-    override: bool = False,
-):
+def run_ocr(data_path: Path, batch_size: int = 1, sleep: float = 0.0, override: bool = False):
     print(f"Running OCR on {data_path} (batch size: {batch_size})")
 
     with data_path.open("r") as f:
-        image_paths = [pathlib.Path(line.strip()).with_suffix(".jpg") for line in f]
+        image_paths = [Path(line.strip()).with_suffix(".png") for line in f]
 
     for path in image_paths:
         responses, performed_request = run_ocr_on_image_paths([path], override)
@@ -156,7 +137,7 @@ def run_ocr(
             time.sleep(sleep)
 
 
-def dump_ocr(image_paths: list[pathlib.Path], sleep: float = 0.0, override: bool = False):
+def dump_ocr(image_paths: list[Path], sleep: float = 0.0, override: bool = False):
     responses, performed_request = run_ocr_on_image_paths(image_paths, override)
 
     for image_path, response in responses:
@@ -178,7 +159,7 @@ def add_missing_ocr(sleep: float):
     valid = 0
     empty_images = 0
 
-    for i, image_path in enumerate(BASE_IMAGE_DIR.glob("**/*.jpg")):
+    for i, image_path in enumerate(BASE_IMAGE_DIR.glob("*.png")):
         if not image_path.stem.isdigit():
             continue
 
@@ -230,11 +211,14 @@ def add_missing_ocr(sleep: float):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data-path", type=pathlib.Path)
+    parser.add_argument("--data-path", type=Path)
     parser.add_argument("--override", action="store_true")
     parser.add_argument("--sleep", type=float, default=1.0)
     args = parser.parse_args()
     data_path = args.data_path
+
+    session = requests.Session()
+
     if data_path is not None:
         assert data_path.is_file()
         r = run_ocr(data_path, sleep=args.sleep, override=args.override)
