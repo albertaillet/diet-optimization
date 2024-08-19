@@ -57,6 +57,11 @@ app: $(SUMMARY_CSV) $(NUTRIENT_MAP) $(NNR_SUMMARY_CSV)
 
 # ---------- Clean data. ----------
 
+ocr:
+	DATA_DIR=$(DATA_DIR) python scripts/run_ocr.py
+
+# ---------- Clean data. ----------
+
 # cleans current OFF_USERNAME data
 clean-user-data:
 	rm -f $(PRICES_JSON)

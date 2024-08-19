@@ -1,6 +1,9 @@
 # Vscode settings
 .vscode/
 
+# Dotenv file
+.env
+
 # Folders to exclude
 # python virtual environment
 venv/
@@ -21,6 +24,10 @@ tmp/
 **/product_prices_and_nutrients.csv
 # Fetched nutrient_map
 **/nutrient_map_recipe_estimator.csv
+
+# Any image
+*/exported_images/*
+*.png
 
 
 # All python cache files

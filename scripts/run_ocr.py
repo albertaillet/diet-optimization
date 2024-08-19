@@ -67,6 +67,7 @@ def run_ocr_on_image_batch(base64_images: list[str]) -> requests.Response:
                 for base64_image in base64_images
             ]
         },
+        verify=False,
     )
 
 
@@ -117,11 +118,11 @@ def run_ocr_on_image_paths(image_paths: list[Path], override: bool = False):
     )
 
 
-def run_ocr(data_path: Path, batch_size: int = 1, sleep: float = 0.0, override: bool = False):
-    print(f"Running OCR on {data_path} (batch size: {batch_size})")
+def run_ocr(data_definition: Path, batch_size: int = 1, sleep: float = 0.0, override: bool = False):
+    print(f"Running OCR on {data_definition} (batch size: {batch_size})")
 
-    with data_path.open("r") as f:
-        image_paths = [Path(line.strip()).with_suffix(".png") for line in f]
+    with data_definition.open("r") as f:
+        image_paths = [data_definition.parent / f"{line.strip()}.png" for line in f]
 
     for path in image_paths:
         responses, performed_request = run_ocr_on_image_paths([path], override)
@@ -131,7 +132,7 @@ def run_ocr(data_path: Path, batch_size: int = 1, sleep: float = 0.0, override: 
 
             with json_path.open("w") as f:
                 print(f"Dumping OCR JSON to {json_path}")
-                json.dump({"responses": [response]}, f)
+                json.dump({"responses": [response]}, f, indent=2)
 
         if performed_request and sleep:
             time.sleep(sleep)
@@ -145,7 +146,7 @@ def dump_ocr(image_paths: list[Path], sleep: float = 0.0, override: bool = False
 
         with json_path.open("w") as f:
             print(f"Dumping OCR JSON to {json_path}")
-            json.dump({"responses": [response]}, f)
+            json.dump({"responses": [response]}, f, indent=2)
 
     if performed_request and sleep:
         time.sleep(sleep)
@@ -210,17 +211,19 @@ def add_missing_ocr(sleep: float):
 
 
 if __name__ == "__main__":
+    print(f"{API_KEY=}")
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data-path", type=Path)
     parser.add_argument("--override", action="store_true")
     parser.add_argument("--sleep", type=float, default=1.0)
     args = parser.parse_args()
-    data_path = args.data_path
 
     session = requests.Session()
 
-    if data_path is not None:
-        assert data_path.is_file()
-        r = run_ocr(data_path, sleep=args.sleep, override=args.override)
+    data_definition = DATA_DIR / "exported_images/data.txt"
+
+    if data_definition is not None:
+        assert data_definition.is_file()
+        r = run_ocr(data_definition, sleep=args.sleep, override=args.override)
     else:
-        add_missing_ocr(sleep=args.sleep)
+        pass
+        # add_missing_ocr(sleep=args.sleep)
