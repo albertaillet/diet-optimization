@@ -19,6 +19,7 @@ import sys
 import time
 from pathlib import Path
 
+import certifi
 import requests
 
 API_KEY = os.getenv("CLOUD_VISION_API_KEY")
@@ -57,17 +58,16 @@ def run_ocr_on_image_batch(base64_images: list[str]) -> requests.Response:
                 {
                     "features": [
                         {"type": "TEXT_DETECTION"},
-                        {"type": "LOGO_DETECTION"},
-                        {"type": "LABEL_DETECTION"},
-                        {"type": "SAFE_SEARCH_DETECTION"},
-                        {"type": "FACE_DETECTION"},
+                        # {"type": "LOGO_DETECTION"},
+                        # {"type": "LABEL_DETECTION"},
+                        # {"type": "SAFE_SEARCH_DETECTION"},
+                        # {"type": "FACE_DETECTION"},
                     ],
                     "image": {"content": base64_image},
                 }
                 for base64_image in base64_images
             ]
         },
-        verify=False,
     )
 
 
@@ -216,6 +216,9 @@ if __name__ == "__main__":
     parser.add_argument("--override", action="store_true")
     parser.add_argument("--sleep", type=float, default=1.0)
     args = parser.parse_args()
+
+    # Make a request with certificate verification enabled
+    response = requests.get("https://vision.googleapis.com", verify=certifi.where())
 
     session = requests.Session()
 
