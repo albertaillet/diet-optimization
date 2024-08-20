@@ -55,10 +55,13 @@ $(SUMMARY_CSV): $(CIQUAL_CSV) $(PRICES_JSON) $(PRODUCTS_JSON) $(NUTRIENT_MAP)
 app: $(SUMMARY_CSV) $(NUTRIENT_MAP) $(NNR_SUMMARY_CSV)
 	DATA_DIR=$(DATA_DIR) python scripts/app.py
 
-# ---------- Clean data. ----------
+# ---------- OCR. ----------
 
 ocr:
 	DATA_DIR=$(DATA_DIR) python scripts/run_ocr.py
+
+view-ocr:
+	DATA_DIR=$(DATA_DIR) python scripts/view_ocr_app.py
 
 # ---------- Clean data. ----------
 
