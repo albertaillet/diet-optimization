@@ -2,7 +2,7 @@ import json
 import os
 from pathlib import Path
 
-from flask import Flask, jsonify, render_template, send_from_directory
+from flask import Flask, abort, jsonify, render_template, send_from_directory
 
 DATA_DIR = Path(os.getenv("DATA_DIR", "")).resolve()
 BASE_IMAGE_DIR = DATA_DIR / "exported_images"
@@ -18,10 +18,9 @@ BASE_IMAGE_DIR = DATA_DIR / "exported_images"
 
 
 def create_app(list_of_file_names: list[str]) -> Flask:
-    # Create the Flask app
     app = Flask(__name__)
 
-    # Route for the main page
+    # Route for the main page with links to each image
     @app.route("/")
     def index():
         return render_template("index.html", names=list_of_file_names)
@@ -31,10 +30,16 @@ def create_app(list_of_file_names: list[str]) -> Flask:
     def serve_image(image_filename):
         return send_from_directory(BASE_IMAGE_DIR, image_filename)
 
-    # Route to fetch image annotations
-    @app.route("/annotations/<annotation_filename>")
-    def serve_annotations(annotation_filename):
-        with (BASE_IMAGE_DIR / annotation_filename).open("r") as f:
+    # Dynamic route for each image based on the file name
+    @app.route("/<name>")
+    def image_page(name):
+        image_file = BASE_IMAGE_DIR / f"{name}.png"
+        annotation_file = BASE_IMAGE_DIR / f"{name}.json"
+
+        if not image_file.exists() or not annotation_file.exists():
+            abort(404)
+
+        with annotation_file.open("r") as f:
             data = json.load(f)
 
         responses = data.get("responses", [])
@@ -43,12 +48,20 @@ def create_app(list_of_file_names: list[str]) -> Flask:
 
         annotations = responses[0].get("textAnnotations", [])
         annotation_descriptions = [ann["description"] for ann in annotations]
-        return jsonify({"annotations": annotation_descriptions})
+
+        return render_template(
+            "image_page.html",
+            name=name,
+            image_file=f"/images/{name}.png",
+            annotations=annotation_descriptions,
+            names=list_of_file_names,
+        )
 
     return app
 
 
 if __name__ == "__main__":
+    # Create a list of image names (without extension)
     list_of_file_names = sorted([p.stem for p in BASE_IMAGE_DIR.glob("*.png") if p.with_suffix(".json").exists()])
 
     app = create_app(list_of_file_names)
