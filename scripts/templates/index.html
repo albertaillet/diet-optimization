@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask Image Viewer</title>
+    <script>
+        function updateImage() {
+            const dropdown = document.getElementById('name-dropdown');
+            const name = dropdown.value;
+
+            // Set the image src to the static file URL
+            document.getElementById('image').src = `/images/${name}.png`;
+            document.getElementById('image_path').innerText = name;
+
+            // Fetch annotations
+            fetch(`/annotations/${name}.json`)
+                .then(response => response.json())
+                .then(data => {
+                    const outputDiv = document.getElementById('output');
+                    outputDiv.innerHTML = '';
+                    if (data.annotations) {
+                        data.annotations.forEach(annotation => {
+                            const div = document.createElement('div');
+                            div.innerText = annotation;
+                            outputDiv.appendChild(div);
+                        });
+                    }
+                });
+        }
+
+        window.onload = function () {
+            updateImage();  // Initialize with the first image on page load
+        };
+    </script>
+</head>
+
+<body>
+    <h1>Select an Image</h1>
+    <select id="name-dropdown" onchange="updateImage()">
+        {% for name in names %}
+        <option value="{{ name }}">{{ name }}</option>
+        {% endfor %}
+    </select>
+
+    <h2>Image:</h2>
+    <img id="image" alt="Selected image will appear here" />
+
+    <h3>Image Path:</h3>
+    <div id="image_path"></div>
+
+    <h3>Annotations:</h3>
+    <div id="output"></div>
+</body>
+
+</html>

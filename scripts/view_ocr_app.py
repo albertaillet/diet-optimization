@@ -1,14 +1,11 @@
-import base64
 import json
 import os
 from pathlib import Path
 
-from dash import Dash, Input, Output, dcc, html
+from flask import Flask, jsonify, render_template, send_from_directory
 
-DATA_DIR = Path(os.getenv("DATA_DIR", ""))
+DATA_DIR = Path(os.getenv("DATA_DIR", "")).resolve()
 BASE_IMAGE_DIR = DATA_DIR / "exported_images"
-
-static_image_route = "/static/"
 
 # TODO: Use this together with a regex to extract a proposed barcode.
 # def check_ean13(number: int) -> bool:
@@ -20,39 +17,39 @@ static_image_route = "/static/"
 #     return int(num_str[-1]) == check_digit
 
 
-def create_app(list_of_images: list[Path]) -> Dash:
-    app = Dash()
+def create_app(list_of_file_names: list[str]) -> Flask:
+    # Create the Flask app
+    app = Flask(__name__)
 
-    options = list(sorted(p.name for p in list_of_images))
+    # Route for the main page
+    @app.route("/")
+    def index():
+        return render_template("index.html", names=list_of_file_names)
 
-    app.layout = html.Div([
-        dcc.Dropdown(id="image-dropdown", options=options, value=options[0]),
-        html.Img(id="image"),
-        html.Div(id="image_path"),
-        html.Div(id="output"),
-    ])
+    # Route to serve static images
+    @app.route("/images/<path:image_filename>")
+    def serve_image(image_filename):
+        return send_from_directory(BASE_IMAGE_DIR, image_filename)
 
-    @app.callback(
-        Output("image", "src"),
-        Output("image_path", "children"),
-        Output("output", "children"),
-        Input("image-dropdown", "value"),
-    )
-    def update_image_desc(image_filename: str):
-        with (BASE_IMAGE_DIR / image_filename).open("rb") as f:
-            b64_string = "data:image/png;base64," + base64.b64encode(f.read()).decode()
-        with (BASE_IMAGE_DIR / image_filename).with_suffix(".json").open("r") as f:
-            d = json.load(f)
-        responses = d["responses"]
-        assert len(responses) == 1, len(responses)
-        annotations = responses[0]["textAnnotations"]
-        return b64_string, str(BASE_IMAGE_DIR / image_filename), [html.Div(ann["description"]) for ann in annotations]
+    # Route to fetch image annotations
+    @app.route("/annotations/<annotation_filename>")
+    def serve_annotations(annotation_filename):
+        with (BASE_IMAGE_DIR / annotation_filename).open("r") as f:
+            data = json.load(f)
+
+        responses = data.get("responses", [])
+        if len(responses) != 1:
+            return jsonify({"error": "Invalid response length"}), 400
+
+        annotations = responses[0].get("textAnnotations", [])
+        annotation_descriptions = [ann["description"] for ann in annotations]
+        return jsonify({"annotations": annotation_descriptions})
 
     return app
 
 
 if __name__ == "__main__":
-    list_of_images = [p for p in BASE_IMAGE_DIR.glob("*.png") if p.with_suffix(".json").exists()]
+    list_of_file_names = sorted([p.stem for p in BASE_IMAGE_DIR.glob("*.png") if p.with_suffix(".json").exists()])
 
-    app = create_app(list_of_images)
-    app.run_server(debug=True)
+    app = create_app(list_of_file_names)
+    app.run(debug=True)
