@@ -53,15 +53,15 @@ $(SUMMARY_CSV): $(CIQUAL_CSV) $(PRICES_JSON) $(PRODUCTS_JSON) $(NUTRIENT_MAP)
 # ---------- Run the optmization dashboard. ----------
 
 app: $(SUMMARY_CSV) $(NUTRIENT_MAP) $(NNR_SUMMARY_CSV)
-	DATA_DIR=$(DATA_DIR) python scripts/app.py
+	DATA_DIR=$(DATA_DIR) python dietdashboard/app.py
 
 # ---------- OCR. ----------
 
 ocr:
-	DATA_DIR=$(DATA_DIR) python scripts/run_ocr.py
+	DATA_DIR=$(DATA_DIR) python datacollection/run_ocr.py
 
 view-ocr:
-	DATA_DIR=$(DATA_DIR) python scripts/view_ocr_app.py
+	DATA_DIR=$(DATA_DIR) python datacollection/view_ocr_app.py
 
 # ---------- Clean data. ----------
 

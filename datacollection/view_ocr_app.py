@@ -27,12 +27,12 @@ def create_app(list_of_file_names: list[str]) -> Flask:
 
     # Route to serve static images
     @app.route("/images/<path:image_filename>")
-    def serve_image(image_filename):
+    def serve_image(image_filename: str):
         return send_from_directory(BASE_IMAGE_DIR, image_filename)
 
     # Dynamic route for each image based on the file name
     @app.route("/<name>")
-    def image_page(name):
+    def image_page(name: str):
         image_file = BASE_IMAGE_DIR / f"{name}.png"
         annotation_file = BASE_IMAGE_DIR / f"{name}.json"
 
