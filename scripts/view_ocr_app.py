@@ -49,12 +49,15 @@ def create_app(list_of_file_names: list[str]) -> Flask:
         annotations = responses[0].get("textAnnotations", [])
         annotation_descriptions = [ann["description"] for ann in annotations]
 
+        i = list_of_file_names.index(name)
+
         return render_template(
             "image_page.html",
             name=name,
             image_file=f"/images/{name}.png",
             annotations=annotation_descriptions,
-            names=list_of_file_names,
+            prev=list_of_file_names[i - 1],
+            next=list_of_file_names[(i + 1) % len(list_of_file_names)],
         )
 
     return app
