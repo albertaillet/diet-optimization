@@ -1,36 +1,49 @@
 import json
 import os
+import re
 from pathlib import Path
 
-from flask import Flask, abort, jsonify, render_template, send_from_directory
+import requests
+from flask import Flask, abort, jsonify, render_template, request, send_from_directory
 
 DATA_DIR = Path(os.getenv("DATA_DIR", "")).resolve()
 BASE_IMAGE_DIR = DATA_DIR / "exported_images"
 
-# TODO: Use this together with a regex to extract a proposed barcode.
-# def check_ean13(number: int) -> bool:
-#     """Based on https://en.wikipedia.org/wiki/International_Article_Number#Position_%E2%80%93_weight."""
-#     num_str = str(number)
-#     assert len(num_str) == 13, f"{number} is not 13 digits long."
-#     remainder = sum(int(num_str[i]) * (3 if i % 2 else 1) for i in range(12)) % 10
-#     check_digit = 10 - remainder if remainder else 0
-#     return int(num_str[-1]) == check_digit
+
+# Use this function to validate EAN-13 numbers
+def check_ean13(num_str: str) -> bool:
+    """Based on https://en.wikipedia.org/wiki/International_Article_Number#Position_%E2%80%93_weight."""
+    if len(num_str) != 13:
+        return False
+    remainder = sum(int(num_str[i]) * (3 if i % 2 else 1) for i in range(12)) % 10
+    check_digit = 10 - remainder if remainder else 0
+    return int(num_str[-1]) == check_digit
 
 
+# Extract the longest numeric string from annotations
+def extract_longest_number(annotations: list) -> str:
+    longest = ""
+    for text in annotations:
+        numbers = re.findall(r"\d+", text)
+        if numbers:
+            for num in numbers:
+                if len(num) > len(longest):
+                    longest = num
+    return longest
+
+
+# Route to validate EAN-13 and check with Open Food Facts
 def create_app(list_of_file_names: list[str]) -> Flask:
     app = Flask(__name__)
 
-    # Route for the main page with links to each image
     @app.route("/")
     def index():
         return render_template("index.html", names=list_of_file_names)
 
-    # Route to serve static images
     @app.route("/images/<path:image_filename>")
     def serve_image(image_filename: str):
         return send_from_directory(BASE_IMAGE_DIR, image_filename)
 
-    # Dynamic route for each image based on the file name
     @app.route("/<name>")
     def image_page(name: str):
         image_file = BASE_IMAGE_DIR / f"{name}.png"
@@ -49,6 +62,9 @@ def create_app(list_of_file_names: list[str]) -> Flask:
         annotations = responses[0].get("textAnnotations", [])
         annotation_descriptions = [ann["description"] for ann in annotations]
 
+        # Extract the longest numeric string
+        longest_number = extract_longest_number(annotation_descriptions)
+
         i = list_of_file_names.index(name)
 
         return render_template(
@@ -58,7 +74,38 @@ def create_app(list_of_file_names: list[str]) -> Flask:
             annotations=annotation_descriptions,
             prev=list_of_file_names[i - 1],
             next=list_of_file_names[(i + 1) % len(list_of_file_names)],
+            ean=longest_number if len(longest_number) == 13 else "",
         )
+
+    # Route to validate EAN-13 (automatic validation)
+    @app.route("/validate_ean", methods=["POST"])
+    def validate_ean():
+        ean = request.form.get("ean13")
+
+        # Validate EAN-13
+        if not ean or not check_ean13(ean):
+            return render_template("validation_result.html", valid=False, error="Invalid EAN-13")
+
+        # If valid, return success and show the button for Open Food Facts lookup
+        return render_template("validation_result.html", valid=True)
+
+    # Route to check Open Food Facts (manual request on button click)
+    @app.route("/check_off", methods=["POST"])
+    def check_off():
+        ean = request.form.get("ean13") or ""
+
+        # Ensure the EAN-13 is valid before proceeding
+        if not check_ean13(ean):
+            return render_template("validation_result.html", valid=False, error="Invalid EAN-13")
+
+        # Check Open Food Facts
+        response = requests.get(f"https://world.openfoodfacts.org/api/v0/product/{ean}.json")
+        if response.status_code == 200:
+            product_data = response.json()
+            if product_data.get("status") == 1:
+                return render_template("validation_result.html", valid=True, product=product_data.get("product"))
+            return render_template("validation_result.html", valid=False, error="Product not found in Open Food Facts")
+        return render_template("validation_result.html", valid=False, error="Error fetching data from Open Food Facts")
 
     return app
 

@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ name }} - Image Viewer</title>
+    <script src="https://unpkg.com/htmx.org"></script>
     <script>
         document.addEventListener('keydown', function (event) {
             // Check if the right arrow key (ArrowRight) or left arrow key (ArrowLeft) is pressed
@@ -17,20 +18,81 @@
             }
         });
     </script>
+    <style>
+        /* Flexbox for two columns layout */
+        .content {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .column {
+            width: 45%;
+        }
+
+        .column h3 {
+            margin-top: 0;
+        }
+
+        /* Styling the image */
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Adjust the form and annotation list */
+        .annotations-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .annotations-list li {
+            margin-bottom: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 
 <body>
     <h1>{{ name }}</h1>
 
-    <h2>Image:</h2>
-    <img src="{{ image_file }}" alt="Image for {{ name }}" />
 
-    <h3>Annotations:</h3>
-    <ul>
-        {% for annotation in annotations %}
-        <li>{{ annotation }}</li>
-        {% endfor %}
-    </ul>
+    <!-- Flex container for two columns -->
+    <div class="content">
+        <!-- Annotations Column -->
+        <div class="column">
+            <h2>Image:</h2>
+            <img src="{{ image_file }}" alt="Image for {{ name }}" />
+            <h3>Annotations:</h3>
+            <ul class="annotations-list">
+                {% for annotation in annotations %}
+                <li>{{ annotation }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Validation Form Column -->
+        <div class="column">
+            <h3>Validate EAN-13:</h3>
+
+            <!-- Automatically validate EAN-13 on input -->
+            <form>
+                <div class="form-group">
+                    <label for="ean13">EAN-13:</label>
+                    <input type="text" id="ean13" name="ean13" value="{{ ean }}"
+                        placeholder="Enter or check EAN-13 here" hx-post="/validate_ean"
+                        hx-trigger="load, input delay:500ms" hx-target="#validation-result" hx-swap="outerHTML" />
+                </div>
+            </form>
+
+            <!-- Validation Result (show button only if valid) -->
+            <div id="validation-result"></div>
+        </div>
+    </div>
+
+    <div style="clear: both;"></div>
 
     <!-- Navigation Links -->
     <div>
