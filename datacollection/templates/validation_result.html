@@ -1,17 +1,10 @@
 <div id="validation-result">
-    {% if valid %}
-    <p style="color: green;">The EAN-13 is valid!</p>
-    <!-- Show the button for Open Food Facts only if EAN is valid -->
-    <button type="submit" name="ean13" value="{{ ean13 }}" hx-post="/check_off" hx-target="#validation-result"
-        hx-swap="outerHTML">Check Open food facts
-    </button>
-    {% if product %}
+    {% if error %}
+    <p style="color: red;">{{ error }}</p>
+    {% else %}
     <h3>Product Information:</h3>
     <p><strong>Product Name:</strong> {{ product.product_name }}</p>
     <p><strong>Brand:</strong> {{ product.brands }}</p>
     <p><strong>Categories:</strong> {{ product.categories }}</p>
-    {% endif %}
-    {% else %}
-    <p style="color: red;">{{ error }}</p>
     {% endif %}
 </div>

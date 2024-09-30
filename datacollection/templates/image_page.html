@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ name }} - Image Viewer</title>
-    <script src="https://unpkg.com/htmx.org"></script>
     <script>
         document.addEventListener('keydown', function (event) {
             // Check if the right arrow key (ArrowRight) or left arrow key (ArrowLeft) is pressed
@@ -75,20 +74,54 @@
 
         <!-- Validation Form Column -->
         <div class="column">
-            <h3>Validate EAN-13:</h3>
-
             <!-- Automatically validate EAN-13 on input -->
-            <form>
-                <div class="form-group">
-                    <label for="ean13">EAN-13:</label>
-                    <input type="text" id="ean13" name="ean13" value="{{ ean }}"
-                        placeholder="Enter or check EAN-13 here" hx-post="/validate_ean"
-                        hx-trigger="load, input delay:500ms" hx-target="#validation-result" hx-swap="outerHTML" />
-                </div>
-            </form>
+            <label for="ean13">EAN-13:</label>
+            <input type="text" id="ean13" name="ean13" value="{{ ean }}" placeholder="Enter or check EAN-13 here" />
+            <div id="ean-warning" style="color: red;">Invalid EAN-13.</div>
+            <div id="ean-success" style="color: green; display: none;">Valid EAN-13.</div>
+            <button id="submit-btn" disabled>Check Open Food Facts for EAN</button>
+            <div id="product-info"></div>
+            <script>
+                // Get references to the success and warning elements
+                var success = document.getElementById('ean-success');
+                var warning = document.getElementById('ean-warning');
+                var submitButton = document.getElementById('submit-btn');
+                var eanInputField = document.getElementById('ean13');
+                var productInfo = document.getElementById('product-info');
 
-            <!-- Validation Result (show button only if valid) -->
-            <div id="validation-result"></div>
+                // Function to validate the EAN
+                async function validateEAN() {
+                    var eanInput = eanInputField.value;
+                    const response = await fetch('/validate_ean/' + eanInput);
+                    if (response.ok) {
+                        warning.style.display = 'none';
+                        success.style.display = 'block';
+                        submitButton.disabled = false;
+                    } else {
+                        warning.style.display = 'block';
+                        success.style.display = 'none';
+                        submitButton.disabled = true;
+                    }
+                }
+
+                async function checkOff() {
+                    var eanInput = eanInputField.value;
+                    const response = await fetch('/check_off/' + eanInput);
+                    // Check if the response is okay
+                    if (response.ok) {
+                        // Set the inner HTML of the productInfo div
+                        productInfo.innerHTML = await response.text();;
+                    }
+                }
+                // Add event listener for input changes
+                eanInputField.addEventListener('input', validateEAN);
+
+                // Run the validation on page load
+                window.addEventListener('load', validateEAN);
+
+                // If button is clicked, check open food facts if they have the product
+                submitButton.addEventListener('click', checkOff)
+            </script>
         </div>
     </div>
 

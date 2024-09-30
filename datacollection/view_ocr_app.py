@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 
 import requests
-from flask import Flask, abort, jsonify, render_template, request, send_from_directory
+from flask import Flask, abort, jsonify, render_template, send_from_directory
 
 DATA_DIR = Path(os.getenv("DATA_DIR", "")).resolve()
 BASE_IMAGE_DIR = DATA_DIR / "exported_images"
@@ -78,34 +78,30 @@ def create_app(list_of_file_names: list[str]) -> Flask:
         )
 
     # Route to validate EAN-13 (automatic validation)
-    @app.route("/validate_ean", methods=["POST"])
-    def validate_ean():
-        ean = request.form.get("ean13")
-
+    @app.route("/validate_ean/<ean>")
+    def validate_ean(ean: str):
         # Validate EAN-13
         if not ean or not check_ean13(ean):
-            return render_template("validation_result.html", valid=False, error="Invalid EAN-13")
-
-        # If valid, return success and show the button for Open Food Facts lookup
-        return render_template("validation_result.html", valid=True)
+            # Return a 400 Bad Request response if the EAN is invalid
+            return jsonify({"message": "Invalid EAN-13"}), 400
+        # Return a 200 OK response if the EAN is valid
+        return jsonify({"message": "Valid EAN-13"}), 200
 
     # Route to check Open Food Facts (manual request on button click)
-    @app.route("/check_off", methods=["POST"])
-    def check_off():
-        ean = request.form.get("ean13") or ""
-
+    @app.route("/check_off/<ean>")
+    def check_off(ean: str):
         # Ensure the EAN-13 is valid before proceeding
         if not check_ean13(ean):
-            return render_template("validation_result.html", valid=False, error="Invalid EAN-13")
+            return render_template("validation_result.html", error="Invalid EAN-13")
 
         # Check Open Food Facts
         response = requests.get(f"https://world.openfoodfacts.org/api/v0/product/{ean}.json")
         if response.status_code == 200:
             product_data = response.json()
             if product_data.get("status") == 1:
-                return render_template("validation_result.html", valid=True, product=product_data.get("product"))
-            return render_template("validation_result.html", valid=False, error="Product not found in Open Food Facts")
-        return render_template("validation_result.html", valid=False, error="Error fetching data from Open Food Facts")
+                return render_template("validation_result.html", product=product_data.get("product"))
+            return render_template("validation_result.html", error="Product not found in Open Food Facts")
+        return render_template("validation_result.html", error="Error fetching data from Open Food Facts")
 
     return app
 
