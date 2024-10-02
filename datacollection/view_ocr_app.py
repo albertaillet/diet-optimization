@@ -6,6 +6,8 @@ from pathlib import Path
 import requests
 from flask import Flask, abort, jsonify, render_template, send_from_directory
 
+from utils.image import image_info
+
 DATA_DIR = Path(os.getenv("DATA_DIR", "")).resolve()
 BASE_IMAGE_DIR = DATA_DIR / "exported_images"
 
@@ -52,6 +54,8 @@ def create_app(list_of_file_names: list[str]) -> Flask:
         if not image_file.exists() or not annotation_file.exists():
             abort(404)
 
+        gps_info, date_info = image_info(image_file)
+
         with annotation_file.open("r") as f:
             data = json.load(f)
 
@@ -75,6 +79,9 @@ def create_app(list_of_file_names: list[str]) -> Flask:
             prev=list_of_file_names[i - 1],
             next=list_of_file_names[(i + 1) % len(list_of_file_names)],
             ean=longest_number if len(longest_number) == 13 else "",
+            latitude=gps_info.get("GPSLatitude"),
+            longitude=gps_info.get("GPSLongitude"),
+            created_at=date_info.get("CreateDate"),
         )
 
     # Route to validate EAN-13 (automatic validation)
