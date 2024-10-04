@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTMX Backend Example</title>
+    <script src="https://unpkg.com/htmx.org@1.7.0"></script>
+</head>
+
+<body>
+
+    <div>
+        <!-- Currency Selector -->
+        <select id="currency" name="currency" hx-post="/optimize" hx-trigger="change" hx-target="#result"
+            hx-include="[name='slider[]'], #currency">
+            <!-- Loop over the currencies list to dynamically generate the options -->
+            {% for currency in currencies %}
+            <option value="{{ currency }}">{{ currency }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div>
+        <!-- Sliders -->
+        {% for slider_value in sliders %}
+        <input type="range" min="0" max="100" step="1" name="slider[]" value="{{ slider_value }}" hx-post="/optimize"
+            hx-trigger="change" hx-include="[name='slider[]'], #currency" hx-target="#result">
+        {% endfor %}
+    </div>
+
+    <div id="result"></div>
+
+</body>
+
+</html>
