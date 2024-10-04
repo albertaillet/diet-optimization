@@ -12,7 +12,7 @@
 </head>
 
 <body>
-    {% set optimization_input = 'hx-trigger="change, load" hx-post="/optimize" hx-target="#result"
+    {% set optimization_input = 'hx-trigger="change" hx-post="/optimize" hx-target="#result"
     hx-include="[name^=brush_],[name=macronutrients],[name=micronutrients], #currency"' | safe %}
     <div class="container mt-5">
         <div class="header d-flex justify-content-between align-items-center pb-3 mb-4 border-bottom">
@@ -138,6 +138,10 @@
                     }
                 }
             });
+
+            // Activate a change on the currency to load the optimzation results on load
+            const currency = document.getElementById('currency');
+            htmx.trigger(currency, 'change')
         });
     </script>
 </body>
