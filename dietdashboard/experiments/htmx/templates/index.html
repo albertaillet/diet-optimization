@@ -4,33 +4,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTMX Backend Example</title>
+    <title>HTMX Backend Example - Dashboard Style</title>
     <script src="https://unpkg.com/htmx.org@1.7.0"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+    <style>
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+        }
+
+        .navbar {
+            margin-bottom: 20px;
+        }
+
+        .card {
+            margin-bottom: 20px;
+        }
+
+        .slider-col {
+            width: 100%;
+        }
+    </style>
 </head>
 
 <body>
+    <div class="container">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">Dashboard</a>
+                <div>
+                    <!-- Currency Selector -->
+                    <select id="currency" name="currency" class="form-select" hx-post="/optimize" hx-trigger="change"
+                        hx-target="#result"
+                        hx-include="[name='slider[]'], [name='macronutrients'], [name='micronutrients'], #currency">
+                        {% for currency in currencies %}
+                        <option value="{{ currency }}">{{ currency }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </nav>
 
-    <div>
-        <!-- Currency Selector -->
-        <select id="currency" name="currency" hx-post="/optimize" hx-trigger="change" hx-target="#result"
-            hx-include="[name='slider[]'], #currency">
-            <!-- Loop over the currencies list to dynamically generate the options -->
-            {% for currency in currencies %}
-            <option value="{{ currency }}">{{ currency }}</option>
-            {% endfor %}
-        </select>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Targets</h4>
+                        <p>Adjust your nutrient targets to optimize your diet.</p>
+                    </div>
+                    <div class="card-body">
+                        <!-- Macronutrient Selector -->
+                        <label for="macronutrients" class="form-label">Select Macronutrients:</label>
+                        <select id="macronutrients" name="macronutrients" class="form-select" multiple
+                            hx-post="/optimize" hx-trigger="change" hx-target="#result"
+                            hx-include="[name='slider[]'], [name='macronutrients'], [name='micronutrients'], #currency">
+                            {% for nutrient in macronutrients %}
+                            <option value="{{ nutrient }}">{{ nutrient }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <!-- Micronutrient Selector -->
+                        <label for="micronutrients" class="form-label mt-3">Select Micronutrients:</label>
+                        <select id="micronutrients" name="micronutrients" class="form-select" multiple
+                            hx-post="/optimize" hx-trigger="change" hx-target="#result"
+                            hx-include="[name='slider[]'], [name='macronutrients'], [name='micronutrients'], #currency">
+                            {% for nutrient in micronutrients %}
+                            <option value="{{ nutrient }}">{{ nutrient }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Adjust Nutrient Levels</h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- Sliders -->
+                        <div class="slider-container">
+                            {% for slider_value in sliders %}
+                            <div class="mb-3">
+                                <input type="range" min="0" max="100" step="1" name="slider[]"
+                                    value="{{ slider_value }}" class="form-range" hx-post="/optimize"
+                                    hx-trigger="change"
+                                    hx-include="[name='slider[]'], [name='macronutrients'], [name='micronutrients'], #currency"
+                                    hx-target="#result">
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4>Optimized Food</h4>
+                        <p>The recommended food items and quantities to meet your nutrient targets.</p>
+                    </div>
+                    <div class="card-body" id="result">
+                        <!-- Result will be displayed here -->
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div>
-        <!-- Sliders -->
-        {% for slider_value in sliders %}
-        <input type="range" min="0" max="100" step="1" name="slider[]" value="{{ slider_value }}" hx-post="/optimize"
-            hx-trigger="change" hx-include="[name='slider[]'], #currency" hx-target="#result">
-        {% endfor %}
-    </div>
-
-    <div id="result"></div>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
