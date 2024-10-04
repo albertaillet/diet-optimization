@@ -4,14 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTMX Backend Example - Bootstrap Dashboard Style</title>
+    <title>Nutrition Dashboard</title>
     <script src="https://unpkg.com/htmx.org@1.7.0"></script>
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 
 <body>
+    {% set include_elements = '[name^=brush_], [name=macronutrients], [name=micronutrients], #currency' %}
     <div class="container mt-5">
         <div class="header d-flex justify-content-between align-items-center pb-3 mb-4 border-bottom">
             <h1 class="h2">Nutrition Dashboard</h1>
@@ -31,7 +32,7 @@
                                 <input class="form-check-input nutrient-checkbox" type="checkbox" value="{{ nutrient }}"
                                     id="{{ nutrient }}_{{ nutrient_type }}" name="{{ nutrient_type | lower }}"
                                     hx-post="/optimize" hx-trigger="change" hx-target="#result"
-                                    hx-include="[name='slider[]'], [name='macronutrients'], [name='micronutrients'], #currency">
+                                    hx-include="{{ include_elements }}">
                                 <label class="form-check-label" for="{{ nutrient }}_{{ nutrient_type }}">
                                     {{ nutrient }}
                                 </label>
@@ -43,8 +44,7 @@
                 {% endfor %}
                 <!-- Currency Selector -->
                 <select id="currency" name="currency" class="form-select" style="width: auto;" hx-post="/optimize"
-                    hx-trigger="change" hx-target="#result"
-                    hx-include="[name='slider[]'], [name='macronutrients'], [name='micronutrients'], #currency">
+                    hx-trigger="change" hx-target="#result" hx-include="{{ include_elements }}">
                     {% for currency in currencies %}
                     <option value="{{ currency }}">{{ currency }}</option>
                     {% endfor %}
@@ -56,20 +56,24 @@
             <div class="col-md-6">
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h4 class="h5">Adjust Nutrient Levels</h4>
+                        <h4 class="h5">Nutrient Targets</h4>
                         <p class="text-muted mb-0">Adjust your nutrient targets to optimize your diet.</p>
                     </div>
                     <div class="card-body">
-                        <!-- Sliders -->
+                        <!-- D3 Brush Elements -->
                         {% for slider_value in sliders %}
-                        <div class="mb-3">
-                            <input type="range" min="0" max="100" step="1" name="slider[]" value="{{ slider_value }}"
-                                class="form-range" hx-post="/optimize" hx-trigger="change"
-                                hx-include="[name='slider[]'], [name='macronutrients'], [name='micronutrients'], #currency"
-                                hx-target="#result">
+                        <div class="mb-4">
+                            <label for="brush{{ loop.index }}" class="form-label">Nutrient {{ loop.index }}</label>
+                            <div id="brush{{ loop.index }}" class="brush" style="height: 50px; margin-bottom: 20px;"
+                                hx-trigger="change" hx-post="/optimize" hx-target="#result"
+                                hx-include="{{ include_elements }}"></div>
+                            <input type="hidden" name="brush_{{ loop.index }}_min" id="brush{{ loop.index }}-hidden-min"
+                                value="0">
+                            <input type="hidden" name="brush_{{ loop.index }}_max" id="brush{{ loop.index }}-hidden-max"
+                                value="100">
                             <div class="d-flex justify-content-between">
-                                <span>0</span>
-                                <span>100</span>
+                                <span id="brush{{ loop.index }}-min">0</span>
+                                <span id="brush{{ loop.index }}-max">100</span>
                             </div>
                         </div>
                         {% endfor %}
@@ -91,6 +95,54 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const brushes = document.querySelectorAll('.brush');
+            brushes.forEach((brush, index) => {
+                const svg = d3.select(brush)
+                    .append('svg')
+                    .attr('width', '100%')
+                    .attr('height', 50);
+
+                const margin = { top: 10, right: 30, bottom: 10, left: 30 };
+                const width = brush.clientWidth - margin.left - margin.right;
+                const height = +svg.attr('height') - margin.top - margin.bottom;
+
+                const x = d3.scaleLinear()
+                    .domain([0, 100])
+                    .range([0, width]);
+
+                const g = svg.append('g')
+                    .attr('transform', `translate(${margin.left},${margin.top})`);
+
+                const brushSelection = d3.brushX()
+                    .extent([[0, 0], [width, height]])
+                    .on('end', brushed);
+
+                g.append('g')
+                    .attr('class', 'x axis')
+                    .call(d3.axisBottom(x).ticks(5));
+
+                const brushGroup = g.append('g')
+                    .attr('class', 'brush')
+                    .call(brushSelection);
+
+                function brushed(event) {
+                    if (event.selection) {
+                        const [min, max] = event.selection.map(x.invert);
+                        document.getElementById(`brush${index + 1}-min`).textContent = Math.round(min);
+                        document.getElementById(`brush${index + 1}-max`).textContent = Math.round(max);
+                        document.getElementById(`brush${index + 1}-hidden-min`).value = Math.round(min);
+                        document.getElementById(`brush${index + 1}-hidden-max`).value = Math.round(max);
+                        if (event.type === 'end') {
+                            htmx.trigger(brush, 'change', { include: '{{ include_elements }}' });
+                        }
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>
