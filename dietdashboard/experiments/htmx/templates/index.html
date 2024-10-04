@@ -12,6 +12,8 @@
 </head>
 
 <body>
+    {% set optimization_input = 'hx-trigger="change, load" hx-post="/optimize" hx-target="#result"
+    hx-include="[name^=brush_],[name=macronutrients],[name=micronutrients], #currency"' | safe %}
     {% set include_elements = '[name^=brush_], [name=macronutrients], [name=micronutrients], #currency' %}
     <div class="container mt-5">
         <div class="header d-flex justify-content-between align-items-center pb-3 mb-4 border-bottom">
@@ -30,9 +32,8 @@
                         <li>
                             <div class="form-check ms-3">
                                 <input class="form-check-input nutrient-checkbox" type="checkbox" value="{{ nutrient }}"
-                                    id="{{ nutrient }}_{{ nutrient_type }}" name="{{ nutrient_type | lower }}"
-                                    hx-post="/optimize" hx-trigger="change" hx-target="#result"
-                                    hx-include="{{ include_elements }}">
+                                    id="{{nutrient_type}}_{{nutrient}}" name="{{ nutrient_type | lower }}" checked
+                                    {{optimization_input}}>
                                 <label class="form-check-label" for="{{ nutrient }}_{{ nutrient_type }}">
                                     {{ nutrient }}
                                 </label>
@@ -43,8 +44,7 @@
                 </div>
                 {% endfor %}
                 <!-- Currency Selector -->
-                <select id="currency" name="currency" class="form-select" style="width: auto;" hx-post="/optimize"
-                    hx-trigger="change" hx-target="#result" hx-include="{{ include_elements }}">
+                <select id="currency" name="currency" class="form-select" {{optimization_input}}>
                     {% for currency in currencies %}
                     <option value="{{ currency }}">{{ currency }}</option>
                     {% endfor %}
@@ -64,9 +64,7 @@
                         {% for slider_value in sliders %}
                         <div class="mb-4">
                             <label for="brush{{ loop.index }}" class="form-label">Nutrient {{ loop.index }}</label>
-                            <div id="brush{{ loop.index }}" class="brush" style="height: 50px; margin-bottom: 20px;"
-                                hx-trigger="change" hx-post="/optimize" hx-target="#result"
-                                hx-include="{{ include_elements }}"></div>
+                            <div id="brush{{ loop.index }}" class="brush" {{optimization_input}}></div>
                             <input type="hidden" name="brush_{{ loop.index }}_min" id="brush{{ loop.index }}-hidden-min"
                                 value="0">
                             <input type="hidden" name="brush_{{ loop.index }}_max" id="brush{{ loop.index }}-hidden-max"
@@ -136,7 +134,7 @@
                         document.getElementById(`brush${index + 1}-hidden-min`).value = Math.round(min);
                         document.getElementById(`brush${index + 1}-hidden-max`).value = Math.round(max);
                         if (event.type === 'end') {
-                            htmx.trigger(brush, 'change', { include: '{{ include_elements }}' });
+                            htmx.trigger(brush, 'change')
                         }
                     }
                 }
