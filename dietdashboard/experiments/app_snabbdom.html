@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snabbdom Example</title>
+  <script src="https://unpkg.com/snabbdom/build/package/init.js"></script>
+  <script src="https://unpkg.com/snabbdom/build/package/h.js"></script>
+</head>
+
+<body>
+
+  <div id="app"></div>
+
+  <script>
+    const patch = snabbdom.init([]);
+    const h = snabbdom.h;
+
+    let currency = 'USD';
+    let sliders = [
+      { value: 10, marks: '' },
+      { value: 20, marks: '' },
+    ];
+    let result = null;
+
+    function updateMarks(index) {
+      sliders[index].marks = 'Value: ' + sliders[index].value;
+      render();
+    }
+
+    function handleInput(event, index) {
+      sliders[index].value = event.target.value;
+      updateMarks(index);
+    }
+
+    async function optimize() {
+      const total = (sliders.reduce((acc, s) => acc + parseFloat(s.value), 0) * (currency === 'USD' ? 1 : 0.85)).toFixed(2);
+      result = {
+        total: total,
+        items: [
+          { name: 'Item 1', price: sliders[0].value },
+          { name: 'Item 2', price: sliders[1].value }
+        ]
+      };
+      render();
+    }
+
+    function render() {
+      const app = h('div', {}, [
+        h('select', { on: { change: event => { currency = event.target.value; render(); } } }, [
+          h('option', { props: { value: 'USD', selected: currency === 'USD' } }, 'USD'),
+          h('option', { props: { value: 'EUR', selected: currency === 'EUR' } }, 'EUR'),
+          h('option', { props: { value: 'GBP', selected: currency === 'GBP' } }, 'GBP'),
+        ]),
+        ...sliders.map((slider, index) =>
+          h('div', {}, [
+            h('input', {
+              props: { type: 'range', min: 0, max: 100, value: slider.value },
+              on: { input: event => handleInput(event, index) }
+            }),
+            h('span', {}, slider.value),
+            h('div', {}, slider.marks)
+          ])
+        ),
+        h('button', { on: { click: optimize } }, 'Optimize'),
+        result ? h('div', {}, [
+          h('h5', {}, 'Total: ' + result.total + ' ' + currency),
+          h('table', {}, result.items.map(item =>
+            h('tr', {}, [
+              h('td', {}, item.name),
+              h('td', {}, item.price)
+            ])
+          ))
+        ]) : null
+      ]);
+      patch(document.getElementById('app'), app);
+    }
+
+    render();
+  </script>
+
+</body>
+
+</html>

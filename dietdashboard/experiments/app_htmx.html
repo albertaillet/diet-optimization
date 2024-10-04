@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTMX Example</title>
+    <script src="https://unpkg.com/htmx.org@1.7.0"></script>
+</head>
+
+<body>
+
+    <div>
+        <select id="currency" hx-trigger="change" hx-post="/optimize" hx-include="[name='slider[]'], #currency"
+            hx-target="#result">
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+        </select>
+    </div>
+
+    <div>
+        <input type="range" min="0" max="100" step="1" name="slider[]" value="10" hx-trigger="input" hx-post="/optimize"
+            hx-include="[name='slider[]'], #currency" hx-target="#result">
+        <input type="range" min="0" max="100" step="1" name="slider[]" value="20" hx-trigger="input" hx-post="/optimize"
+            hx-include="[name='slider[]'], #currency" hx-target="#result">
+    </div>
+
+    <div id="result"></div>
+
+    <script>
+        document.addEventListener("htmx:configRequest", function (evt) {
+            const sliders = Array.from(document.querySelectorAll('[name="slider[]"]')).map(el => el.value);
+            const currency = document.getElementById('currency').value;
+
+            evt.detail.parameters['currency'] = currency;
+            evt.detail.parameters['sliders'] = sliders;
+        });
+
+        document.addEventListener("htmx:beforeRequest", function (evt) {
+            const resultDiv = document.getElementById('result');
+            const sliders = Array.from(document.querySelectorAll('[name="slider[]"]')).map(el => el.value);
+            const currency = document.getElementById('currency').value;
+
+            // Simulating a backend response
+            const total = (sliders.reduce((acc, s) => acc + parseFloat(s), 0) * (currency === 'USD' ? 1 : 0.85)).toFixed(2);
+
+            resultDiv.innerHTML = `<h5>Total: ${total} ${currency}</h5>
+      <table>
+        <tr><td>Item 1</td><td>${sliders[0]}</td></tr>
+        <tr><td>Item 2</td><td>${sliders[1]}</td></tr>
+      </table>`;
+
+            evt.preventDefault(); // Prevent HTMX from making an actual HTTP request
+        });
+    </script>
+
+</body>
+
+</html>
