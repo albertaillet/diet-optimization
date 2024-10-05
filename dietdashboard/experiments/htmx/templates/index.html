@@ -13,7 +13,7 @@
 
 <body>
     {% set optimization_input = 'hx-trigger="change" hx-post="/optimize" hx-target="#result"
-    hx-include="[name^=brush_],[name=macronutrients],[name=micronutrients], #currency"' | safe %}
+    hx-include="[name^=bounds_],[name=macronutrients],[name=micronutrients], #currency"' | safe %}
     <div class="container mt-5">
         <div class="header d-flex justify-content-between align-items-center pb-3 mb-4 border-bottom">
             <h1 class="h2">Nutrition Dashboard</h1>
@@ -60,18 +60,14 @@
                     </div>
                     <div class="card-body">
                         <!-- D3 Brush Elements -->
-                        {% for slider_value in sliders %}
+                        {% for slider in sliders %}
                         <div class="mb-4">
-                            <label for="brush{{ loop.index }}" class="form-label">Nutrient {{ loop.index }}</label>
-                            <div id="brush{{ loop.index }}" class="brush" {{optimization_input}}></div>
-                            <input type="hidden" name="brush_{{ loop.index }}_min" id="brush{{ loop.index }}-hidden-min"
-                                value="0">
-                            <input type="hidden" name="brush_{{ loop.index }}_max" id="brush{{ loop.index }}-hidden-max"
-                                value="100">
-                            <div class="d-flex justify-content-between">
-                                <span id="brush{{ loop.index }}-min">0</span>
-                                <span id="brush{{ loop.index }}-max">100</span>
-                            </div>
+                            <label for="{{ slider.id }}" class="form-label">{{ slider.name }}</label>
+                            <div id="{{ slider.id }}" class="brush" {{optimization_input}}></div>
+                            <input type="hidden" name="bounds_{{ slider.id }}" id="{{ slider.id }}-lower"
+                                value="{{slider.lower}}">
+                            <input type="hidden" name="bounds_{{ slider.id }}" id="{{ slider.id }}-upper"
+                                value="{{slider.upper}}">
                         </div>
                         {% endfor %}
                     </div>
@@ -127,11 +123,9 @@
 
                 function brushed(event) {
                     if (event.selection) {
-                        const [min, max] = event.selection.map(x.invert);
-                        document.getElementById(`brush${index + 1}-min`).textContent = Math.round(min);
-                        document.getElementById(`brush${index + 1}-max`).textContent = Math.round(max);
-                        document.getElementById(`brush${index + 1}-hidden-min`).value = Math.round(min);
-                        document.getElementById(`brush${index + 1}-hidden-max`).value = Math.round(max);
+                        const [lower, upper] = event.selection.map(x.invert);
+                        document.getElementById(brush.id + '-lower').value = Math.round(lower);
+                        document.getElementById(brush.id + '-upper').value = Math.round(upper);
                         if (event.type === 'end') {
                             htmx.trigger(brush, 'change')
                         }
@@ -139,7 +133,7 @@
                 }
             });
 
-            // Activate a change on the currency to load the optimzation results on load
+            // Activate a change on the currency to load the optimization results on load
             const currency = document.getElementById('currency');
             htmx.trigger(currency, 'change')
         });

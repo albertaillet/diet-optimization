@@ -8,7 +8,17 @@ def create_app() -> Flask:
 
     @app.route("/")
     def index():
-        sliders = [None] * 5
+        sliders = [
+            {
+                "name": f"NutrientName{i}",
+                "id": f"nutrient_{i}",
+                "min": 0,
+                "max": 100,
+                "lower": 10,
+                "upper": 45,
+            }
+            for i in range(5)
+        ]
         macronutrients = ["Protein", "Carbohydrates", "Fats"]
         micronutrients = ["Vitamin A", "Vitamin C", "Iron", "Calcium"]
         return render_template(
