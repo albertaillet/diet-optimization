@@ -62,7 +62,7 @@
                         <h4 class="h5">Nutrient Targets</h4>
                         <p class="text-muted mb-0">Adjust your nutrient targets to optimize your diet.</p>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body  p-0">
                         {% include "sliders.html" %}
                     </div>
                 </div>
@@ -75,7 +75,7 @@
                         <p class="text-muted mb-0">The recommended food items and quantities to meet your nutrient
                             targets.</p>
                     </div>
-                    <div class="card-body" id="result">
+                    <div class="card-body p-0 overflow-auto" style="max-height: 80vh;" id="result">
                         <!-- Result will be displayed here -->
                     </div>
                 </div>
@@ -85,7 +85,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-
             // Activate a change on the currency to load the optimization results on load
             const currency = document.getElementById('currency');
             htmx.trigger(currency, 'change')
