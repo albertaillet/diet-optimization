@@ -10,13 +10,13 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const brushes = document.querySelectorAll('.brush');
-        brushes.forEach((brush, index) => {
+        brushes.forEach((brush) => {
             const svg = d3.select(brush)
                 .append('svg')
                 .attr('width', '100%')
                 .attr('height', 50);
 
-            const margin = { top: 10, right: 30, bottom: 10, left: 30 };
+            const margin = { top: 10, right: 10, bottom: 10, left: 10 };
             const width = brush.clientWidth - margin.left - margin.right;
             const height = +svg.attr('height') - margin.top - margin.bottom;
 
@@ -39,14 +39,16 @@
                 .attr('class', 'brush')
                 .call(brushSelection);
 
+            const initialLower = +document.getElementById(brush.id + '-lower').value;
+            const initialUpper = +document.getElementById(brush.id + '-upper').value;
+            brushGroup.call(brushSelection.move, [x(initialLower), x(initialUpper)]);
+
             function brushed(event) {
                 if (event.selection) {
                     const [lower, upper] = event.selection.map(x.invert);
                     document.getElementById(brush.id + '-lower').value = Math.round(lower);
                     document.getElementById(brush.id + '-upper').value = Math.round(upper);
-                    if (event.type === 'end') {
-                        htmx.trigger(brush, 'change')
-                    }
+                    htmx.trigger(brush, 'change')
                 }
             }
         });
