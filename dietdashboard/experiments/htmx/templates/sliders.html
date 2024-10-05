@@ -1,56 +1,107 @@
 <!-- D3 Brush Elements -->
-{% for slider in sliders %}
-<div class="mb-4">
-    <label for="{{ slider.id }}" class="form-label">{{ slider.name }}</label>
-    <div id="{{ slider.id }}" class="brush" {{optimization_input}}></div>
-    <input type="hidden" name="bounds_{{ slider.id }}" id="{{ slider.id }}-lower" value="{{slider.lower}}">
-    <input type="hidden" name="bounds_{{ slider.id }}" id="{{ slider.id }}-upper" value="{{slider.upper}}">
-</div>
-{% endfor %}
+<table class="table table-bordered">
+    <tbody>
+        {% for slider in sliders %}
+        <tr>
+            <td class="align-middle text-start" style="width: 15%">{{ slider.name }}</td>
+            <td>
+                <div id="{{ slider.id }}" class="slider-container" {{optimization_input}}></div>
+                <input type="hidden" name="bounds_{{ slider.id }}" id="{{ slider.id }}-lower" value="{{slider.lower}}">
+                <input type="hidden" name="bounds_{{ slider.id }}" id="{{ slider.id }}-upper" value="{{slider.upper}}">
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const brushes = document.querySelectorAll('.brush');
+        const brushes = document.querySelectorAll('.slider-container');
         brushes.forEach((brush) => {
+            const lowerDiv = document.getElementById(brush.id + '-lower')
+            const upperDiv = document.getElementById(brush.id + '-upper')
             const svg = d3.select(brush)
                 .append('svg')
                 .attr('width', '100%')
-                .attr('height', 50);
+                .attr('height', 60);
 
-            const margin = { top: 10, right: 10, bottom: 10, left: 10 };
+            const domainX = [0, 100];
+            const margin = { top: 10, right: 10, bottom: 30, left: 10 };
             const width = brush.clientWidth - margin.left - margin.right;
             const height = +svg.attr('height') - margin.top - margin.bottom;
+            const labelDist = 12;
+            const labelFontSize = '12px';
+            const nTicks = 5;
 
             const x = d3.scaleLinear()
-                .domain([0, 100])
+                .domain(domainX)
                 .range([0, width]);
 
             const g = svg.append('g')
                 .attr('transform', `translate(${margin.left},${margin.top})`);
 
+            // Draw background lines
+            g.append('g').selectAll('line')
+                .data(d3.range(domainX[0], domainX[1] + 1))
+                .enter()
+                .append('line')
+                .attr('x1', d => x(d))
+                .attr('x2', d => x(d))
+                .attr('y1', 0)
+                .attr('y2', height)
+                .style('stroke', '#ccc');
+
+            // Labels
+            const labelL = g.append('text')
+                .attr('id', 'labelleft')
+                .attr('y', height + labelDist)
+                .style('font-size', labelFontSize)
+                .style('text-anchor', 'middle');
+
+            const labelR = g.append('text')
+                .attr('id', 'labelright')
+                .attr('y', height + labelDist)
+                .style('font-size', labelFontSize)
+                .style('text-anchor', 'middle');
+
+            // Define brush
             const brushSelection = d3.brushX()
                 .extent([[0, 0], [width, height]])
-                .on('end', brushed);
+                .on('brush', brushed)
+                .on('end', brushended);
 
             g.append('g')
                 .attr('class', 'x axis')
-                .call(d3.axisBottom(x).ticks(5));
+                .call(d3.axisBottom(x).ticks(nTicks));
 
             const brushGroup = g.append('g')
                 .attr('class', 'brush')
                 .call(brushSelection);
 
-            const initialLower = +document.getElementById(brush.id + '-lower').value;
-            const initialUpper = +document.getElementById(brush.id + '-upper').value;
-            brushGroup.call(brushSelection.move, [x(initialLower), x(initialUpper)]);
+            // Set brush to initial value
+            brushGroup.call(brushSelection.move, [x(+lowerDiv.value), x(+upperDiv.value)]);
 
             function brushed(event) {
                 if (event.selection) {
-                    const [lower, upper] = event.selection.map(x.invert);
-                    document.getElementById(brush.id + '-lower').value = Math.round(lower);
-                    document.getElementById(brush.id + '-upper').value = Math.round(upper);
-                    htmx.trigger(brush, 'change')
+                    const [lower, upper] = event.selection.map(x.invert).map(Math.round);
+                    labelL.attr('x', event.selection[0]).text(lower);
+                    labelR.attr('x', event.selection[1]).text(upper);
                 }
+            }
+
+            function brushended(event) {
+                if (!event.sourceEvent) return;  // If not user interaction
+                const [lower, upper] = event.selection.map(x.invert).map(Math.round);
+                d3.select(this).transition().call(event.target.move, [lower, upper].map(x));
+                lowerDiv.value = lower;
+                upperDiv.value = upper;
+                htmx.trigger(brush, 'change');
             }
         });
     });
 </script>
+
+<style>
+    rect.selection {
+        stroke: black;
+    }
+</style>
