@@ -15,39 +15,43 @@
     {% set optimization_input = 'hx-trigger="change" hx-post="/optimize" hx-target="#result"
     hx-include="[name^=bounds_],[name=macronutrients],[name=micronutrients], #currency"' | safe %}
     <div class="container mt-5">
-        <div class="header d-flex justify-content-between align-items-center pb-3 mb-4 border-bottom">
-            <h1 class="h2">Nutrition Dashboard</h1>
-            <div class="d-flex align-items-center">
-                {% for nutrient_type, nutrient_list in [('Macronutrients', macronutrients), ('Micronutrients',
-                micronutrients)] %}
-                <!-- Dropdown Selector -->
-                <div class="dropdown me-3">
-                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdown{{ nutrient_type }}"
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                        Select {{ nutrient_type }}
-                    </button>
-                    <ul class="dropdown-menu" aria-labelledby="dropdown{{ nutrient_type }}">
-                        {% for nutrient in nutrient_list %}
-                        <li>
-                            <div class="form-check ms-3">
-                                <input class="form-check-input nutrient-checkbox" type="checkbox" value="{{ nutrient }}"
-                                    id="{{nutrient_type}}_{{nutrient}}" name="{{ nutrient_type | lower }}" checked
-                                    {{optimization_input}}>
-                                <label class="form-check-label" for="{{ nutrient }}_{{ nutrient_type }}">
-                                    {{ nutrient }}
-                                </label>
-                            </div>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endfor %}
-                <!-- Currency Selector -->
-                <select id="currency" name="currency" class="form-select" {{optimization_input}}>
-                    {% for currency in currencies %}
-                    <option value="{{ currency }}">{{ currency }}</option>
+        <div class="header pb-3 mb-4 border-bottom">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+                <h1 class="h2">Nutrition Dashboard</h1>
+                <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center mt-3 mt-md-0">
+                    {% for nutrient_type, nutrient_list in [('Macronutrients', macronutrients), ('Micronutrients',
+                    micronutrients)] %}
+                    <!-- Dropdown Selector -->
+                    <div class="dropdown mb-3 mb-md-0 me-md-3">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdown{{ nutrient_type }}"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            Select {{ nutrient_type }}
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="dropdown{{ nutrient_type }}">
+                            {% for nutrient in nutrient_list %}
+                            <li>
+                                <div class="form-check ms-3">
+                                    <input class="form-check-input nutrient-checkbox" type="checkbox"
+                                        value="{{ nutrient }}" id="{{nutrient_type}}_{{nutrient}}"
+                                        name="{{ nutrient_type | lower }}" checked {{optimization_input}}>
+                                    <label class="form-check-label" for="{{ nutrient }}_{{ nutrient_type }}">
+                                        {{ nutrient }}
+                                    </label>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
                     {% endfor %}
-                </select>
+                    <!-- Currency Selector -->
+                    <div class="mb-3 mb-md-0">
+                        <select id="currency" name="currency" class="form-select" {{optimization_input}}>
+                            {% for currency in currencies %}
+                            <option value="{{ currency }}">{{ currency }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
             </div>
         </div>
 
