@@ -59,17 +59,7 @@
                         <p class="text-muted mb-0">Adjust your nutrient targets to optimize your diet.</p>
                     </div>
                     <div class="card-body">
-                        <!-- D3 Brush Elements -->
-                        {% for slider in sliders %}
-                        <div class="mb-4">
-                            <label for="{{ slider.id }}" class="form-label">{{ slider.name }}</label>
-                            <div id="{{ slider.id }}" class="brush" {{optimization_input}}></div>
-                            <input type="hidden" name="bounds_{{ slider.id }}" id="{{ slider.id }}-lower"
-                                value="{{slider.lower}}">
-                            <input type="hidden" name="bounds_{{ slider.id }}" id="{{ slider.id }}-upper"
-                                value="{{slider.upper}}">
-                        </div>
-                        {% endfor %}
+                        {% include "sliders.html" %}
                     </div>
                 </div>
             </div>
@@ -91,47 +81,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const brushes = document.querySelectorAll('.brush');
-            brushes.forEach((brush, index) => {
-                const svg = d3.select(brush)
-                    .append('svg')
-                    .attr('width', '100%')
-                    .attr('height', 50);
-
-                const margin = { top: 10, right: 30, bottom: 10, left: 30 };
-                const width = brush.clientWidth - margin.left - margin.right;
-                const height = +svg.attr('height') - margin.top - margin.bottom;
-
-                const x = d3.scaleLinear()
-                    .domain([0, 100])
-                    .range([0, width]);
-
-                const g = svg.append('g')
-                    .attr('transform', `translate(${margin.left},${margin.top})`);
-
-                const brushSelection = d3.brushX()
-                    .extent([[0, 0], [width, height]])
-                    .on('end', brushed);
-
-                g.append('g')
-                    .attr('class', 'x axis')
-                    .call(d3.axisBottom(x).ticks(5));
-
-                const brushGroup = g.append('g')
-                    .attr('class', 'brush')
-                    .call(brushSelection);
-
-                function brushed(event) {
-                    if (event.selection) {
-                        const [lower, upper] = event.selection.map(x.invert);
-                        document.getElementById(brush.id + '-lower').value = Math.round(lower);
-                        document.getElementById(brush.id + '-upper').value = Math.round(upper);
-                        if (event.type === 'end') {
-                            htmx.trigger(brush, 'change')
-                        }
-                    }
-                }
-            });
 
             // Activate a change on the currency to load the optimization results on load
             const currency = document.getElementById('currency');
