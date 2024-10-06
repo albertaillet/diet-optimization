@@ -1,13 +1,23 @@
-from flask import Flask, render_template, render_template_string, request
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from typing import List
+from pathlib import Path
+import uvicorn
+
+# Setting up the FastAPI app and Jinja2 templates
+
 
 POSSIBLE_CURRENCIES = ["EUR", "CHF"]
 
 
-def create_app() -> Flask:
-    app = Flask(__name__)
+def create_app() -> FastAPI:
+    templates = Jinja2Templates(directory=Path(__file__).resolve().parent / "templates")
 
-    @app.route("/")
-    def index():
+    app = FastAPI()
+
+    @app.get("/", response_class=HTMLResponse)
+    async def index(request: Request):
         sliders = [
             {
                 "name": f"NutrientName{i}",
@@ -21,34 +31,33 @@ def create_app() -> Flask:
         ]
         macronutrients = ["Protein", "Carbohydrates", "Fats"]
         micronutrients = ["Vitamin A", "Vitamin C", "Iron", "Calcium"]
-        return render_template(
-            "index.html",
+        context = dict(
             currencies=POSSIBLE_CURRENCIES,
             sliders=sliders,
             macronutrients=macronutrients,
             micronutrients=micronutrients,
+            request=request,
         )
+        return templates.TemplateResponse("index.html", context)
 
-    @app.route("/optimize", methods=["POST"])
-    def optimize():
-        form_data = request.form.to_dict(flat=False)
-        html_template = """
-        <table class="table table-striped table-bordered">
-            <thead>
-                <tr><th>Field</th><th>Value</th></tr>
-            </thead>
-            <tbody>
-                {% for key, value in form_data.items() %}
-                <tr><td>{{ key }}</td><td>{{ value }}</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        """
-        return render_template_string(html_template, form_data=form_data)
+    @app.post("/optimize", response_class=HTMLResponse)
+    async def optimize(request: Request):
+        form_data = await request.form()
+        import code
+
+        code.interact(local=locals())
+        form_data_dict = {key: value for key, value in zip(request.query_params.keys(), form_data)}
+        return templates.TemplateResponse(
+            "result.html",
+            {
+                "request": request,
+                "form_data": form_data_dict,
+            },
+        )
 
     return app
 
 
+app = create_app()
 if __name__ == "__main__":
-    app = create_app()
-    app.run(debug=True)
+    uvicorn.run("app:app", host="127.0.0.1", port=5000, reload=True)
