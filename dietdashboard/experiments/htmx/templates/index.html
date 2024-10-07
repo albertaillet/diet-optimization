@@ -80,9 +80,11 @@
     </div>
 
     <script>
+        function optimizationInput() { return document.querySelectorAll('[optimization-input]'); }
+
         function handleOptimitzationInputs() {
             const data = {};
-            document.querySelectorAll('[optimization-input]').forEach(function (element) {
+            optimizationInput().forEach(function (element) {
                 if ((element.type === 'checkbox' || element.type === 'radio')) {
                     if (element.checked) {
                         if (!data[element.name]) { data[element.name] = []; }
@@ -107,7 +109,7 @@
                 .catch(error => console.error('Error:', error));
         }
         document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('[optimization-input]').forEach(function (element) {
+            optimizationInput().forEach(function (element) {
                 element.addEventListener('change', handleOptimitzationInputs);
             });
             handleOptimitzationInputs();
