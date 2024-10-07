@@ -6,7 +6,7 @@
             <td class="align-middle text-start" style="width: 110px; font-size: 12px">{{ slider.name }} ({{ slider.unit
                 }})</td>
             <td class="ps-3 pe-3">
-                <div id="{{ slider.id }}" class="slider-container" style="height: 40px;"></div>
+                <div id="{{ slider.id }}" class="slider-container p-0" style="height: 40px;"></div>
                 <input type="hidden" id="{{ slider.id }}-min" value="{{ slider.min }}">
                 <input type="hidden" id="{{ slider.id }}-max" value="{{ slider.max }}">
                 <input type="hidden" id="{{ slider.id }}-lower" value="{{ slider.lower }}" name="bounds_{{ slider.id }}"
@@ -50,17 +50,20 @@
                 .attr('id', 'labelleft')
                 .attr('y', height + 10)
                 .style('font-size', labelFontSize)
-                .style('text-anchor', 'middle');
+                .style('text-anchor', 'middle')
+                .style('opacity', 0); // Initially hidden
 
             const labelR = g.append('text')
                 .attr('id', 'labelright')
-                .attr('y', height + 10)
+                .attr('y', - height + 10)
                 .style('font-size', labelFontSize)
-                .style('text-anchor', 'middle');
+                .style('text-anchor', 'middle')
+                .style('opacity', 0); // Initially hidden
 
             // Define brush
             const brushSelection = d3.brushX()
                 .extent([[0, 0], [width, height]])
+                .handleSize(3) // Makes the handles larger to accommodate arrow labels
                 .on('brush', brushed)
                 .on('end', brushended);
 
@@ -75,11 +78,27 @@
             // Set brush to initial value
             brushGroup.call(brushSelection.move, [x(+lowerDiv.value), x(+upperDiv.value)]);
 
+            // Update styles of the brush to match requirements
+            brushGroup.selectAll('.selection')
+                .style('fill', 'none') // Remove fill
+                .style('stroke-width', 1    ); // Set the thickness of the border
+
+            brushGroup.selectAll('.handle')
+                .style('fill', 'black') // Handles now appear as black bars for left and right
+                .on('mouseover', function () {
+                    labelL.style('opacity', 1);
+                    labelR.style('opacity', 1);
+                })
+                .on('mouseout', function () {
+                    labelL.style('opacity', 0);
+                    labelR.style('opacity', 0);
+                });
+
             function brushed(event) {
                 if (event.selection) {
                     const [lower, upper] = event.selection.map(x.invert).map(Math.round);
-                    labelL.attr('x', event.selection[0]).text(lower);
-                    labelR.attr('x', event.selection[1]).text(upper);
+                    labelL.attr('x', event.selection[0] + margin.left).text(lower);
+                    labelR.attr('x', event.selection[1] + margin.left).text(upper);
                 }
             }
 
@@ -94,23 +113,3 @@
         });
     });
 </script>
-
-<style>
-    rect.selection {
-        stroke: black;
-    }
-
-    .x.axis path,
-    .x.axis line {
-        shape-rendering: crispEdges;
-        stroke: #ddd;
-    }
-
-    .table {
-        margin-bottom: 5px;
-    }
-
-    .slider-container {
-        padding: 0;
-    }
-</style>
