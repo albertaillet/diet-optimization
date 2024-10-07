@@ -5,9 +5,11 @@
         <tr>
             <td class="align-middle text-start" style="width: 15%">{{ slider.name }}</td>
             <td>
-                <div id="{{ slider.id }}" class="slider-container" {{optimization_input}}></div>
-                <input type="hidden" name="bounds_{{ slider.id }}" id="{{ slider.id }}-lower" value="{{slider.lower}}">
-                <input type="hidden" name="bounds_{{ slider.id }}" id="{{ slider.id }}-upper" value="{{slider.upper}}">
+                <div id="{{ slider.id }}" class="slider-container"></div>
+                <input type="hidden" name="bounds_{{ slider.id }}" id="{{ slider.id }}-lower" value="{{slider.lower}}"
+                    optimization-input>
+                <input type="hidden" name="bounds_{{ slider.id }}" id="{{ slider.id }}-upper" value="{{slider.upper}}"
+                    optimization-input>
             </td>
         </tr>
         {% endfor %}
@@ -89,12 +91,12 @@
             }
 
             function brushended(event) {
-                if (!event.sourceEvent) return;  // If not user interaction
+                if (!event.sourceEvent) return;
                 const [lower, upper] = event.selection.map(x.invert).map(Math.round);
                 d3.select(this).transition().call(event.target.move, [lower, upper].map(x));
                 lowerDiv.value = lower;
                 upperDiv.value = upper;
-                htmx.trigger(brush, 'change');
+                handleOptimitzationInputs()
             }
         });
     });

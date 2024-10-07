@@ -31,7 +31,7 @@ def create_app() -> Flask:
 
     @app.route("/optimize", methods=["POST"])
     def optimize():
-        form_data = request.form.to_dict(flat=False)
+        form_data = request.get_json()
         html_template = """
         <table class="table table-striped table-bordered">
             <thead>
