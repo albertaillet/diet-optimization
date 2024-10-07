@@ -10,11 +10,11 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 
-<body>
-    <div class="container mt-5">
-        <div class="header pb-3 mb-4 border-bottom">
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
-                <h1 class="h2">Nutrition Dashboard</h1>
+<body style="font-size: 0.9rem;">
+    <div class="container">
+        <div class="header pt-3 pb-3">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+                <h1 class="h3">Nutrition Dashboard</h1>
                 <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center mt-3 mt-md-0">
                     {% for nutrient_group in nutient_groups %}
                     <!-- Dropdown Selector -->
@@ -23,14 +23,16 @@
                             id="dropdown-{{ nutrient_group.id }}" data-bs-toggle="dropdown" aria-expanded="false">
                             Select {{ nutrient_group.name }}
                         </button>
-                        <ul class="dropdown-menu" aria-labelledby="dropdown-{{ nutrient_group.id }}">
+                        <ul class="dropdown-menu" aria-labelledby="dropdown-{{ nutrient_group.id }}"
+                            style="font-size: 0.85rem;">
                             {% for nutrient in nutrient_group.nutrients %}
                             <li>
                                 <div class="form-check ms-3">
                                     <input class="form-check-input" type="checkbox" value="{{ nutrient.id }}"
                                         id="{{ nutrient_group.id }}-{{ nutrient.id }}" name="{{ nutrient_group.id }}"
                                         checked optimization-input>
-                                    <label class="form-check-label" for="{{ nutrient_group.id }}-{{ nutrient.id }}">
+                                    <label class="form-check-label" for="{{ nutrient_group.id }}-{{ nutrient.id }}"
+                                        style="font-size: 0.85rem;">
                                         {{ nutrient.name }}
                                     </label>
                                 </div>
@@ -58,7 +60,7 @@
                         <h4 class="h5">Nutrient Targets</h4>
                         <p class="text-muted mb-0">Adjust your nutrient targets to optimize your diet.</p>
                     </div>
-                    <div class="card-body  p-0">
+                    <div class="card-body p-0" style="overflow-y: auto; max-height: 77vh;">
                         {% include "sliders.html" %}
                     </div>
                 </div>
@@ -71,7 +73,7 @@
                         <p class="text-muted mb-0">The recommended food items and quantities to meet your nutrient
                             targets.</p>
                     </div>
-                    <div class="card-body p-0 overflow-auto" style="max-height: 80vh;" id="result">
+                    <div class="card-body p-0" style="overflow-y: auto; max-height: 77vh;" id="result">
                         <!-- Result will be displayed here -->
                     </div>
                 </div>
