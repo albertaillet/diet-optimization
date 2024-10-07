@@ -19,14 +19,32 @@ def create_app() -> Flask:
             }
             for i in range(5)
         ]
-        macronutrients = ["Protein", "Carbohydrates", "Fats"]
-        micronutrients = ["Vitamin A", "Vitamin C", "Iron", "Calcium"]
+        nutient_groups = [
+            {
+                "name": "Macronutrients",
+                "id": "macro",
+                "nutrients": [
+                    {"name": "Protein", "id": "protein"},
+                    {"name": "Carbohydrates", "id": "carbs"},
+                    {"name": "Fats", "id": "fats"},
+                ],
+            },
+            {
+                "name": "Micronutrients",
+                "id": "micro",
+                "nutrients": [
+                    {"name": "Vitamin A", "id": "vitamin-a"},
+                    {"name": "Vitamin C", "id": "vitamin-c"},
+                    {"name": "Iron", "id": "iron"},
+                    {"name": "Calcium", "id": "calcium"},
+                ],
+            },
+        ]
         return render_template(
             "index.html",
             currencies=POSSIBLE_CURRENCIES,
             sliders=sliders,
-            macronutrients=macronutrients,
-            micronutrients=micronutrients,
+            nutient_groups=nutient_groups,
         )
 
     @app.route("/optimize", methods=["POST"])
