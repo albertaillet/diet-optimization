@@ -3,12 +3,14 @@
     <tbody>
         {% for slider in sliders %}
         <tr>
-            <td class="align-middle text-start" style="width: 15%">{{ slider.name }}</td>
+            <td class="align-middle text-start" style="width: 15%">{{ slider.name }} ({{slider.unit}})</td>
             <td>
                 <div id="{{ slider.id }}" class="slider-container"></div>
-                <input type="hidden" name="bounds_{{ slider.id }}" id="{{ slider.id }}-lower" value="{{slider.lower}}"
+                <input type="hidden" id="{{ slider.id }}-min" value="{{ slider.min }}">
+                <input type="hidden" id="{{ slider.id }}-max" value="{{ slider.max }}">
+                <input type="hidden" id="{{ slider.id }}-lower" value="{{ slider.lower }}" name="bounds_{{ slider.id }}"
                     optimization-input>
-                <input type="hidden" name="bounds_{{ slider.id }}" id="{{ slider.id }}-upper" value="{{slider.upper}}"
+                <input type="hidden" id="{{ slider.id }}-upper" value="{{ slider.upper }}" name="bounds_{{ slider.id }}"
                     optimization-input>
             </td>
         </tr>
@@ -19,6 +21,8 @@
     document.addEventListener('DOMContentLoaded', function () {
         const brushes = document.querySelectorAll('.slider-container');
         brushes.forEach((brush) => {
+            const minDiv = document.getElementById(brush.id + '-min')
+            const maxDiv = document.getElementById(brush.id + '-max')
             const lowerDiv = document.getElementById(brush.id + '-lower')
             const upperDiv = document.getElementById(brush.id + '-upper')
             const svg = d3.select(brush)
@@ -26,7 +30,7 @@
                 .attr('width', '100%')
                 .attr('height', 60);
 
-            const domainX = [0, 100];
+            const domainX = [+minDiv.value, +maxDiv.value];
             const margin = { top: 10, right: 10, bottom: 30, left: 10 };
             const width = brush.clientWidth - margin.left - margin.right;
             const height = +svg.attr('height') - margin.top - margin.bottom;
@@ -40,17 +44,6 @@
 
             const g = svg.append('g')
                 .attr('transform', `translate(${margin.left},${margin.top})`);
-
-            // Draw background lines
-            g.append('g').selectAll('line')
-                .data(d3.range(domainX[0], domainX[1] + 1))
-                .enter()
-                .append('line')
-                .attr('x1', d => x(d))
-                .attr('x2', d => x(d))
-                .attr('y1', 0)
-                .attr('y2', height)
-                .style('stroke', '#ccc');
 
             // Labels
             const labelL = g.append('text')
