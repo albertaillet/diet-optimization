@@ -38,12 +38,33 @@
     .axis text {
         font-size: 10px;
     }
+
+    /* Tooltip styling */
+    .segment-label {
+        font: 12px sans-serif;
+        text-anchor: middle;
+        fill: #000;
+        pointer-events: none;
+        opacity: 0;
+        /* Hidden by default */
+    }
+
+    .segment:hover+.segment-label,
+    .segment-label:hover {
+        opacity: 1;
+        /* Show label on hover */
+    }
 </style>
 
 <!-- D3.js Script -->
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    // Object to store references to sliders and their components
+    const sliderComponents = {};
+
+    // Function to initialize sliders and bars
+    function initializeSliders() {
+        // Select all slider containers
         const brushes = document.querySelectorAll('.slider-container');
         brushes.forEach((brush) => {
             const minDiv = document.getElementById(brush.id + '-min');
@@ -82,6 +103,23 @@
                 .selectAll('text')
                 .style('text-anchor', 'middle');
 
+            // Initialize empty stacked bar over the x-axis
+            const barHeight = 10;
+            const barYPosition = axisYPosition - barHeight - 2; // Position above the axis
+
+            const barGroup = g.append('g')
+                .attr('class', 'stacked-bar');
+
+            // Initialize empty data for segments
+            const segments = [];
+
+            // Create empty segment groups
+            const segmentGroups = barGroup.selectAll('g')
+                .data(segments)
+                .enter()
+                .append('g')
+                .attr('class', 'segment-group');
+
             // Define brush extent over the axis line with thinner height
             const brushHeight = 4; // Set brush height to a thin value (e.g., 4 pixels)
             const brushYPosition = axisYPosition - brushHeight / 2;
@@ -90,6 +128,7 @@
                 .on('brush', brushed)
                 .on('end', brushended);
 
+            // Add brush group AFTER the stacked bar so it appears on top
             const brushGroup = g.append('g')
                 .attr('class', 'brush')
                 .call(brushSelection);
@@ -125,8 +164,92 @@
                 d3.select(this).transition().call(brushSelection.move, [lower, upper].map(x));
                 lowerDiv.value = lower;
                 upperDiv.value = upper;
-                handleOptimitzationInputs();
+                handleOptimitzationInputs(); // Ensure this function is defined elsewhere
+            }
+
+            // Store references for updating later
+            sliderComponents[brush.id] = {
+                x: x,
+                barGroup: barGroup,
+                barYPosition: barYPosition,
+                barHeight: barHeight,
+                lowerDiv: lowerDiv,
+                upperDiv: upperDiv,
+                axisYPosition: axisYPosition
+            };
+        });
+    }
+
+    // Function to update bars with new data
+    function updateBars(nutrientLevelsData) {
+        Object.keys(sliderComponents).forEach((nutrientName) => {
+            const components = sliderComponents[nutrientName];
+            const x = components.x;
+            const barGroup = components.barGroup;
+            const barYPosition = components.barYPosition;
+            const barHeight = components.barHeight;
+            const axisYPosition = components.axisYPosition;
+
+            // Get the segments data for this nutrient
+            const segments = nutrientLevelsData[nutrientName];
+
+            // Remove existing segments
+            barGroup.selectAll('.segment-group').remove();
+
+            if (segments && segments.length > 0) {
+                // Sum up levels to get totalLevel
+                const totalLevel = segments.reduce((sum, d) => sum + d.level, 0);
+
+                const [min, max] = x.domain()
+                console.log(x.domain())
+
+                // Calculate cumulative proportions
+                let cum = 0;
+                segments.forEach((d, i) => {
+                    d.startValue = cum;
+                    cum += d.level;
+                    d.endValue = cum;
+                });
+
+                // Add new segment groups
+                const segmentGroups = barGroup.selectAll('.segment-group')
+                    .data(segments)
+                    .enter()
+                    .append('g')
+                    .attr('class', 'segment-group');
+
+                // Add rectangles for each segment
+                segmentGroups.append('rect')
+                    .attr('class', 'segment')
+                    .attr('x', d => x(d.startValue))
+                    .attr('y', barYPosition)
+                    .attr('width', d => x(d.endValue) - x(d.startValue))
+                    .attr('height', barHeight)
+                    .attr('fill', (d, i) => d3.schemeCategory10[i % 10]);
+
+                // Add fixed labels for each segment, hidden by default
+                segmentGroups.append('text')
+                    .attr('class', 'segment-label')
+                    .attr('x', d => x((d.startValue + d.endValue) / 2))
+                    .attr('y', barYPosition - 5) // Position above the bar segment
+                    .text(d => d.ciqual_name);
+
+                // Show label on hover
+                segmentGroups.selectAll('.segment')
+                    .on('mouseover', function (event, d) {
+                        d3.select(this.parentNode).select('.segment-label')
+                            .attr('opacity', 1);
+                    })
+                    .on('mouseout', function (event, d) {
+                        d3.select(this.parentNode).select('.segment-label')
+                            .attr('opacity', 0);
+                    });
             }
         });
+    }
+
+    // Call the initialize function once after DOM content is loaded
+    document.addEventListener('DOMContentLoaded', function () {
+        initializeSliders();
     });
 </script>

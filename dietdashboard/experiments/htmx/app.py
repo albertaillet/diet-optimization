@@ -18,6 +18,7 @@ TODO: Include breakdown source of each nutrient (either in popup, other page or 
 
 import csv
 import math
+import operator
 import os
 from pathlib import Path
 
@@ -119,7 +120,7 @@ def create_rangeslider(data: dict[str, str]) -> dict[str, float | str]:
     value_key = "value_males"  # "value_females"  # NOTE: using male values
     lower = float(data[value_key])
     upper = float(data["value_upper_intake"]) if data["value_upper_intake"] != "" else None
-    _min = 0 if data["off_id"] != "energy-kcal" else 1000
+    _min = 0
     _max = 4 * lower if upper is None else math.ceil(upper + lower - _min)
     _max = _min + 100 if _max == _min else _max
     unit = data["unit"]
@@ -174,6 +175,14 @@ def create_app(
             nutient_groups=nutient_groups,
         )
 
+    @app.route("/sliders")
+    def sliders():
+        sliders = [create_rangeslider(rec) for rec in [*macro_recommendations, *micro_recommendations]]
+        return render_template(
+            "sliders.html",
+            sliders=sliders,
+        )
+
     @app.route("/optimize", methods=["POST"])
     def optimize():
         data = request.get_json()
@@ -193,12 +202,17 @@ def create_app(
         if result.status != 0:
             return "<h1>No solution</h1>"
 
+        n_products = A_nutrients.shape[1]
+
         # Calculate nutrient levels
-        # nutrients_levels = A_nutrients @ result.x  # TODO: use nutrient levels.
+        nutrients_levels = A_nutrients * result.x  # TODO: use nutrient levels.
+        assert (nutrients_levels < 0).sum() == 0, "Negative values in nutrients_levels."
 
         # Prepare data for rendering in the HTML table
         products = []
-        for i in range(len(products_and_prices["product_code"])):
+        for i in range(n_products):
+            if result.x[i] <= 0:  # Filter out products with zero quantity
+                continue
             product = {
                 "product_code": products_and_prices["product_code"][i],
                 "product_name": products_and_prices["product_name"][i],
@@ -208,11 +222,22 @@ def create_app(
                 "location_osm_id": products_and_prices["location_osm_id"][i],
                 "quantity_g": round(100 * result.x[i], 1),
                 "price": round(c_costs[i] * result.x[i], 2),
+                "levels": {nutrient_id: nutrients_levels[j, i] for j, nutrient_id in enumerate(chosen_nutrient_ids)},
             }
-            if product["quantity_g"] > 0:  # Filter out products with zero quantity
-                products.append(product)
+            products.append(product)
 
-        return render_template("result.html", products=products, result=result, currency=currency)
+        products = sorted(products, key=operator.itemgetter("quantity_g"), reverse=True)
+
+        nutrients = {}
+        for p in products:
+            for nutrient_id, level in p["levels"].items():
+                if nutrient_id not in nutrients:
+                    nutrients[nutrient_id] = []
+                if level == 0:
+                    continue
+                nutrients[nutrient_id].append({"ciqual_name": p["ciqual_name"], "level": level})
+
+        return render_template("result.html", products=products, result=result, currency=currency, nutrients=nutrients)
 
     return app
 
