@@ -3,10 +3,11 @@
     <tbody>
         {% for slider in sliders %}
         <tr>
-            <td class="align-middle text-start" style="width: 110px; font-size: 12px">{{ slider.name }} ({{ slider.unit
-                }})</td>
+            <td class="align-middle text-start" style="width: 110px; font-size: 12px">
+                {{ slider.name }} ({{ slider.unit }})
+            </td>
             <td class="ps-3 pe-3">
-                <div id="{{ slider.id }}" class="slider-container p-0" style="height: 40px;"></div>
+                <div id="{{ slider.id }}" class="slider-container p-0" style="height: 60px;"></div>
                 <input type="hidden" id="{{ slider.id }}-min" value="{{ slider.min }}">
                 <input type="hidden" id="{{ slider.id }}-max" value="{{ slider.max }}">
                 <input type="hidden" id="{{ slider.id }}-lower" value="{{ slider.lower }}" name="bounds_{{ slider.id }}"
@@ -18,6 +19,29 @@
         {% endfor %}
     </tbody>
 </table>
+
+<!-- Custom CSS for Styling -->
+<style>
+    .brush .selection {
+        fill: #69a0e8;
+        fill-opacity: 0.8;
+        stroke: none;
+    }
+
+    .brush .handle--custom circle {
+        fill: #444;
+        fill-opacity: 0.9;
+        stroke: #000;
+        stroke-width: 1.5px;
+    }
+
+    .axis text {
+        font-size: 10px;
+    }
+</style>
+
+<!-- D3.js Script -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const brushes = document.querySelectorAll('.slider-container');
@@ -29,14 +53,13 @@
             const svg = d3.select(brush)
                 .append('svg')
                 .attr('width', '100%')
-                .attr('height', 40);
+                .attr('height', 60); // Adjust height as needed
 
             const domainX = [+minDiv.value, +maxDiv.value];
-            const margin = { top: 5, right: 5, bottom: 20, left: 5 };
+            const margin = { top: 5, right: 10, bottom: 20, left: 10 };
             const width = brush.clientWidth - margin.left - margin.right;
             const height = +svg.attr('height') - margin.top - margin.bottom;
-            const labelFontSize = '10px';
-            const nTicks = 5;
+            const nTicks = 10; // Adjust number of ticks as needed
 
             const x = d3.scaleLinear()
                 .domain(domainX)
@@ -45,67 +68,61 @@
             const g = svg.append('g')
                 .attr('transform', `translate(${margin.left},${margin.top})`);
 
-            // Labels
-            const labelL = g.append('text')
-                .attr('id', 'labelleft')
-                .attr('y', height + 10)
-                .style('font-size', labelFontSize)
-                .style('text-anchor', 'middle')
-                .style('opacity', 0); // Initially hidden
-
-            const labelR = g.append('text')
-                .attr('id', 'labelright')
-                .attr('y', - height + 10)
-                .style('font-size', labelFontSize)
-                .style('text-anchor', 'middle')
-                .style('opacity', 0); // Initially hidden
-
-            // Define brush
-            const brushSelection = d3.brushX()
-                .extent([[0, 0], [width, height]])
-                .handleSize(3) // Makes the handles larger to accommodate arrow labels
-                .on('brush', brushed)
-                .on('end', brushended);
+            // Position the axis at the bottom
+            const axisYPosition = height;
+            const xAxis = d3.axisBottom(x)
+                .ticks(nTicks)
+                .tickSize(6) // Ticks pointing down
+                .tickPadding(3);
 
             g.append('g')
                 .attr('class', 'x axis')
-                .call(d3.axisBottom(x).ticks(nTicks).tickSize(-height).tickPadding(6));
+                .attr('transform', `translate(0,${axisYPosition})`)
+                .call(xAxis)
+                .selectAll('text')
+                .style('text-anchor', 'middle');
+
+            // Define brush extent over the axis line with thinner height
+            const brushHeight = 4; // Set brush height to a thin value (e.g., 4 pixels)
+            const brushYPosition = axisYPosition - brushHeight / 2;
+            const brushSelection = d3.brushX()
+                .extent([[0, brushYPosition], [width, brushYPosition + brushHeight]])
+                .on('brush', brushed)
+                .on('end', brushended);
 
             const brushGroup = g.append('g')
                 .attr('class', 'brush')
                 .call(brushSelection);
 
-            // Set brush to initial value
+            // Create custom handles
+            const handle = brushGroup.selectAll('.handle--custom')
+                .data([{ type: 'w' }, { type: 'e' }])
+                .enter().append('g')
+                .attr('class', 'handle--custom')
+                .attr('cursor', 'ew-resize');
+
+            handle.append('circle')
+                .attr('r', 8)
+                .attr('cy', axisYPosition); // Position handles on the axis line
+
+            // Set initial brush position
             brushGroup.call(brushSelection.move, [x(+lowerDiv.value), x(+upperDiv.value)]);
-
-            // Update styles of the brush to match requirements
-            brushGroup.selectAll('.selection')
-                .style('fill', 'none') // Remove fill
-                .style('stroke-width', 1    ); // Set the thickness of the border
-
-            brushGroup.selectAll('.handle')
-                .style('fill', 'black') // Handles now appear as black bars for left and right
-                .on('mouseover', function () {
-                    labelL.style('opacity', 1);
-                    labelR.style('opacity', 1);
-                })
-                .on('mouseout', function () {
-                    labelL.style('opacity', 0);
-                    labelR.style('opacity', 0);
-                });
 
             function brushed(event) {
                 if (event.selection) {
                     const [lower, upper] = event.selection.map(x.invert).map(Math.round);
-                    labelL.attr('x', event.selection[0] + margin.left).text(lower);
-                    labelR.attr('x', event.selection[1] + margin.left).text(upper);
+
+                    // Update custom handle positions
+                    handle.attr("transform", function (d, i) {
+                        return "translate(" + [event.selection[i], 0] + ")";
+                    });
                 }
             }
 
             function brushended(event) {
-                if (!event.sourceEvent) return;
+                if (!event.sourceEvent) return; // Only transition after input
                 const [lower, upper] = event.selection.map(x.invert).map(Math.round);
-                d3.select(this).transition().call(event.target.move, [lower, upper].map(x));
+                d3.select(this).transition().call(brushSelection.move, [lower, upper].map(x));
                 lowerDiv.value = lower;
                 upperDiv.value = upper;
                 handleOptimitzationInputs();
