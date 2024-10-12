@@ -36,7 +36,7 @@ POSSIBLE_CURRENCIES = ["EUR", "CHF"]
 
 def load_and_filter_products(file, used_nutrients: list[str]) -> dict[str, list[str | float]]:
     """Filters to only the relevant nutrients and drops all products with missing values."""
-    product_cols = {"product_code": str, "product_name": str, "ciqual_code": str, "ciqual_name": str}
+    product_cols = {"id": int, "product_code": str, "product_name": str, "ciqual_code": str, "ciqual_name": str}
     price_cols = {"price": float, "currency": str, "price_date": str, "location": str, "location_osm_id": str}
     nutrient_cols = {
         name + suffix: _type for name in used_nutrients for suffix, _type in (("_value", float), ("_unit", str), ("_source", str))
@@ -214,6 +214,7 @@ def create_app(
             if result.x[i] <= 0:  # Filter out products with zero quantity
                 continue
             product = {
+                "id": products_and_prices["id"][i],
                 "product_code": products_and_prices["product_code"][i],
                 "product_name": products_and_prices["product_name"][i],
                 "ciqual_name": products_and_prices["ciqual_name"][i],
@@ -235,9 +236,17 @@ def create_app(
                     nutrients[nutrient_id] = []
                 if level == 0:
                     continue
-                nutrients[nutrient_id].append({"ciqual_name": p["ciqual_name"], "level": level})
+                nutrients[nutrient_id].append({"name": p["ciqual_name"], "id": p["id"], "level": level})
 
-        return render_template("result.html", products=products, result=result, currency=currency, nutrients=nutrients)
+        product_indices = {p["id"]: i for i, p in enumerate(products)}
+        return render_template(
+            "result.html",
+            products=products,
+            result=result,
+            currency=currency,
+            nutrients=nutrients,
+            product_indices=product_indices,
+        )
 
     return app
 

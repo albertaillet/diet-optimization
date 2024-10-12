@@ -127,7 +127,7 @@ def create_csv(
     product_cols = ["product_code", "product_name", "ciqual_code", "ciqual_name"]
     price_cols = ["price", "currency", "price_date", "location", "location_osm_id"]
     nutrient_cols = [d["off_id"] + suffix for d in nutrient_map for suffix in ("_value", "_unit", "_source")]
-    header = product_cols + price_cols + nutrient_cols
+    header = ["id", *product_cols, *price_cols, *nutrient_cols]
 
     writer = csv.writer(file)
     writer.writerow(header)  # Write the header
@@ -164,6 +164,7 @@ def create_csv(
             ciqual_name = ciqual_table[ciqual_code]["ciqual_name"] if ciqual_code is not None else None
 
         row_dict = {
+            "id": price_item["id"],
             "product_name": product_item["product"].get("product_name"),
             "product_code": product_item["code"],
             "ciqual_code": ciqual_code,

@@ -59,6 +59,8 @@
 <!-- D3.js Script -->
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <script>
+    // Inspired by https://observablehq.com/@sarah37/snapping-range-slider-with-d3-brush
+
     // Object to store references to sliders and their components
     const sliderComponents = {};
 
@@ -66,7 +68,7 @@
     function initializeSliders() {
         // Select all slider containers
         const brushes = document.querySelectorAll('.slider-container');
-        brushes.forEach((brush) => {
+        brushes.forEach((brush, i) => {
             const minDiv = document.getElementById(brush.id + '-min');
             const maxDiv = document.getElementById(brush.id + '-max');
             const lowerDiv = document.getElementById(brush.id + '-lower');
@@ -109,16 +111,6 @@
 
             const barGroup = g.append('g')
                 .attr('class', 'stacked-bar');
-
-            // Initialize empty data for segments
-            const segments = [];
-
-            // Create empty segment groups
-            const segmentGroups = barGroup.selectAll('g')
-                .data(segments)
-                .enter()
-                .append('g')
-                .attr('class', 'segment-group');
 
             // Define brush extent over the axis line with thinner height
             const brushHeight = 4; // Set brush height to a thin value (e.g., 4 pixels)
@@ -173,83 +165,105 @@
                 barGroup: barGroup,
                 barYPosition: barYPosition,
                 barHeight: barHeight,
-                lowerDiv: lowerDiv,
-                upperDiv: upperDiv,
-                axisYPosition: axisYPosition
             };
         });
     }
 
-    // Function to update bars with new data
-    function updateBars(nutrientLevelsData) {
+    function updateBars() {
+        const nutrientLevelsData = JSON.parse(document.getElementById('nutrient-levels').textContent);
+        const productIndices = JSON.parse(document.getElementById('product-indices').textContent);
+
         Object.keys(sliderComponents).forEach((nutrientName) => {
             const components = sliderComponents[nutrientName];
             const x = components.x;
             const barGroup = components.barGroup;
             const barYPosition = components.barYPosition;
             const barHeight = components.barHeight;
-            const axisYPosition = components.axisYPosition;
 
             // Get the segments data for this nutrient
-            const segments = nutrientLevelsData[nutrientName];
+            const segments = nutrientLevelsData[nutrientName] || [];
 
-            // Remove existing segments
-            barGroup.selectAll('.segment-group').remove();
+            // Calculate cumulative values using actual levels
+            let cum = 0;
+            segments.forEach((d) => {
+                d.startValue = cum;
+                cum += d.level;
+                d.endValue = cum;
+            });
 
-            if (segments && segments.length > 0) {
-                // Sum up levels to get totalLevel
-                const totalLevel = segments.reduce((sum, d) => sum + d.level, 0);
+            // Data join without key function (match by index)
+            const segmentGroups = barGroup.selectAll('.segment-group')
+                .data(segments);
 
-                const [min, max] = x.domain()
-                console.log(x.domain())
+            // EXIT selection: Remove old elements
+            segmentGroups.exit()
+                .transition()
+                .duration(100)
+                .style('opacity', 0)
+                .remove();
 
-                // Calculate cumulative proportions
-                let cum = 0;
-                segments.forEach((d, i) => {
-                    d.startValue = cum;
-                    cum += d.level;
-                    d.endValue = cum;
+            // ENTER selection: Create new elements
+            const segmentGroupsEnter = segmentGroups.enter()
+                .append('g')
+                .attr('class', 'segment-group');
+
+            // Append rectangles to entering segments
+            segmentGroupsEnter.append('rect')
+                .attr('class', 'segment')
+                .attr('y', barYPosition)
+                .attr('height', barHeight)
+                .attr('width', 0) // Start with zero width for transition
+                .on('mouseover', function (event, d) {
+                    d3.select(this.parentNode).select('.segment-label')
+                        .attr('opacity', 1);
+                })
+                .on('mouseout', function (event, d) {
+                    d3.select(this.parentNode).select('.segment-label')
+                        .attr('opacity', 0);
                 });
 
-                // Add new segment groups
-                const segmentGroups = barGroup.selectAll('.segment-group')
-                    .data(segments)
-                    .enter()
-                    .append('g')
-                    .attr('class', 'segment-group');
+            // Append labels to entering segments
+            segmentGroupsEnter.append('text')
+                .attr('class', 'segment-label')
+                .attr('y', barYPosition - 5)
+                .text(d => d.name)
+                .attr('opacity', 0);
 
-                // Add rectangles for each segment
-                segmentGroups.append('rect')
-                    .attr('class', 'segment')
-                    .attr('x', d => x(d.startValue))
-                    .attr('y', barYPosition)
-                    .attr('width', d => x(d.endValue) - x(d.startValue))
-                    .attr('height', barHeight)
-                    .attr('fill', (d, i) => d3.schemeCategory10[i % 10]);
+            // Merge entering and updating segments
+            const segmentGroupsMerge = segmentGroupsEnter.merge(segmentGroups);
 
-                // Add fixed labels for each segment, hidden by default
-                segmentGroups.append('text')
-                    .attr('class', 'segment-label')
-                    .attr('x', d => x((d.startValue + d.endValue) / 2))
-                    .attr('y', barYPosition - 5) // Position above the bar segment
-                    .text(d => d.ciqual_name);
+            // Update positions and sizes of rectangles for both entering and updating segments
+            segmentGroupsMerge.select('.segment')
+                .transition()
+                .duration(750)
+                .attr('x', d => x(d.startValue))
+                .attr('width', d => x(d.endValue) - x(d.startValue))
+                .attr('fill', (d, i) => d3.schemeCategory10[+productIndices[d.id] % 10]);
 
-                // Show label on hover
-                segmentGroups.selectAll('.segment')
-                    .on('mouseover', function (event, d) {
-                        d3.select(this.parentNode).select('.segment-label')
-                            .attr('opacity', 1);
-                    })
-                    .on('mouseout', function (event, d) {
-                        d3.select(this.parentNode).select('.segment-label')
-                            .attr('opacity', 0);
-                    });
-            }
+            // Update positions and text of labels
+            segmentGroupsMerge.select('.segment-label')
+                .transition()
+                .duration(750)
+                .attr('x', d => x((d.startValue + d.endValue) / 2))  // Text placement
+                .text(d => d.name);
+
+            // Ensure event listeners are attached to updated segments
+            segmentGroupsMerge.select('.segment')
+                .on('mouseover', function (event, d) {
+                    d3.select(this.parentNode).select('.segment-label')
+                        .attr('opacity', 1);
+                })
+                .on('mouseout', function (event, d) {
+                    d3.select(this.parentNode).select('.segment-label')
+                        .attr('opacity', 0);
+                });
         });
     }
 
     // Call the initialize function once after DOM content is loaded
-    document.addEventListener('DOMContentLoaded', function () {
-        initializeSliders();
-    });
+    document.addEventListener('DOMContentLoaded', initializeSliders);
+
+    // Example: Call updateBars() when data changes
+    // const newNutrientLevelsData = { ... }; // Your new data
+    // updateBars(newNutrientLevelsData);
 </script>
