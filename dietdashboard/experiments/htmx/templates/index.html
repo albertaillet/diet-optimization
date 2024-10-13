@@ -29,8 +29,8 @@
                             <li>
                                 <div class="form-check ms-3">
                                     <input class="form-check-input" type="checkbox" value="{{ nutrient.id }}"
-                                        id="{{ nutrient_group.id }}-{{ nutrient.id }}" name="{{ nutrient_group.id }}"
-                                        checked optimization-input>
+                                        id="{{ nutrient_group.id }}-{{ nutrient.id }}" checked
+                                        data-optimization="{{ nutrient_group.id }}">
                                     <label class="form-check-label" for="{{ nutrient_group.id }}-{{ nutrient.id }}"
                                         style="font-size: 0.85rem;">
                                         {{ nutrient.name }}
@@ -43,7 +43,7 @@
                     {% endfor %}
                     <!-- Currency Selector -->
                     <div class="mb-3 mb-md-0">
-                        <select id="currency" name="currency" class="form-select" optimization-input>
+                        <select id="currency" class="form-select" data-optimization="currency">
                             {% for currency in currencies %}
                             <option value="{{ currency }}">{{ currency }}</option>
                             {% endfor %}
@@ -82,21 +82,21 @@
     </div>
 
     <script>
-        function optimizationInput() { return document.querySelectorAll('[optimization-input]'); }
+        function optimizationInput() { return document.querySelectorAll('[data-optimization]'); }
 
         function handleOptimitzationInputs() {
             const data = {};
             optimizationInput().forEach(function (element) {
                 if ((element.type === 'checkbox' || element.type === 'radio')) {
                     if (element.checked) {
-                        if (!data[element.name]) { data[element.name] = []; }
-                        data[element.name].push(element.value);  // Nutrients
+                        if (!data[element.dataset.optimization]) { data[element.dataset.optimization] = []; }
+                        data[element.dataset.optimization].push(element.value);  // Nutrients
                     }
                 } else if (element.tagName.toLowerCase() === 'select') {
-                    data[element.name] = element.value;  // Currency
+                    data[element.dataset.optimization] = element.value;  // Currency
                 } else if (element.tagName.toLowerCase() === 'input') {
-                    if (!data[element.name]) { data[element.name] = []; }
-                    data[element.name].push(element.value);  // Slider selections
+                    if (!data[element.dataset.optimization]) { data[element.dataset.optimization] = []; }
+                    data[element.dataset.optimization].push(element.value);  // Slider selections
                 }
             });
             fetch('/optimize', {

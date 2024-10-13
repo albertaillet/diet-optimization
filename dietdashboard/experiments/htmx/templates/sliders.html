@@ -10,10 +10,10 @@
                 <div id="{{ slider.id }}" class="slider-container p-0" style="height: 60px;"></div>
                 <input type="hidden" id="{{ slider.id }}-min" value="{{ slider.min }}">
                 <input type="hidden" id="{{ slider.id }}-max" value="{{ slider.max }}">
-                <input type="hidden" id="{{ slider.id }}-lower" value="{{ slider.lower }}" name="bounds_{{ slider.id }}"
-                    optimization-input>
-                <input type="hidden" id="{{ slider.id }}-upper" value="{{ slider.upper }}" name="bounds_{{ slider.id }}"
-                    optimization-input>
+                <input type="hidden" id="{{ slider.id }}-lower" value="{{ slider.lower }}"
+                    data-optimization="bounds_{{ slider.id }}">
+                <input type="hidden" id="{{ slider.id }}-upper" value="{{ slider.upper }}"
+                    data-optimization="bounds_{{ slider.id }}">
             </td>
         </tr>
         {% endfor %}
