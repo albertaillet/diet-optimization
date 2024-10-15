@@ -5,6 +5,8 @@ Usage of script DATA_DIR=<path to data directory> OFF_USERNAME=<yourusername> py
 
 TODO: show/hide sliders depending on the chosen nutrients.
 TODO: have link to load info card for each of the chosen products.
+TODO: User authentication and save optimization input.
+TODO: Advanced filter: location, vegan, vegetarian, indiviudal off categories
 
 Long term todos:
 - Retrieve prices in SQL database.
@@ -59,11 +61,11 @@ def load_and_filter_products(file, used_nutrients: list[str]) -> dict[str, list[
     assert all(len(products[col]) == n_rows for col in products)  # check that all columns have all the rows.
 
     # Check that all columns have the same unit and that the source are either reported or ciqual.
-    for nutient in used_nutrients:
-        unique_units = set(products[nutient + "_unit"])
-        assert len(unique_units) == 1, (nutient, unique_units)
-        unique_sources = set(products[nutient + "_source"])
-        assert unique_sources.issubset({"reported", "ciqual"}), (nutient, unique_sources)
+    for nutrient in used_nutrients:
+        unique_units = set(products[nutrient + "_unit"])
+        assert len(unique_units) == 1, (nutrient, unique_units)
+        unique_sources = set(products[nutrient + "_source"])
+        assert unique_sources.issubset({"reported", "ciqual"}), (nutrient, unique_sources)
 
     return products
 
@@ -158,12 +160,14 @@ def create_app(
 ) -> Flask:
     app = Flask(__name__)
 
+    nutrient_ids = [nutrient["off_id"] for nutrient in nutrient_map]
+
     macronutrients = filter_nutrients(nutrient_map, macro_recommendations)
     micronutrients = filter_nutrients(nutrient_map, micro_recommendations)
 
     @app.route("/")
     def index():
-        nutient_groups = [
+        nutrient_groups = [
             {"name": "Macronutrients", "id": "macro", "nutrients": macronutrients},
             {"name": "Micronutrients", "id": "micro", "nutrients": micronutrients},
         ]
@@ -172,7 +176,7 @@ def create_app(
             "index.html",
             currencies=POSSIBLE_CURRENCIES,
             sliders=sliders,
-            nutient_groups=nutient_groups,
+            nutrient_groups=nutrient_groups,
         )
 
     @app.route("/sliders")
@@ -190,11 +194,14 @@ def create_app(
             return render_template("debug.html", data=data)
 
         currency = data["currency"]
-        chosen_nutrient_ids = data["macro"] + data["micro"]
 
         # Remove previous level markers
         chosen_bounds = {}
-        for nutrient_id in chosen_nutrient_ids:
+        chosen_nutrient_ids = []
+        for nutrient_id in nutrient_ids:
+            if data.get(f"bounds_{nutrient_id}") is None:
+                continue
+            chosen_nutrient_ids.append(nutrient_id)
             chosen_bounds[nutrient_id] = data[f"bounds_{nutrient_id}"]
 
         A_nutrients, lb, ub, c_costs = get_arrays(chosen_bounds, products_and_prices, currency)
