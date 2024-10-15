@@ -20,6 +20,7 @@ tmp/
 */recommendations_nnr2023.html
 # Ciqual 2020 table
 */ciqual2020.csv
+*/ciqual_XML_2020_07_07/*.xml
 # Summarized product prices and nutrients table
 **/product_prices_and_nutrients.csv
 # Fetched nutrient_map
