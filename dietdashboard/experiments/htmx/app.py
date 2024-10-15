@@ -3,7 +3,6 @@ with linear optimization to get the optimal quantities of food products.
 
 Usage of script DATA_DIR=<path to data directory> OFF_USERNAME=<yourusername> python app.py
 
-TODO: show/hide sliders depending on the chosen nutrients.
 TODO: have link to load info card for each of the chosen products.
 TODO: User authentication and save optimization input.
 TODO: Advanced filter: location, vegan, vegetarian, indiviudal off categories
