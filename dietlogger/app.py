@@ -24,21 +24,25 @@ temporary_csv_data: list[dict[str, str]] = []
 
 
 # Route to read CSV file from disk and render it in editable format
-@app.route("/", methods=["GET", "POST"])
+@app.route("/", methods=["GET"])
 def index():
     global temporary_csv_data
     if not temporary_csv_data:
         # Load initial CSV data from disk if temporary data is not present
         csv_path = DATA_DIR / "nutrient_map.csv"
         temporary_csv_data = read_csv_file(csv_path)
-
-    if request.method == "POST":
-        # Update temporary CSV data with form inputs
-        updated_data = request.form.to_dict(flat=False)
-        temporary_csv_data = convert_form_data_to_dict(updated_data)
-        return redirect(url_for("index"))
-
     return render_template("index.html", csv_data=list(enumerate(temporary_csv_data)))
+
+
+# Route to update a specific row in the CSV data
+@app.route("/update_row/<int:row_index>", methods=["POST"])
+def update_row(row_index: int) -> str:
+    global temporary_csv_data
+    if row_index < len(temporary_csv_data):
+        # Update the specific row with form data
+        updated_row = request.form.to_dict()
+        temporary_csv_data[row_index] = updated_row
+    return redirect(url_for("index")).get_data(as_text=True)
 
 
 def read_csv_file(filepath: Path) -> list[dict[str, str]]:

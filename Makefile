@@ -52,8 +52,13 @@ $(SUMMARY_CSV): $(CIQUAL_CSV) $(PRICES_JSON) $(PRODUCTS_JSON) $(NUTRIENT_MAP)
 
 # ---------- Run the optmization dashboard. ----------
 
-app: $(SUMMARY_CSV) $(NUTRIENT_MAP) $(NNR_SUMMARY_CSV)
+opt: $(SUMMARY_CSV) $(NUTRIENT_MAP) $(NNR_SUMMARY_CSV)
 	DATA_DIR=$(DATA_DIR) python dietdashboard/app.py
+
+# ---------- Run the diet logger. ----------
+
+log: $(SUMMARY_CSV) $(NUTRIENT_MAP) $(NNR_SUMMARY_CSV)
+	DATA_DIR=$(DATA_DIR) python dietlogger/app.py
 
 # ---------- OCR. ----------
 
