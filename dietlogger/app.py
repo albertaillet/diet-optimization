@@ -20,43 +20,45 @@ app = Flask(__name__)
 DATA_DIR = Path(os.getenv("DATA_DIR", ""))
 
 # Store the temporary CSV data in memory
-temporary_csv_data: list[dict[str, str]] = []
+temporary_csv_data: list[tuple[int, dict[str, str]]] = []
+
+# Define columns with details such as name, editability, and input type
+columns = [
+    {"name": "ID", "editable": False, "type": "text"},
+    {"name": "Name", "editable": True, "type": "text"},
+    {"name": "Date", "editable": True, "type": "date"},
+    {"name": "Amount (g)", "editable": True, "type": "number"},
+    {"name": "Calories", "editable": False, "type": "number"},
+    {"name": "Fat (g)", "editable": False, "type": "number"},
+    {"name": "Carbs (g)", "editable": False, "type": "number"},
+    {"name": "Protein (g)", "editable": False, "type": "number"},
+]
 
 
-# Route to read CSV file from disk and render it in editable format
 @app.route("/", methods=["GET"])
 def index():
     global temporary_csv_data
     if not temporary_csv_data:
         # Load initial CSV data from disk if temporary data is not present
-        csv_path = DATA_DIR / "nutrient_map.csv"
+        csv_path = DATA_DIR / "example.csv"
         temporary_csv_data = read_csv_file(csv_path)
-    return render_template("index.html", csv_data=list(enumerate(temporary_csv_data)))
+    return render_template("index.html", csv_data=temporary_csv_data, columns=columns)
 
 
-# Route to update a specific row in the CSV data
 @app.route("/update_row/<int:row_index>", methods=["POST"])
-def update_row(row_index: int) -> str:
+def update_row(row_index: int):
     global temporary_csv_data
     if row_index < len(temporary_csv_data):
         # Update the specific row with form data
         updated_row = request.form.to_dict()
-        temporary_csv_data[row_index] = updated_row
-    return redirect(url_for("index")).get_data(as_text=True)
+        temporary_csv_data[row_index] = (row_index, updated_row)
+    return redirect(url_for("index"))
 
 
-def read_csv_file(filepath: Path) -> list[dict[str, str]]:
+def read_csv_file(filepath: Path) -> list[tuple[int, dict[str, str]]]:
     # Reads a CSV file and returns the data as a list of dictionaries
     with filepath.open(newline="", encoding="utf-8") as file:
-        csv_reader = csv.DictReader(file)
-        return list(csv_reader)
-
-
-def convert_form_data_to_dict(form_data: dict[str, list[str]]) -> list[dict[str, str]]:
-    # Converts form data to a list of dictionaries (rows)
-    fieldnames = form_data.keys()
-    rows = zip(*form_data.values(), strict=True)
-    return [dict(zip(fieldnames, row, strict=True)) for row in rows]
+        return list(enumerate(csv.DictReader(file)))
 
 
 if __name__ == "__main__":
