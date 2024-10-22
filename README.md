@@ -154,3 +154,27 @@ For optimizing the diet, a linear programming python library is used, here are t
 -   **Gurobi**
     -   [Gurobi Website](https://www.gurobi.com/)
     -   Note: Gurobi is commercial software
+
+### Other nutrient tackers:
+
+Open source:
+
+https://github.com/jrhizor/awesome-nutrition-tracking
+https://github.com/simonoppowa/OpenNutriTracker
+https://github.com/davidhealey/waistline
+https://codeberg.org/epinez/Energize/
+-   To use https://codeberg.org/epinez/Energize/src/branch/main/scripts/update_sfcd_data/update_sfcd_data.py
+
+Personal projects:
+https://kale.world/ (https://news.ycombinator.com/item?id=22689346)
+
+Proprietary:
+https://cronometer.com/
+https://www.joyapp.com/
+https://www.mynetdiary.com/
+
+### Other links
+
+https://news.ycombinator.com/item?id=22683416
+
+### References
