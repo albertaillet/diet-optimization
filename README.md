@@ -1,5 +1,7 @@
 # Diet optimization
 
+This repository contains the code for some diet optimization projects. The goal is to create a tool for me to automatically generate a diet plan that meets set nutritional needs, while minimizing the cost, the environmental impact and the complexity of the diet.
+
 ## Installation
 
 From the root of the repository run
@@ -10,12 +12,7 @@ pip install -e ".[dev]"
 
 ## Usage
 
-To run the app, and fetch all needed files do
-
-```
-export OFF_USERNAME=<a Open Food Facts username>
-make app
-```
+To run different parts of the project, check out the `Makefile` for the available commands.
 
 ## Data sources
 
@@ -29,8 +26,7 @@ To get reference data on the food products that are chosen to be included, the f
 ### Reference for food composition and micronutrients
 
 -   [The Swiss Food Composition Database](https://valeursnutritives.ch/en/)
-    Data collection of the Federal Food Safety and Veterinary Office FSVO on the composition of foods that are available
-    in Switzerland. The version available at the time of writing (V6.5) contains information on 1,145 foodstuffs.
+    Data collection of the Federal Food Safety and Veterinary Office FSVO on the composition of foods that are available in Switzerland. The version available at the time of writing (V6.5) contains information on 1,145 foodstuffs.
 -   [The ANSES-CIQUAL French food composition table](https://ciqual.anses.fr/)
     The ANSES-CIQUAL food composition table gives information on the average nutritional composition of food consumed in France.
     67 components each for 100g of edible portion and an average value, a minimum and a maximum, together with a confidence code (A=very reliable, D=less reliable).
@@ -43,6 +39,7 @@ To get reference data on the food products that are chosen to be included, the f
     shows the energy and nutrient content of foods, it contains nutrient content of more than the 2.000 most commonly
     eaten foods and recipes dishes in Norway.
 -   [FoodData Central](https://fdc.nal.usda.gov/), USDA’s comprehensive source of food composition data with multiple distinct data types.
+-   [Nutrition Coordinating Center Food & Nutrient Database](https://www.ncc.umn.edu/food-and-nutrient-database/), curated by the University of Minnesota. Very comprehensive, but not free.
 
 Here is the combined table listing the availability of different nutrients in the three databases:
 
@@ -159,22 +156,83 @@ For optimizing the diet, a linear programming python library is used, here are t
 
 Open source:
 
-https://github.com/jrhizor/awesome-nutrition-tracking
-https://github.com/simonoppowa/OpenNutriTracker
-https://github.com/davidhealey/waistline
-https://codeberg.org/epinez/Energize/
--   To use https://codeberg.org/epinez/Energize/src/branch/main/scripts/update_sfcd_data/update_sfcd_data.py
+-   [awesome-nutrition-tracking](https://github.com/jrhizor/awesome-nutrition-tracking)
+-   [OpenNutriTracker](https://github.com/simonoppowa/OpenNutriTracker) (iOS / Android)
+-   [waistline](https://github.com/davidhealey/waistline) (Android)
+-   🎖️[Energize](https://codeberg.org/epinez/Energize/) (Android)
+    -   TODO: checkout this tool to extract the Swiss Food Composition Database [update_sfcd_data.py](https://codeberg.org/epinez/Energize/src/branch/main/scripts/update_sfcd_data/update_sfcd_data.py)
 
 Personal projects:
-https://kale.world/ (https://news.ycombinator.com/item?id=22689346)
+-   🎖️[kale.world](https://kale.world/) (Found on [Hacker News](https://news.ycombinator.com/item?id=22689346))
 
-Proprietary:
-https://cronometer.com/
-https://www.joyapp.com/
-https://www.mynetdiary.com/
+### Proprietary nutrition trackers and databases:
+
+Apps with API, database documentation, licensing or search tools:
+
+-   [Edamam](https://www.edamam.com/), has an [API](https://developer.edamam.com/food-database-api-docs) and database licensing.
+-   [Calorie Counter by FatSecret](https://www.fatsecret.com/), has an [API](https://blog.fatsecret.com/).
+-   [Nutritionix](https://www.nutritionix.com/), has an [API](https://www.nutritionix.com/business/api) and [database](https://www.nutritionix.com/database) documentation for nutrition data.
+-   [Chomp](https://www.chompthis.com/), has an API.
+-   [Spoonacular](https://spoonacular.com/), has an API.
+-   [MyNetDiary](https://www.mynetdiary.com/), has an API and [database licensing](https://www.mynetdiary.com/food-database.html).
+-   [Lose It!](https://www.loseit.com/), has an [API](https://www.loseit.com/api/).
+-   [DietaGram](http://dietagram.com/), has an [API](http://dietagram.com/api-page).
+-   [ESHA Nutrition Database](https://esha.com/), has an [API](https://esha.com/products/nutrition-database-api/) and [Database Licensing](https://esha.com/products/database-licensing/).
+-   [Yazio](https://www.yazio.com/), has a [search tool](https://www.yazio.com/en/foods) and apparently and [API](https://github.com/saganos/yazio_public_api).
+-   [Eat This Much](https://www.eatthismuch.com/), they have a database exploration tools at this [link](https://www.eatthismuch.com/food/browse/).
+-   [MyFoodDiary](https://www.myfooddiary.com/), search in database available [here](https://www.myfooddiary.com/foods).
+-   🎖️[Nutrition value](https://www.nutritionvalue.org/), is a php website using the USDA database, a user has created and API for it [here](https://github.com/ryojp/nutrition-api).
+-   [Samsung Food Recipe Nutrition Calculator](https://samsungfood.com/recipe-nutrition-calculator/), nutrition calculator for recipes.
+-   🎖️[TheMealDB](https://www.themealdb.com/), small meal and recipe database and API.
+
+Apps with a bit of information about their databases:
+
+-   [Cronometer](https://cronometer.com/), data sources described [here](https://support.cronometer.com/hc/en-us/articles/360018239472-Data-Sources).
+-   [Lifesum](https://lifesum.com/), data sources described [here](https://lifesum.helpshift.com/hc/en/3-lifesum/faq/48-lifesum-s-food-database/).
+-   [Noom](https://www.noom.com/), data sources described [here](https://www.noom.com/blog/inside-look-nooms-food-database/).
+-   [MyFoodData](https://www.myfooddata.com/), data sources described [here](https://www.myfooddata.com/about-the-data).
+-   [MyNetDiary](https://www.mynetdiary.com/food-database.html), data sources described [here](https://www.mynetdiary.com/food-database.html).
+
+Other apps:
+
+-   [Joy Health Tracker](https://www.joyapp.com/)
+-   [MyFitnessPal](https://www.myfitnesspal.com/)
+-   [MyPlate](https://www.myplate.gov/resources/tools/startsimple-myplate-app), USDA's nutrition tracker.
+-   [iEatBetter](https://www.ieatbetter.com/)
+-   [Mealime](https://www.mealime.com/)
+-   [PlateJoy](https://www.platejoy.com/)
+-   [EatLove](https://www.eatlove.is/)
+-   [MacroFactor](https://macrofactorapp.com/)
+-   [Rex](https://www.rex.fit/), calorie and exercise tracking over WhatsApp, has some kind of API.
+-   [Lolo](https://apps.apple.com/us/app/lolo-ai-food-calorie-tracker/id6448986851?l=en)
+-   [SnackFolio](https://www.snackfolio.com/), offline friendly nutrition tracker.
+
+Other tools:
+-   [Terra](https://tryterra.co/) is a Health API for Wearable and Sensor Data that integrates with nutrition trackers.
+-   [BigOven](https://www.bigoven.com/) is a recipe database.
+-   [SnapCalorie](https://www.snapcalorie.com/), is an [API](https://snapcalorie.github.io/) for taking a picture of a food item and getting the nutritional information.
+-   [Foodvisor](https://www.foodvisor.io/en/), they have an API for their food recognition tool.
+-   NanEye, WIP project connecting biomarkers to nutrition data.
+
+
+### Food classification standards:
+Related [xkcd](https://xkcd.com/927/).
+
+-   [Open Food Facts Taxonomy](https://world.openfoodfacts.org/taxonomy), a taxonomy for food products, [wiki](https://wiki.openfoodfacts.org/Global_taxonomies).
+-   [LanguaL](https://www.langual.org/default.asp), an international framework for food description.
+-   [FoodEx2](https://www.efsa.europa.eu/en/data/data-standardisation), a food classification standardisation system.
+-   [FoodOn](https://foodon.org/), an ontology for food [github](https://github.com/FoodOntology/foodon). Available in [Ontobee](https://ontobee.org/ontology/FOODON).
 
 ### Other links
 
-https://news.ycombinator.com/item?id=22683416
+Random links:
+-   [Open Food Facts post on HN](https://news.ycombinator.com/item?id=22683416)
+-   [Food Facts](https://www.foodfacts.se/), Swedish food stratup at Norrsken House.
+-   [Random kaggle dataset](https://www.kaggle.com/datasets/trolukovich/nutritional-values-for-common-foods-and-products), nutritional values for common foods and products, source unclear.
+-   [Nutrition5k](https://github.com/google-research-datasets/Nutrition5k), a dataset of 5k images of food items with nutritional information.
+-   [Documenu](https://github.com/documenu), Restaurant menu API.
 
-### References
+
+Outdated projects:
+-   [MyDietCoach](https://www.mydietcoachapp.com/) (deprecated, now redirects to [Bending Spoons](https://www.bendingspoons.com/))
+-   [EuroFIR](https://www.eurofir.org/), a European network that provides a comprehensive food composition database. The project has ended, so support and database updates is questionable (https://www.eurofir.org/foodexplorer). It also seems to use Wordpress.
