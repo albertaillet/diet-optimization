@@ -28,6 +28,7 @@ tmp/
 **/product_prices_and_nutrients.csv
 # Fetched nutrient_map
 **/nutrient_map_recipe_estimator.csv
+**/products.parquet
 
 # Any image
 */exported_images/*
