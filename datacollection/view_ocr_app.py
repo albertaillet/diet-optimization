@@ -1,13 +1,16 @@
 import json
 import os
 import re
+from datetime import datetime
 from pathlib import Path
 
 import certifi
 import requests
 from flask import Flask, abort, jsonify, render_template, send_from_directory
-from run_ocr import run_ocr_on_image_paths
 
+from datacollection.database import Database, ImageData
+from datacollection.init_db import validate_db
+from datacollection.run_ocr import run_ocr_on_image_paths
 from utils.image import image_info
 
 DATA_DIR = Path(os.getenv("DATA_DIR", "")).resolve()
@@ -37,7 +40,7 @@ def extract_longest_number(annotations: list) -> str:
 
 
 # Route to validate EAN-13 and check with Open Food Facts
-def create_app(list_of_file_names: list[str]) -> Flask:
+def create_app(list_of_file_names: list[str], db: Database) -> Flask:
     app = Flask(__name__)
 
     @app.route("/")
@@ -56,36 +59,47 @@ def create_app(list_of_file_names: list[str]) -> Flask:
         if not image_file.exists():
             abort(404)
 
+        stored_data = db.get_image_data(name)
         gps_info, date_info = image_info(image_file)
 
         annotations = []
-        try:
+        has_annotations = annotation_file.exists()
+
+        if has_annotations:
             with annotation_file.open("r") as f:
                 data = json.load(f)
+                responses = data.get("responses", [])
+                if len(responses) == 1:
+                    annotations = [ann["description"] for ann in responses[0].get("textAnnotations", [])]
 
-            responses = data.get("responses", [])
-            if len(responses) != 1:
-                raise ValueError("Invalid response length")
+        # Extract the longest numeric string if we have annotations
+        longest_number = extract_longest_number(annotations) if annotations else ""
 
-            full_annotations = responses[0].get("textAnnotations", [])
-            annotations = [ann["description"] for ann in full_annotations]
-        except Exception:  # noqa: BLE001
-            pass
+        # Use stored EAN if available, otherwise use the detected one
+        ean = stored_data.ean if stored_data else (longest_number if len(longest_number) == 13 else "")
 
-            # Extract the longest numeric string
-        longest_number = extract_longest_number(annotations)
+        # Store initial data in database if not exists
+        db.insert_image_data(
+            ImageData(
+                image_name=name,
+                ean=ean,
+                latitude=gps_info.get("GPSLatitude"),
+                longitude=gps_info.get("GPSLongitude"),
+                created_at=date_info.get("CreateDate"),
+                last_updated=datetime.now().isoformat(),
+            )
+        )
 
         i = list_of_file_names.index(name)
-
         return render_template(
             "image_page.html",
             name=name,
             image_file=f"/images/{name}.png",
             annotations=annotations,
-            has_annotations=len(annotations) > 0,
+            has_annotations=has_annotations,
             prev=list_of_file_names[i - 1],
             next=list_of_file_names[(i + 1) % len(list_of_file_names)],
-            ean=longest_number if len(longest_number) == 13 else "",
+            ean=ean,
             latitude=gps_info.get("GPSLatitude"),
             longitude=gps_info.get("GPSLongitude"),
             created_at=date_info.get("CreateDate"),
@@ -135,12 +149,20 @@ def create_app(list_of_file_names: list[str]) -> Flask:
             return render_template("validation_result.html", error="Product not found in Open Food Facts")
         return render_template("validation_result.html", error="Error fetching data from Open Food Facts")
 
+    # Add a new route to update EAN
+    @app.route("/update_ean/<name>/<ean>", methods=["POST"])
+    def update_ean(name: str, ean: str):
+        if db.update_ean(name, ean):
+            return jsonify({"success": True}), 200
+        return jsonify({"error": "Failed to update EAN"}), 500
+
     return app
 
 
 if __name__ == "__main__":
     # Create a list of image names (without extension)
     list_of_file_names = sorted([p.stem for p in BASE_IMAGE_DIR.glob("*.png")])
-
-    app = create_app(list_of_file_names)
+    db = Database(DATA_DIR / "images.db")
+    validate_db(db, list_of_file_names)
+    app = create_app(list_of_file_names, db)
     app.run(debug=True)

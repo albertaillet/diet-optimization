@@ -121,6 +121,37 @@
 
                 // If button is clicked, check open food facts if they have the product
                 submitButton.addEventListener('click', checkOff)
+
+                // Add function to save EAN to database
+                async function saveEAN(ean) {
+                    try {
+                        const response = await fetch(`/update_ean/{{ name }}/${ean}`, {
+                            method: 'POST'
+                        });
+                        if (!response.ok) {
+                            console.error('Failed to save EAN');
+                        }
+                    } catch (error) {
+                        console.error('Error saving EAN:', error);
+                    }
+                }
+
+                // Modify validateEAN function to save valid EANs
+                async function validateEAN() {
+                    var eanInput = eanInputField.value;
+                    const response = await fetch('/validate_ean/' + eanInput);
+                    if (response.ok) {
+                        warning.style.display = 'none';
+                        success.style.display = 'block';
+                        submitButton.disabled = false;
+                        // Save valid EAN to database
+                        await saveEAN(eanInput);
+                    } else {
+                        warning.style.display = 'block';
+                        success.style.display = 'none';
+                        submitButton.disabled = true;
+                    }
+                }
             </script>
             <!-- Add this in the Validation Form Column div, before the GPS Information -->
             {% if not has_annotations %}

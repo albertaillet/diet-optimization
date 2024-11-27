@@ -68,6 +68,9 @@ ocr:
 view-ocr:
 	DATA_DIR=$(DATA_DIR) python datacollection/view_ocr_app.py
 
+init-db:
+	DATA_DIR=$(DATA_DIR) python datacollection/init_db.py
+
 # ---------- Clean data. ----------
 
 # cleans current OFF_USERNAME data
