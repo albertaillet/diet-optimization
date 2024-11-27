@@ -122,6 +122,41 @@
                 // If button is clicked, check open food facts if they have the product
                 submitButton.addEventListener('click', checkOff)
             </script>
+            <!-- Add this in the Validation Form Column div, before the GPS Information -->
+            {% if not has_annotations %}
+            <div class="ocr-section">
+                <p>No annotations found for this image.</p>
+                <button id="run-ocr-btn">Run OCR</button>
+                <div id="ocr-status"></div>
+            </div>
+            <script>
+                const ocrButton = document.getElementById('run-ocr-btn');
+                const ocrStatus = document.getElementById('ocr-status');
+
+                async function runOCR() {
+                    ocrButton.disabled = true;
+                    ocrStatus.textContent = 'Running OCR...';
+
+                    try {
+                        const response = await fetch('/run_ocr/{{ name }}');
+                        const data = await response.json();
+
+                        if (response.ok) {
+                            ocrStatus.textContent = 'OCR completed. Refreshing page...';
+                            setTimeout(() => window.location.reload(), 1500);
+                        } else {
+                            ocrStatus.textContent = `Error: ${data.error}`;
+                            ocrButton.disabled = false;
+                        }
+                    } catch (error) {
+                        ocrStatus.textContent = `Error: ${error.message}`;
+                        ocrButton.disabled = false;
+                    }
+                }
+
+                ocrButton.addEventListener('click', runOCR);
+            </script>
+            {% endif %}
             <!-- GPS Information Column -->
             <h3>GPS Information:</h3>
             <p><strong>Latitude:</strong> {{ latitude }}</p>

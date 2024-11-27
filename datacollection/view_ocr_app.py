@@ -3,8 +3,10 @@ import os
 import re
 from pathlib import Path
 
+import certifi
 import requests
 from flask import Flask, abort, jsonify, render_template, send_from_directory
+from run_ocr import run_ocr_on_image_paths
 
 from utils.image import image_info
 
@@ -51,23 +53,27 @@ def create_app(list_of_file_names: list[str]) -> Flask:
         image_file = BASE_IMAGE_DIR / f"{name}.png"
         annotation_file = BASE_IMAGE_DIR / f"{name}.json"
 
-        if not image_file.exists() or not annotation_file.exists():
+        if not image_file.exists():
             abort(404)
 
         gps_info, date_info = image_info(image_file)
 
-        with annotation_file.open("r") as f:
-            data = json.load(f)
+        annotations = []
+        try:
+            with annotation_file.open("r") as f:
+                data = json.load(f)
 
-        responses = data.get("responses", [])
-        if len(responses) != 1:
-            return jsonify({"error": "Invalid response length"}), 400
+            responses = data.get("responses", [])
+            if len(responses) != 1:
+                raise ValueError("Invalid response length")
 
-        annotations = responses[0].get("textAnnotations", [])
-        annotation_descriptions = [ann["description"] for ann in annotations]
+            full_annotations = responses[0].get("textAnnotations", [])
+            annotations = [ann["description"] for ann in full_annotations]
+        except Exception:  # noqa: BLE001
+            pass
 
-        # Extract the longest numeric string
-        longest_number = extract_longest_number(annotation_descriptions)
+            # Extract the longest numeric string
+        longest_number = extract_longest_number(annotations)
 
         i = list_of_file_names.index(name)
 
@@ -75,7 +81,8 @@ def create_app(list_of_file_names: list[str]) -> Flask:
             "image_page.html",
             name=name,
             image_file=f"/images/{name}.png",
-            annotations=annotation_descriptions,
+            annotations=annotations,
+            has_annotations=len(annotations) > 0,
             prev=list_of_file_names[i - 1],
             next=list_of_file_names[(i + 1) % len(list_of_file_names)],
             ean=longest_number if len(longest_number) == 13 else "",
@@ -83,6 +90,24 @@ def create_app(list_of_file_names: list[str]) -> Flask:
             longitude=gps_info.get("GPSLongitude"),
             created_at=date_info.get("CreateDate"),
         )
+
+    @app.route("/run_ocr/<name>")
+    def run_ocr_route(name: str):
+        image_file = BASE_IMAGE_DIR / f"{name}.png"
+        if not image_file.exists():
+            return jsonify({"error": "Image not found"}), 404
+        try:
+            session = requests.Session()
+            requests.get("https://vision.googleapis.com", verify=certifi.where())
+            responses, _performed_request = run_ocr_on_image_paths([image_file], session, override=True)
+            if responses:
+                _image_path, response = responses[0]
+                with (BASE_IMAGE_DIR / f"{name}.json").open("w") as f:
+                    json.dump({"responses": [response]}, f, indent=2)
+                return jsonify({"success": True})
+            return jsonify({"error": "No response from OCR"}), 500
+        except Exception as e:  # noqa: BLE001
+            return jsonify({"error": str(e)}), 500
 
     # Route to validate EAN-13 (automatic validation)
     @app.route("/validate_ean/<ean>")
@@ -115,7 +140,7 @@ def create_app(list_of_file_names: list[str]) -> Flask:
 
 if __name__ == "__main__":
     # Create a list of image names (without extension)
-    list_of_file_names = sorted([p.stem for p in BASE_IMAGE_DIR.glob("*.png") if p.with_suffix(".json").exists()])
+    list_of_file_names = sorted([p.stem for p in BASE_IMAGE_DIR.glob("*.png")])
 
     app = create_app(list_of_file_names)
     app.run(debug=True)
