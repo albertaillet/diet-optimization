@@ -29,7 +29,8 @@ tmp/
 # Fetched nutrient_map
 **/nutrient_map_recipe_estimator.csv
 **/products.parquet
-
+# SQLite databases
+**/*.db
 # Any image
 */exported_images/*
 *.png
@@ -40,3 +41,6 @@ tmp/
 
 # Mac hidden files
 .DS_Store
+
+
+*.egg-info/*

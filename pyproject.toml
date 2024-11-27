@@ -3,17 +3,18 @@ name = "diet-optimization"
 version = "0.0.0"
 readme = "README.md"
 requires-python = "~=3.11"
-dependencies = ["requests", "tqdm", "scipy"]
+dependencies = ["requests", "tqdm", "scipy", "flask", "certifi", "pillow"]
 
 [project.optional-dependencies]
-dev = ["pre-commit"]
+dev = ["pre-commit", "pyright"]
 
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
 
-[tool.hatch.build]
-include = ["*"]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["utils", "datacollection"]
 
 [tool.ruff]
 line-length = 130
