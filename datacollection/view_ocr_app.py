@@ -17,7 +17,6 @@ DATA_DIR = Path(os.getenv("DATA_DIR", "")).resolve()
 BASE_IMAGE_DIR = DATA_DIR / "exported_images"
 
 
-# Use this function to validate EAN-13 numbers
 def check_ean13(num_str: str) -> bool:
     """Based on https://en.wikipedia.org/wiki/International_Article_Number#Position_%E2%80%93_weight."""
     if len(num_str) != 13:
@@ -27,8 +26,21 @@ def check_ean13(num_str: str) -> bool:
     return int(num_str[-1]) == check_digit
 
 
-# Extract the longest numeric string from annotations
-def extract_longest_number(annotations: list) -> str:
+def get_annotations_from_file(annotation_file: Path) -> list[str]:
+    """Get OCR annotations from a JSON file."""
+    if not annotation_file.exists():
+        return []
+
+    with annotation_file.open("r") as f:
+        data = json.load(f)
+        responses = data.get("responses", [])
+        if not responses:
+            return []
+        return [ann["description"] for ann in responses[0].get("textAnnotations", [])]
+
+
+def extract_longest_number(annotations: list[str]) -> str:
+    """Extract the longest numeric string from annotations."""
     longest = ""
     for text in annotations:
         numbers = re.findall(r"\d+", text)
@@ -39,7 +51,38 @@ def extract_longest_number(annotations: list) -> str:
     return longest
 
 
-# Route to validate EAN-13 and check with Open Food Facts
+def find_ean_in_annotations(annotation_file: Path) -> str | None:
+    """Find valid EAN-13 in OCR annotations."""
+    annotations = get_annotations_from_file(annotation_file)
+    if not annotations:
+        return None
+
+    longest_number = extract_longest_number(annotations)
+    if len(longest_number) == 13 and check_ean13(longest_number):
+        return longest_number
+    return None
+
+
+def update_eans_from_annotations(db: Database, list_of_file_names: list[str]) -> None:
+    """Update database with EANs found in OCR annotations."""
+    print("Checking for EANs in OCR annotations...")
+    eans_found = 0
+
+    for name in list_of_file_names:
+        image_data = db.get_image_data(name)
+        if image_data and not image_data.ean:  # Only check if EAN is not already set
+            ean = find_ean_in_annotations(BASE_IMAGE_DIR / f"{name}.json")
+            if ean:
+                db.update_ean(name, ean)
+                eans_found += 1
+                print(f"Found EAN {ean} for {name}")
+
+    if eans_found:
+        print(f"Added {eans_found} EANs from OCR annotations")
+    else:
+        print("No new EANs found in OCR annotations")
+
+
 def create_app(list_of_file_names: list[str], db: Database) -> Flask:
     app = Flask(__name__)
 
@@ -71,15 +114,7 @@ def create_app(list_of_file_names: list[str], db: Database) -> Flask:
         stored_data = db.get_image_data(name)
         gps_info, date_info = image_info(image_file)
 
-        annotations = []
-        has_annotations = annotation_file.exists()
-
-        if has_annotations:
-            with annotation_file.open("r") as f:
-                data = json.load(f)
-                responses = data.get("responses", [])
-                if len(responses) == 1:
-                    annotations = [ann["description"] for ann in responses[0].get("textAnnotations", [])]
+        annotations = get_annotations_from_file(annotation_file)
 
         # Extract the longest numeric string if we have annotations
         longest_number = extract_longest_number(annotations) if annotations else ""
@@ -105,7 +140,6 @@ def create_app(list_of_file_names: list[str], db: Database) -> Flask:
             name=name,
             image_file=f"/images/{name}.png",
             annotations=annotations,
-            has_annotations=has_annotations,
             prev=list_of_file_names[i - 1],
             next=list_of_file_names[(i + 1) % len(list_of_file_names)],
             ean=ean,
@@ -127,29 +161,26 @@ def create_app(list_of_file_names: list[str], db: Database) -> Flask:
                 _image_path, response = responses[0]
                 with (BASE_IMAGE_DIR / f"{name}.json").open("w") as f:
                     json.dump({"responses": [response]}, f, indent=2)
+                # Check if EAN can be found in annotations
+                ean = find_ean_in_annotations(BASE_IMAGE_DIR / f"{name}.json")
+                if ean:
+                    db.update_ean(name, ean)
                 return jsonify({"success": True})
             return jsonify({"error": "No response from OCR"}), 500
         except Exception as e:  # noqa: BLE001
             return jsonify({"error": str(e)}), 500
 
-    # Route to validate EAN-13 (automatic validation)
     @app.route("/validate_ean/<ean>")
     def validate_ean(ean: str):
-        # Validate EAN-13
         if not ean or not check_ean13(ean):
-            # Return a 400 Bad Request response if the EAN is invalid
             return jsonify({"message": "Invalid EAN-13"}), 400
-        # Return a 200 OK response if the EAN is valid
         return jsonify({"message": "Valid EAN-13"}), 200
 
-    # Route to check Open Food Facts (manual request on button click)
     @app.route("/check_off/<ean>")
     def check_off(ean: str):
-        # Ensure the EAN-13 is valid before proceeding
         if not check_ean13(ean):
             return render_template("validation_result.html", error="Invalid EAN-13")
 
-        # Check Open Food Facts
         response = requests.get(f"https://world.openfoodfacts.org/api/v0/product/{ean}.json")
         if response.status_code == 200:
             product_data = response.json()
@@ -158,7 +189,6 @@ def create_app(list_of_file_names: list[str], db: Database) -> Flask:
             return render_template("validation_result.html", error="Product not found in Open Food Facts")
         return render_template("validation_result.html", error="Error fetching data from Open Food Facts")
 
-    # Add a new route to update EAN
     @app.route("/update_ean/<name>/<ean>", methods=["POST"])
     def update_ean(name: str, ean: str):
         if db.update_ean(name, ean):
@@ -169,9 +199,9 @@ def create_app(list_of_file_names: list[str], db: Database) -> Flask:
 
 
 if __name__ == "__main__":
-    # Create a list of image names (without extension)
     list_of_file_names = sorted([p.stem for p in BASE_IMAGE_DIR.glob("*.png")])
     db = Database(DATA_DIR / "images.db")
     validate_db(db, list_of_file_names)
+    update_eans_from_annotations(db, list_of_file_names)
     app = create_app(list_of_file_names, db)
     app.run(debug=True)
