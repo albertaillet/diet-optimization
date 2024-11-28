@@ -43,7 +43,10 @@ select = [
     "FURB", # refurb
     "RUF",  # ruff-specific rules
 ]
-ignore = ["E731"] # Allow named lambdas
+ignore = [
+    "E731",  # Allow named lambdas
+    "FURB140",  # Allow list comprehensions
+]
 
 [tool.pyright]
 reportIncompatibleMethodOverride = true

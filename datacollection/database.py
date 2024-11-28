@@ -4,7 +4,7 @@ from typing import NamedTuple
 
 
 class ImageData(NamedTuple):
-    image_name: str
+    image_name: str | None
     ean: str | None
     latitude: float | None
     longitude: float | None
@@ -29,6 +29,17 @@ class Database:
                 )
             """)
             conn.commit()
+
+    def get_all_images(self) -> list[ImageData]:
+        """Retrieve all images from database, ordered by image name."""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT image_name, ean, latitude, longitude, created_at, last_updated
+                FROM images
+                ORDER BY image_name
+            """)
+            return [ImageData(*row) for row in cursor.fetchall()]
 
     def insert_image_data(self, image_data: ImageData) -> None:
         """Insert or update image data in the database."""

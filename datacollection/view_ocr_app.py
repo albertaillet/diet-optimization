@@ -45,7 +45,16 @@ def create_app(list_of_file_names: list[str], db: Database) -> Flask:
 
     @app.route("/")
     def index():
-        return render_template("index.html", names=list_of_file_names)
+        columns = [
+            {"key": "image_name", "title": "Image Name", "filterable": True},
+            {"key": "ean", "title": "EAN", "filterable": True, "not_none_filter": True},
+            {"key": "latitude", "title": "Latitude", "filterable": True},
+            {"key": "longitude", "title": "Longitude", "filterable": True},
+            {"key": "created_at", "title": "Created At", "filterable": True},
+            {"key": "last_updated", "title": "Last Updated", "filterable": True},
+        ]
+        images = db.get_all_images()
+        return render_template("index.html", images=images, columns=columns)
 
     @app.route("/images/<path:image_filename>")
     def serve_image(image_filename: str):
