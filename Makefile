@@ -40,6 +40,7 @@ USER_DATA := $(DATA_DIR)/user_data/$(OFF_USERNAME)
 PRICES_JSON := $(USER_DATA)/prices.json
 PRODUCTS_JSON := $(USER_DATA)/products.json
 SUMMARY_CSV := $(USER_DATA)/product_prices_and_nutrients.csv
+LOCATION_CSV := $(USER_DATA)/locations.csv
 
 $(PRICES_JSON):
 	DATA_DIR=$(DATA_DIR) SIZE=100 python scripts/prices_fetch.py
@@ -49,6 +50,11 @@ $(PRODUCTS_JSON):
 
 $(SUMMARY_CSV): $(CIQUAL_CSV) $(PRICES_JSON) $(PRODUCTS_JSON) $(NUTRIENT_MAP)
 	DATA_DIR=$(DATA_DIR) python scripts/products_summarize.py
+
+$(LOCATION_CSV): $(PRICES_JSON)
+	DATA_DIR=$(DATA_DIR) python scripts/locations_summarize.py
+
+locations: $(LOCATION_CSV)
 
 # ---------- Run the optmization dashboard. ----------
 

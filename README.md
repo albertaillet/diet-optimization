@@ -206,6 +206,7 @@ Other apps:
 -   [Rex](https://www.rex.fit/), calorie and exercise tracking over WhatsApp, has some kind of API.
 -   [Lolo](https://apps.apple.com/us/app/lolo-ai-food-calorie-tracker/id6448986851?l=en)
 -   [SnackFolio](https://www.snackfolio.com/), offline friendly nutrition tracker.
+-   [Cali AI](https://www.calai.app), calorie tracking app with a focus on tracking food portions from images using multimodal AI.
 
 Other tools:
 -   [Terra](https://tryterra.co/) is a Health API for Wearable and Sensor Data that integrates with nutrition trackers.

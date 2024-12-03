@@ -1,3 +1,4 @@
+import csv
 import json
 import os
 import re
@@ -200,6 +201,9 @@ def create_app(list_of_file_names: list[str], db: Database) -> Flask:
 
 if __name__ == "__main__":
     list_of_file_names = sorted([p.stem for p in BASE_IMAGE_DIR.glob("*.png")])
+    with (DATA_DIR / "hardcoded_locations.csv").open("r") as file:
+        locations = list(csv.DictReader(file))
+
     db = Database(DATA_DIR / "images.db")
     validate_db(db, list_of_file_names)
     update_eans_from_annotations(db, list_of_file_names)

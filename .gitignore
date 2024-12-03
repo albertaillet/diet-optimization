@@ -26,6 +26,7 @@ tmp/
 */LivsmedelsDB_*.xlsx
 # Summarized product prices and nutrients table
 **/product_prices_and_nutrients.csv
+**/locations.csv
 # Fetched nutrient_map
 **/nutrient_map_recipe_estimator.csv
 **/products.parquet
