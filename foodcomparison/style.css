@@ -1,0 +1,11 @@
+#chart {
+    margin: 20px;
+}
+
+.bar-food1:hover, .bar-food2:hover {
+    opacity: 0.8;
+}
+
+select {
+    margin-bottom: 20px;
+}

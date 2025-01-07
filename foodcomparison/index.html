@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <title>Nutrition comparison</title>
+</head>
+<body>
+    <div class="container mt-4">
+        <h2>Nutrition Comparison</h2>
+        <div class="row my-3">
+            <div class="col-md-6">
+                <select class="form-select" id="food1">
+                    <option value="">Select first food</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <select class="form-select" id="food2">
+                    <option value="">Select second food</option>
+                </select>
+            </div>
+        </div>
+        <div id="chart" style="height: 600px;"></div>
+    </div>
+</body>
+
+<script>
+const calnut_link = "calnut.csv";
+const nutrients_link = "nutrients.txt";
+let nutrientsToCompare = [];
+let globalData = [];
+
+function stringToNumber(str) {
+    if (!isNaN(str)) return parseFloat(str);
+    return parseFloat(str.replace(',', '.'));
+}
+
+d3.text(nutrients_link).then(text => {
+    nutrientsToCompare = text.split('\n').filter(n => n.trim() !== '');
+
+    d3.csv(calnut_link, d3.autoType).then(data => {
+        globalData = data;
+        const uniqueFoods = [...new Set(data.map(d => d.FOOD_LABEL))];
+        const food1Select = document.getElementById('food1');
+        const food2Select = document.getElementById('food2');
+        uniqueFoods.forEach(food => {
+            food1Select.add(new Option(food, food));
+            food2Select.add(new Option(food, food));
+        });
+
+        // Load saved selections from localStorage
+        const savedFood1 = localStorage.getItem('food1');
+        const savedFood2 = localStorage.getItem('food2');
+        if (savedFood1) food1Select.value = savedFood1;
+        if (savedFood2) food2Select.value = savedFood2;
+
+        [food1Select, food2Select].forEach(select => {
+            select.addEventListener('change', () => {
+                // Save selections to localStorage
+                localStorage.setItem('food1', food1Select.value);
+                localStorage.setItem('food2', food2Select.value);
+                updateChart();
+            });
+        });
+
+        // Initial chart update
+        updateChart();
+    });
+});
+
+function updateChart() {
+    const food1 = document.getElementById('food1').value;
+    const food2 = document.getElementById('food2').value;
+
+    if (!food1 || !food2) return;
+
+    const food1Data = globalData.filter(d => d.FOOD_LABEL === food1);
+    const food2Data = globalData.filter(d => d.FOOD_LABEL === food2);
+
+    const chartData = nutrientsToCompare.map(nutrient => {
+        const food1Nutrient = food1Data.find(d => d.CONST_LABEL === nutrient);
+        const food2Nutrient = food2Data.find(d => d.CONST_LABEL === nutrient);
+        return {
+            nutrient,
+            lower_bound_1: stringToNumber(food1Nutrient.LB),
+            upper_bound_1: stringToNumber(food1Nutrient.UB),
+            mean_1: stringToNumber(food1Nutrient.MB),
+            lower_bound_2: stringToNumber(food2Nutrient.LB),
+            upper_bound_2: stringToNumber(food2Nutrient.UB),
+            mean_2: stringToNumber(food2Nutrient.MB),
+        };
+    });
+
+    const margin = { top: 30, right: 90, bottom: 40, left: 150 };
+    const width = 800;
+    const height = 500;
+
+    d3.select('#chart').html('');
+    const svg = d3.select('#chart')
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height);
+
+    const x = d3.scaleLinear()
+        .domain([0, d3.max(chartData, d => Math.max(d.mean_1, d.mean_2))])
+        .range([margin.left, width - margin.right]);
+
+    const y = d3.scaleBand()
+        .domain(nutrientsToCompare)
+        .range([margin.top, height - margin.bottom])
+        .padding(0.1);
+
+    svg.append('g')
+        .attr('transform', `translate(0,${height - margin.bottom})`)
+        .call(d3.axisBottom(x));
+
+    svg.append('g')
+        .attr('transform', `translate(${margin.left},0)`)
+        .call(d3.axisLeft(y));
+
+    // Add bars for food1
+    svg.selectAll('.bar-food1')
+        .data(chartData)
+        .enter()
+        .append('rect')
+        .attr('class', 'bar-food1')
+        .attr('x', margin.left)
+        .attr('y', d => y(d.nutrient))
+        .attr('width', d => x(d.mean_1) - margin.left)
+        .attr('height', y.bandwidth() / 2)
+        .attr('fill', 'steelblue');
+
+    // Add bars for food2
+    svg.selectAll('.bar-food2')
+        .data(chartData)
+        .enter()
+        .append('rect')
+        .attr('class', 'bar-food2')
+        .attr('x', margin.left)
+        .attr('y', d => y(d.nutrient) + y.bandwidth() / 2)
+        .attr('width', d => x(d.mean_2) - margin.left)
+        .attr('height', y.bandwidth() / 2)
+        .attr('fill', 'orange');
+
+    // Add legend
+    const legend = svg.append('g')
+        .attr('transform', `translate(${width - margin.right + 10}, ${margin.top})`);
+
+    legend.append('rect')
+        .attr('width', 20)
+        .attr('height', 20)
+        .attr('fill', 'steelblue');
+
+    legend.append('text')
+        .attr('x', 25)
+        .attr('y', 15)
+        .text(food1);
+
+    legend.append('rect')
+        .attr('width', 20)
+        .attr('height', 20)
+        .attr('y', 25)
+        .attr('fill', 'orange');
+
+    legend.append('text')
+        .attr('x', 25)
+        .attr('y', 40)
+        .text(food2);
+}
+</script>
+</html>
