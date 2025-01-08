@@ -85,6 +85,7 @@ function updateChart() {
         const food2Nutrient = food2Data.find(d => d.CONST_LABEL === nutrient);
         return {
             nutrient,
+            unit: food1Nutrient.CONST_LABEL.split('_').slice(-1)[0],
             lower_bound_1: stringToNumber(food1Nutrient.LB),
             upper_bound_1: stringToNumber(food1Nutrient.UB),
             mean_1: stringToNumber(food1Nutrient.MB),
@@ -96,7 +97,7 @@ function updateChart() {
 
     const margin = { top: 30, right: 90, bottom: 40, left: 150 };
     const width = 800;
-    const height = 500;
+    const height = 2200;
 
     d3.select('#chart').html('');
     const svg = d3.select('#chart')
@@ -104,46 +105,53 @@ function updateChart() {
         .attr('width', width)
         .attr('height', height);
 
-    const x = d3.scaleLinear()
-        .domain([0, d3.max(chartData, d => Math.max(d.mean_1, d.mean_2))])
-        .range([margin.left, width - margin.right]);
-
     const y = d3.scaleBand()
         .domain(nutrientsToCompare)
         .range([margin.top, height - margin.bottom])
         .padding(0.1);
 
     svg.append('g')
-        .attr('transform', `translate(0,${height - margin.bottom})`)
-        .call(d3.axisBottom(x));
-
-    svg.append('g')
         .attr('transform', `translate(${margin.left},0)`)
         .call(d3.axisLeft(y));
 
-    // Add bars for food1
-    svg.selectAll('.bar-food1')
-        .data(chartData)
-        .enter()
-        .append('rect')
-        .attr('class', 'bar-food1')
-        .attr('x', margin.left)
-        .attr('y', d => y(d.nutrient))
-        .attr('width', d => x(d.mean_1) - margin.left)
-        .attr('height', y.bandwidth() / 2)
-        .attr('fill', 'steelblue');
+    // Create separate scales for each nutrient
+    chartData.forEach(d => {
+        const maxVal = Math.max(d.mean_1, d.mean_2, d.upper_bound_1, d.upper_bound_2, 2);
+        const x = d3.scaleLinear()
+            .domain([0, maxVal])
+            .range([0, 300]); // Fixed width for all bars
 
-    // Add bars for food2
-    svg.selectAll('.bar-food2')
-        .data(chartData)
-        .enter()
-        .append('rect')
-        .attr('class', 'bar-food2')
-        .attr('x', margin.left)
-        .attr('y', d => y(d.nutrient) + y.bandwidth() / 2)
-        .attr('width', d => x(d.mean_2) - margin.left)
-        .attr('height', y.bandwidth() / 2)
-        .attr('fill', 'orange');
+        // Add bars for food1
+        svg.append('rect')
+            .attr('class', 'bar-food1')
+            .attr('x', margin.left)
+            .attr('y', y(d.nutrient))
+            .attr('width', x(d.mean_1))
+            .attr('height', y.bandwidth() / 2)
+            .attr('fill', 'steelblue');
+
+        // Add bars for food2
+        svg.append('rect')
+            .attr('class', 'bar-food2')
+            .attr('x', margin.left)
+            .attr('y', y(d.nutrient) + y.bandwidth() / 2)
+            .attr('width', x(d.mean_2))
+            .attr('height', y.bandwidth() / 2)
+            .attr('fill', 'orange');
+
+        // Add value labels
+        svg.append('text')
+            .attr('x', margin.left + x(d.mean_1) + 5)
+            .attr('y', y(d.nutrient) + y.bandwidth() / 4)
+            .attr('dy', '0.35em')
+            .text(`${d.mean_1.toFixed(1)} ${d.unit}`);
+
+        svg.append('text')
+            .attr('x', margin.left + x(d.mean_2) + 5)
+            .attr('y', y(d.nutrient) + y.bandwidth() * 3/4)
+            .attr('dy', '0.35em')
+            .text(`${d.mean_2.toFixed(1)} ${d.unit}`);
+    });
 
     // Add legend
     const legend = svg.append('g')
