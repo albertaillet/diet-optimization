@@ -141,7 +141,7 @@ function updateChart() {
         const maxVal = Math.max(d.mean_1, d.mean_2, d.upper_bound_1, d.upper_bound_2, 2);
         const x = d3.scaleLinear()
             .domain([0, maxVal])
-            .range([0, 300]); // Fixed width for all bars
+            .range([0, 300]);
 
         // Add bars for food1
         svg.append('rect')
@@ -161,15 +161,73 @@ function updateChart() {
             .attr('height', y.bandwidth() / 2)
             .attr('fill', 'orange');
 
+        // Add error bars for food1
+        svg.append('line')
+            .attr('x1', margin.left + x(d.lower_bound_1))
+            .attr('x2', margin.left + x(d.upper_bound_1))
+            .attr('y1', y(d.nutrient) + y.bandwidth() / 4)
+            .attr('y2', y(d.nutrient) + y.bandwidth() / 4)
+            .attr('stroke', 'black')
+            .attr('stroke-width', 1)
+            .attr('opacity', 0.5);
+
+        // Vertical lines for food1
+        svg.append('line')
+            .attr('x1', margin.left + x(d.lower_bound_1))
+            .attr('x2', margin.left + x(d.lower_bound_1))
+            .attr('y1', y(d.nutrient) + y.bandwidth() / 8)
+            .attr('y2', y(d.nutrient) + 3 * y.bandwidth() / 8)
+            .attr('stroke', 'black')
+            .attr('stroke-width', 1)
+            .attr('opacity', 0.5);
+
+        svg.append('line')
+            .attr('x1', margin.left + x(d.upper_bound_1))
+            .attr('x2', margin.left + x(d.upper_bound_1))
+            .attr('y1', y(d.nutrient) + y.bandwidth() / 8)
+            .attr('y2', y(d.nutrient) + 3 * y.bandwidth() / 8)
+            .attr('stroke', 'black')
+            .attr('stroke-width', 1)
+            .attr('opacity', 0.5);
+
+        // Add error bars for food2
+        svg.append('line')
+            .attr('x1', margin.left + x(d.lower_bound_2))
+            .attr('x2', margin.left + x(d.upper_bound_2))
+            .attr('y1', y(d.nutrient) + 3 * y.bandwidth() / 4)
+            .attr('y2', y(d.nutrient) + 3 * y.bandwidth() / 4)
+            .attr('stroke', 'black')
+            .attr('stroke-width', 1)
+            .attr('opacity', 0.5);
+
+        // Vertical lines for food2
+        svg.append('line')
+            .attr('x1', margin.left + x(d.lower_bound_2))
+            .attr('x2', margin.left + x(d.lower_bound_2))
+            .attr('y1', y(d.nutrient) + 5 * y.bandwidth() / 8)
+            .attr('y2', y(d.nutrient) + 7 * y.bandwidth() / 8)
+            .attr('stroke', 'black')
+            .attr('stroke-width', 1)
+            .attr('opacity', 0.5);
+
+        svg.append('line')
+            .attr('x1', margin.left + x(d.upper_bound_2))
+            .attr('x2', margin.left + x(d.upper_bound_2))
+            .attr('y1', y(d.nutrient) + 5 * y.bandwidth() / 8)
+            .attr('y2', y(d.nutrient) + 7 * y.bandwidth() / 8)
+            .attr('stroke', 'black')
+            .attr('stroke-width', 1)
+            .attr('opacity', 0.5);
+
         // Add value labels
         svg.append('text')
-            .attr('x', margin.left + x(d.mean_1) + 5)
+            .attr('x', margin.left + x(d.upper_bound_1) + 5)
             .attr('y', y(d.nutrient) + y.bandwidth() / 4)
             .attr('dy', '0.35em')
             .text(`${d.mean_1.toFixed(1)} ${d.unit}`);
 
         svg.append('text')
-            .attr('x', margin.left + x(d.mean_2) + 5)
+            .attr('x', margin.left + x(d.upper_bound_2) + 5)
             .attr('y', y(d.nutrient) + y.bandwidth() * 3/4)
             .attr('dy', '0.35em')
             .text(`${d.mean_2.toFixed(1)} ${d.unit}`);
