@@ -1,4 +1,5 @@
 # %%
+import json
 from pathlib import Path
 
 import duckdb
@@ -90,5 +91,24 @@ SELECT
 FROM my_data
 """)
 
+
+# %%
+nutriments_data = con.sql("SELECT nutriments FROM my_data").fetchall()
+with (Path.cwd().parent / "nutriments.json").open("w") as f:
+    json.dump([row[0] for row in nutriments_data], f, indent=2)
+
+# %%
+nutriments_names = set()
+for row in nutriments_data:
+    if row[0] is None:
+        continue
+    nutriments_names.update(nutriment["name"] for nutriment in row[0])
+
+print("Unique nutriment names:")
+for name in sorted(nutriments_names):
+    print(name)
+
+# %%
+con.sql("SELECT ingredients_text FROM my_data").show()
 
 # %%
