@@ -30,15 +30,21 @@ def fetch_product_info(product_code: str) -> dict[str, Any]:
 if __name__ == "__main__":
     assert OFF_USERNAME is not None, f"Set OFF_USERNAME env variable {OFF_USERNAME=}"
 
+    with (DATA_DIR / "user_data" / OFF_USERNAME / "products.json").open("r") as file:
+        data = json.load(file)
+
     with (DATA_DIR / "user_data" / OFF_USERNAME / "prices.json").open("r") as file:
         product_codes = load_product_codes_from_prices(file)
 
+    # remove already existing
+    product_codes = product_codes - set(data.keys())
+
     if len(product_codes) < 100:
-        data = {product_code: fetch_product_info(product_code) for product_code in tqdm(sorted(product_codes))}
+        new_data = {product_code: fetch_product_info(product_code) for product_code in tqdm(sorted(product_codes))}
+        data.update(new_data)
     else:
         # See https://openfoodfacts.github.io/openfoodfacts-server/api/#rate-limits
         # Rate limit: 100 req/min for all read product queries (GET /api/v*/product requests or product page).
-        data = {}
         for product_code in tqdm(sorted(product_codes)):
             data[product_code] = fetch_product_info(product_code)
             with (DATA_DIR / "user_data" / OFF_USERNAME / "products.json").open("w") as file:
