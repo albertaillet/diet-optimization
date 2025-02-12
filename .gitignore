@@ -29,7 +29,6 @@ tmp/
 **/locations.csv
 # Fetched nutrient_map
 **/nutrient_map_recipe_estimator.csv
-**/products.parquet
 # SQLite databases
 **/*.db
 # Any image
