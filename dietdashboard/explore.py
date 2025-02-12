@@ -6,17 +6,17 @@ import duckdb
 # %%
 data_path = Path.cwd().parent / "data"
 # %%
-parquet_path = data_path / "prices.parquet"
+prices = data_path / "prices.parquet"
 
 # %%
-duckdb.sql(f"SELECT * FROM read_parquet('{parquet_path}') LIMIT 1").show()
+duckdb.sql(f"SELECT * FROM read_parquet('{prices}') LIMIT 1").show()
 
 # %%
-duckdb.sql(f"DESCRIBE SELECT * FROM read_parquet('{parquet_path}')").show()
+duckdb.sql(f"DESCRIBE SELECT * FROM read_parquet('{prices}')").show()
 
 # %%
 owner_id = duckdb.sql(f"""
-    WITH data AS (SELECT * FROM read_parquet('{parquet_path}')),
+    WITH data AS (SELECT * FROM read_parquet('{prices}')),
     swiss_owners AS (
         SELECT DISTINCT owner
         FROM data
@@ -38,8 +38,30 @@ owner_id = owner_id[0]
 # %%
 duckdb.sql(f"""
     SELECT location_osm_address_city
-    FROM read_parquet('{parquet_path}')
+    FROM read_parquet('{prices}')
     WHERE owner = '{owner_id}'
 """).show()
+
+# %%
+food = data_path / "food.parquet"
+duckdb.sql(f"SELECT * FROM read_parquet('{food}') LIMIT 1").show()
+
+# %%
+duckdb.sql(f"DESCRIBE SELECT * FROM read_parquet('{food}')").show()
+
+# %%
+
+with (Path.cwd().parent / "tmp.txt").open("w") as f:
+    columns = duckdb.sql(f"SELECT * FROM read_parquet('{food}') LIMIT 0").columns
+    for col in columns:
+        f.write(f"{col}\n")
+
+# %%
+duckdb.sql(f"""
+    SELECT *
+    FROM read_parquet('{prices}') AS prices
+    JOIN read_parquet('{food}') AS food ON prices.product_code = food.code
+    WHERE prices.owner = '{owner_id}'
+""").write_csv("output.csv")
 
 # %%
