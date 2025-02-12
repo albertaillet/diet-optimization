@@ -71,7 +71,7 @@ con.sql(f"""
 """)
 
 # %%
-con.table("my_data").show()
+con.sql("SELECT * FROM my_data").to_csv("my_data.csv")
 
 # %%
 # Extract only the valuable information
@@ -87,7 +87,9 @@ SELECT
   location_osm_lon,
   product_code,
   price,
-  date
+  date,
+  ciqual_food_name_tags,
+  ingredients,
 FROM my_data
 """)
 
@@ -110,5 +112,60 @@ for name in sorted(nutriments_names):
 
 # %%
 con.sql("SELECT ingredients_text FROM my_data").show()
+# %%
+calnut = data_path / "calnut.csv"
+duckdb.sql(f"SELECT * FROM read_csv('{calnut}')").show()
+
+
+# %%
+# First get all unique CONST_LABELs
+const_labels = duckdb.sql(f"""
+  SELECT DISTINCT CONST_LABEL
+  FROM read_csv('{calnut}')
+  ORDER BY CONST_LABEL
+""").fetchall()
+
+duplicates = duckdb.sql(f"""
+  SELECT ALIM_CODE, CONST_LABEL, COUNT(*) as cnt
+  FROM read_csv('{calnut}')
+  GROUP BY ALIM_CODE, CONST_LABEL
+  HAVING COUNT(*) > 1
+""").fetchall()
+assert len(duplicates) == 0, "Found duplicate combinations of ALIM_CODE and CONST_LABEL"
+
+
+# %%
+def make_pivot_column(label, stat):
+    return f"""
+    MAX(
+      CAST(
+        CASE WHEN CONST_LABEL = '{label}' THEN REPLACE({stat}, ',', '.') END
+      AS FLOAT)
+    ) as {label}_{stat}
+"""
+
+
+pivot_expressions = ",\n".join([make_pivot_column(label[0], stat) for label in const_labels for stat in ["lb", "mean", "ub"]])
+
+query = f"""
+  WITH source AS (
+  SELECT
+  ALIM_CODE,
+  FOOD_LABEL,
+  CONST_LABEL,
+  LB as lb,
+  UB as ub,
+  MB as mean
+  FROM read_csv('{calnut}')
+  )
+  SELECT
+  ALIM_CODE,
+  FOOD_LABEL,
+  {pivot_expressions}
+  FROM source
+  GROUP BY ALIM_CODE, FOOD_LABEL
+"""
+
+duckdb.sql(query).to_csv("calnut_pivoted.csv")
 
 # %%
