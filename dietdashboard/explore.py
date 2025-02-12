@@ -57,11 +57,38 @@ with (Path.cwd().parent / "tmp.txt").open("w") as f:
         f.write(f"{col}\n")
 
 # %%
-duckdb.sql(f"""
-    SELECT *
-    FROM read_parquet('{prices}') AS prices
-    JOIN read_parquet('{food}') AS food ON prices.product_code = food.code
-    WHERE prices.owner = '{owner_id}'
-""").write_csv("output.csv")
+# Create a persistent connection
+con = duckdb.connect(":memory:")
+
+# Create and register the tables
+con.sql(f"""
+  CREATE TABLE my_data AS
+  SELECT *
+  FROM read_parquet('{prices}') AS prices
+  LEFT JOIN read_parquet('{food}') AS food ON prices.product_code = food.code
+  WHERE prices.owner = '{owner_id}'
+""")
+
+# %%
+con.table("my_data").show()
+
+# %%
+# Extract only the valuable information
+con.sql("""
+SELECT
+  code,
+  product_name,
+  ingredients_text,
+  allergens_tags,
+  nutriments,
+  location_osm_address_country,
+  location_osm_lat,
+  location_osm_lon,
+  product_code,
+  price,
+  date
+FROM my_data
+""")
+
 
 # %%
