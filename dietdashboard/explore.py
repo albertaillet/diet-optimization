@@ -114,13 +114,16 @@ for name in sorted(nutriments_names):
 con.sql("SELECT ingredients_text FROM my_data").show()
 # %%
 # Documentation here: https://ciqual.anses.fr/cms/sites/default/files/inline-files/Table%20CALNUT%202020_doc_FR_2020%2007%2007.pdf
-calnut = data_path / "calnut.1.csv"
-duckdb.sql(f"SELECT * FROM read_csv('{calnut}')").show()
+# From table 1 we get upper_bound, lower_bound, mean, and an indicator of the completeness of the data
+# From table 0 we get the food group and subgroup
+# Both tables are linked by the ALIM_CODE and FOOD_LABEL columns
+calnut_1 = data_path / "calnut.1.csv"
+duckdb.sql(f"SELECT * FROM read_csv('{calnut_1}')").show()
 
 # %%
 duckdb.sql(f"""
   SELECT DISTINCT indic_combl
-  FROM read_csv('{calnut}')
+  FROM read_csv('{calnut_1}')
   ORDER BY ALIM_CODE, CONST_LABEL
 """).show()
 
@@ -128,14 +131,14 @@ duckdb.sql(f"""
 # First get all unique CONST_LABELs
 const_labels = duckdb.sql(f"""
   SELECT DISTINCT CONST_LABEL
-  FROM read_csv('{calnut}')
+  FROM read_csv('{calnut_1}')
   ORDER BY CONST_LABEL
 """).fetchall()
 
 # %%
 duplicates = duckdb.sql(f"""
   SELECT COUNT(*)
-  FROM read_csv('{calnut}')
+  FROM read_csv('{calnut_1}')
   GROUP BY ALIM_CODE, CONST_LABEL
   HAVING COUNT(*) > 1
 """).fetchall()
@@ -153,17 +156,18 @@ pivot_expressions = ",\n".join([
     make_pivot_column(label[0], stat) for label in const_labels for stat in ["lb", "mean", "ub", "combl"]
 ])
 
+# Available columns:
+# ALIM_CODE,FOOD_LABEL,indic_combl,LB,UB,MB,CONST_CODE,CONST_LABEL
 query = f"""
   WITH source AS (
   SELECT
   ALIM_CODE,
   FOOD_LABEL,
-  CONST_LABEL,
   LB as lb,
   UB as ub,
   MB as mean,
   indic_combl as combl
-  FROM read_csv('{calnut}')
+  FROM read_csv('{calnut_1}')
   )
   SELECT
   ALIM_CODE,
@@ -174,5 +178,16 @@ query = f"""
 """
 
 duckdb.sql(query).to_csv("calnut_pivoted.csv")
+
+# %%
+# From columns to get from this:
+# alim_code,FOOD_LABEL,alim_grp_code,alim_grp_nom_fr,alim_ssgrp_code,alim_ssgrp_nom_fr,alim_ssssgrp_code,alim_ssssgrp_nom_fr
+calnut_0 = data_path / "calnut.0.csv"
+duckdb.sql(f"""SELECT
+  ALIM_CODE,FOOD_LABEL,
+  alim_grp_code,alim_grp_nom_fr,
+  alim_ssgrp_code,alim_ssgrp_nom_fr,
+  alim_ssssgrp_code,alim_ssssgrp_nom_fr
+  FROM read_csv('{calnut_0}')""").show()
 
 # %%
