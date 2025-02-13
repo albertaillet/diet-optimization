@@ -113,9 +113,16 @@ for name in sorted(nutriments_names):
 # %%
 con.sql("SELECT ingredients_text FROM my_data").show()
 # %%
-calnut = data_path / "calnut.csv"
+# Documentation here: https://ciqual.anses.fr/cms/sites/default/files/inline-files/Table%20CALNUT%202020_doc_FR_2020%2007%2007.pdf
+calnut = data_path / "calnut.1.csv"
 duckdb.sql(f"SELECT * FROM read_csv('{calnut}')").show()
 
+# %%
+duckdb.sql(f"""
+  SELECT DISTINCT indic_combl
+  FROM read_csv('{calnut}')
+  ORDER BY ALIM_CODE, CONST_LABEL
+""").show()
 
 # %%
 # First get all unique CONST_LABELs
@@ -125,8 +132,9 @@ const_labels = duckdb.sql(f"""
   ORDER BY CONST_LABEL
 """).fetchall()
 
+# %%
 duplicates = duckdb.sql(f"""
-  SELECT ALIM_CODE, CONST_LABEL, COUNT(*) as cnt
+  SELECT COUNT(*)
   FROM read_csv('{calnut}')
   GROUP BY ALIM_CODE, CONST_LABEL
   HAVING COUNT(*) > 1
@@ -136,16 +144,14 @@ assert len(duplicates) == 0, "Found duplicate combinations of ALIM_CODE and CONS
 
 # %%
 def make_pivot_column(label, stat):
-    return f"""
-    MAX(
-      CAST(
-        CASE WHEN CONST_LABEL = '{label}' THEN REPLACE({stat}, ',', '.') END
-      AS FLOAT)
-    ) as {label}_{stat}
-"""
+    if stat == "combl":
+        return f"MAX(CAST(CASE WHEN CONST_LABEL = '{label}' THEN combl END AS INT)) as {label}_combl"
+    return f"MAX(CAST(CASE WHEN CONST_LABEL = '{label}' THEN REPLACE({stat}, ',', '.') END AS FLOAT)) as {label}_{stat}"
 
 
-pivot_expressions = ",\n".join([make_pivot_column(label[0], stat) for label in const_labels for stat in ["lb", "mean", "ub"]])
+pivot_expressions = ",\n".join([
+    make_pivot_column(label[0], stat) for label in const_labels for stat in ["lb", "mean", "ub", "combl"]
+])
 
 query = f"""
   WITH source AS (
@@ -155,7 +161,8 @@ query = f"""
   CONST_LABEL,
   LB as lb,
   UB as ub,
-  MB as mean
+  MB as mean,
+  indic_combl as combl
   FROM read_csv('{calnut}')
   )
   SELECT
