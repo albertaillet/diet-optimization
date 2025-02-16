@@ -149,8 +149,8 @@ assert len(duplicates) == 0, "Found duplicate combinations of ALIM_CODE and CONS
 # %%
 def make_pivot_column(label, stat):
     if stat == "combl":
-        return f"MAX(CAST(CASE WHEN CONST_LABEL = '{label}' THEN combl END AS INT)) as {label}_combl"
-    return f"MAX(CAST(CASE WHEN CONST_LABEL = '{label}' THEN REPLACE({stat}, ',', '.') END AS FLOAT)) as {label}_{stat}"
+        return f"MAX(CASE WHEN CONST_LABEL = '{label}' THEN {stat} END) as {label}_combl"
+    return f"MAX(CASE WHEN CONST_LABEL = '{label}' THEN {stat} END) as {label}_{stat}"
 
 
 # %%
@@ -162,14 +162,11 @@ pivot_expressions = ",\n".join([
 # ALIM_CODE,FOOD_LABEL,indic_combl,LB,UB,MB,CONST_CODE,CONST_LABEL
 query = f"""
   WITH source AS (
-  SELECT
-  ALIM_CODE,
-  FOOD_LABEL,
-  CONST_LABEL,
-  LB as lb,
-  UB as ub,
-  MB as mean,
-  indic_combl as combl
+  SELECT ALIM_CODE, FOOD_LABEL, CONST_LABEL, CONST_CODE,
+  CAST(indic_combl AS BOOL) as combl,
+  CAST(REPLACE(LB, ',', '.') AS FLOAT) as lb,
+  CAST(REPLACE(UB, ',', '.') AS FLOAT) as ub,
+  CAST(REPLACE(MB, ',', '.') AS FLOAT) as mean,
   FROM read_csv('{calnut_1}')
   )
   SELECT
@@ -185,38 +182,31 @@ duckdb.sql(query).to_csv("calnut_pivoted.csv")
 # %%
 # Queries to get an example table to add as documentation
 # Before:
-duckdb.sql(f"""
-    SELECT * FROM read_csv('{calnut_1}')
+con = duckdb.connect(":memory:")
+con.sql(f"""
+    CREATE TABLE example_before AS
+    SELECT ALIM_CODE, FOOD_LABEL, CONST_LABEL, CONST_CODE,
+    CAST(indic_combl AS BOOL) as combl,
+    CAST(REPLACE(LB, ',', '.') AS FLOAT) as lb,
+    CAST(REPLACE(UB, ',', '.') AS FLOAT) as ub,
+    CAST(REPLACE(MB, ',', '.') AS FLOAT) as mean,
+    FROM read_csv('{calnut_1}')
     WHERE (FOOD_LABEL == 'Gruyère' OR FOOD_LABEL == 'Saint-Marcellin') AND
-          (CONST_LABEL == 'lipides_g' OR CONST_LABEL == 'proteines_g')
-""").show()
+          (CONST_LABEL == 'proteines_g' OR CONST_LABEL == 'ag_20_4_ara_g')
+""")
+con.sql("SELECT * FROM example_before").show()
 
 # After:
 pivot_expressions_example = ",\n".join([
-    make_pivot_column(label, stat) for label in ["lipides_g", "proteines_g"] for stat in ["lb", "mean", "ub", "combl"]
+    make_pivot_column(label, stat) for label in ["proteines_g", "ag_20_4_ara_g"] for stat in ["lb", "mean", "ub", "combl"]
 ])
-duckdb.sql(f"""
-  WITH source AS (
-  SELECT
-  ALIM_CODE,
-  FOOD_LABEL,
-  CONST_LABEL,
-  LB as lb,
-  UB as ub,
-  MB as mean,
-  indic_combl as combl
-  FROM read_csv('{calnut_1}')
-  WHERE (FOOD_LABEL == 'Gruyère' OR FOOD_LABEL == 'Saint-Marcellin') AND
-        (CONST_LABEL == 'lipides_g' OR CONST_LABEL == 'proteines_g')
-  )
-  SELECT
-  ALIM_CODE,
-  FOOD_LABEL,
+con.sql(f"""
+  SELECT ALIM_CODE, FOOD_LABEL,
   {pivot_expressions_example}
-  FROM source
+  FROM example_before
   GROUP BY ALIM_CODE, FOOD_LABEL
 """).show(max_width=10000)  # type: ignore
-
+con.close()
 
 # %%
 # From columns to get from this:
@@ -312,7 +302,7 @@ set(nutrients_to_add) - set(top_nutriments[:105])
 # %%
 unnest_expressions = ",\n".join([
     f"""
-      MAX(CAST(CASE WHEN t.unnest.name = '{nutriment}' THEN t.unnest.value END AS FLOAT)) as {nutriment}
+      MAX(CASE WHEN t.unnest.name = '{nutriment}' THEN t.unnest.value END)) as {nutriment}
 """
     for nutriment in nutrients_to_add
 ])

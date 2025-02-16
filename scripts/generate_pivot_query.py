@@ -17,8 +17,8 @@ assert len(duplicates) == 0, "Found duplicate combinations of ALIM_CODE and CONS
 
 def make_pivot_column(label, stat):
     if stat == "combl":
-        return f"MAX(CAST(CASE WHEN CONST_LABEL = '{label}' THEN combl END AS INT)) as {label}_combl"
-    return f"MAX(CAST(CASE WHEN CONST_LABEL = '{label}' THEN REPLACE({stat}, ',', '.') END AS FLOAT)) as {label}_{stat}"
+        return f"MAX(CASE WHEN CONST_LABEL = '{label}' THEN combl END) as {label}_combl"
+    return f"MAX(CASE WHEN CONST_LABEL = '{label}' THEN {stat} END) as {label}_{stat}"
 
 
 const_labels = con.sql("SELECT DISTINCT CONST_LABEL FROM calnut_1 ORDER BY CONST_LABEL").fetchall()
