@@ -147,19 +147,10 @@ assert len(duplicates) == 0, "Found duplicate combinations of ALIM_CODE and CONS
 
 
 # %%
-def make_pivot_column(label, stat):
-    if stat == "combl":
-        return f"MAX(CASE WHEN CONST_LABEL = '{label}' THEN {stat} END) as {label}_combl"
-    return f"MAX(CASE WHEN CONST_LABEL = '{label}' THEN {stat} END) as {label}_{stat}"
-
-
-# %%
-pivot_expressions = ",\n".join([
-    make_pivot_column(label[0], stat) for label in const_labels for stat in ["lb", "mean", "ub", "combl"]
-])
 
 # Available columns:
 # ALIM_CODE,FOOD_LABEL,indic_combl,LB,UB,MB,CONST_CODE,CONST_LABEL
+const_labels_str = str(tuple(label[0] for label in const_labels))
 query = f"""
   WITH source AS (
   SELECT ALIM_CODE, FOOD_LABEL, CONST_LABEL, CONST_CODE,
@@ -169,14 +160,19 @@ query = f"""
   CAST(REPLACE(MB, ',', '.') AS FLOAT) as mean,
   FROM read_csv('{calnut_1}')
   )
-  SELECT
-  ALIM_CODE,
-  FOOD_LABEL,
-  {pivot_expressions}
+  SELECT *
   FROM source
-  GROUP BY ALIM_CODE, FOOD_LABEL
+  PIVOT (
+    first(lb) AS lb,
+    first(mean) AS mean,
+    first(ub) AS ub,
+    first(combl) AS combl
+    FOR CONST_LABEL IN
+    {const_labels_str}
+    GROUP BY ALIM_CODE, FOOD_LABEL
+  )
 """
-
+print(query)
 duckdb.sql(query).to_csv("calnut_pivoted.csv")
 
 # %%
@@ -197,14 +193,18 @@ con.sql(f"""
 con.sql("SELECT * FROM example_before").show()
 
 # After:
-pivot_expressions_example = ",\n".join([
-    make_pivot_column(label, stat) for label in ["proteines_g", "ag_20_4_ara_g"] for stat in ["lb", "mean", "ub", "combl"]
-])
-con.sql(f"""
-  SELECT ALIM_CODE, FOOD_LABEL,
-  {pivot_expressions_example}
-  FROM example_before
+con.sql("""
+SELECT *
+FROM example_before
+PIVOT (
+  first(lb) AS lb,
+  first(mean) AS mean,
+  first(ub) AS ub,
+  first(combl) AS combl
+  FOR CONST_LABEL IN
+  ('proteines_g', 'ag_20_4_ara_g')
   GROUP BY ALIM_CODE, FOOD_LABEL
+);
 """).show(max_width=10000)  # type: ignore
 con.close()
 
