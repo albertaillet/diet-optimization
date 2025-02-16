@@ -4,10 +4,11 @@ from pathlib import Path
 
 import duckdb
 
-# %%
 data_path = Path.cwd().parent / "data"
-# %%
 prices = data_path / "prices.parquet"
+food = data_path / "food.parquet"
+calnut_0 = data_path / "calnut.0.csv"
+calnut_1 = data_path / "calnut.1.csv"
 
 # %%
 duckdb.sql(f"SELECT * FROM read_parquet('{prices}') LIMIT 1").show()
@@ -44,7 +45,6 @@ duckdb.sql(f"""
 """).show()
 
 # %%
-food = data_path / "food.parquet"
 duckdb.sql(f"SELECT * FROM read_parquet('{food}') LIMIT 1").show()
 
 # %%
@@ -55,7 +55,7 @@ duckdb.sql(f"DESCRIBE SELECT * FROM read_parquet('{food}')").show()
 with (Path.cwd().parent / "tmp.txt").open("w") as f:
     columns = duckdb.sql(f"SELECT * FROM read_parquet('{food}') LIMIT 0").columns
     for col in columns:
-        f.write(f"{col}\n")
+        f.write(f"{col},\n")
 
 # %%
 # Create a persistent connection
@@ -117,7 +117,6 @@ con.sql("SELECT ingredients_text FROM my_data").show()
 # From table 1 we get upper_bound, lower_bound, mean, and an indicator of the completeness of the data
 # From table 0 we get the food group and subgroup
 # Both tables are linked by the ALIM_CODE and FOOD_LABEL columns
-calnut_1 = data_path / "calnut.1.csv"
 duckdb.sql(f"SELECT * FROM read_csv('{calnut_1}')").show()
 
 # %%
@@ -183,12 +182,145 @@ duckdb.sql(query).to_csv("calnut_pivoted.csv")
 # %%
 # From columns to get from this:
 # alim_code,FOOD_LABEL,alim_grp_code,alim_grp_nom_fr,alim_ssgrp_code,alim_ssgrp_nom_fr,alim_ssssgrp_code,alim_ssssgrp_nom_fr
-calnut_0 = data_path / "calnut.0.csv"
 duckdb.sql(f"""SELECT
   ALIM_CODE,FOOD_LABEL,
   alim_grp_code,alim_grp_nom_fr,
   alim_ssgrp_code,alim_ssgrp_nom_fr,
   alim_ssssgrp_code,alim_ssssgrp_nom_fr
   FROM read_csv('{calnut_0}')""").show()
+
+# %%
+
+con = duckdb.connect(":memory:")
+
+# Create and register the tables
+con.sql("CREATE TABLE products AS SELECT * FROM read_parquet($products_path) LIMIT 10000", params={"products_path": str(food)})
+
+# %%
+con.sql("SELECT * FROM products LIMIT 2").show()
+
+# %%
+# countries_tags
+# can look like this: ["en:france", "en:switzerland"]
+# filter out all products that are from either France or Switzerland
+duckdb.sql(
+    """
+SELECT
+  -- additives_n,
+  -- additives_tags,
+  -- allergens_tags,
+  -- brands_tags,
+  -- brands,
+  -- categories,
+  -- categories_tags,
+  -- checkers_tags,
+  -- ciqual_food_name_tags,
+  -- cities_tags,
+  code,
+  -- compared_to_category,
+  -- complete,
+  -- completeness,
+  -- correctors_tags,
+  countries_tags,
+  -- created_t,
+  -- creator,
+  -- data_quality_errors_tags,
+  -- data_quality_info_tags,
+  -- data_quality_warnings_tags,
+  -- data_sources_tags,
+  -- ecoscore_data,
+  -- ecoscore_grade,
+  ecoscore_score,
+  -- ecoscore_tags,
+  -- editors,
+  -- emb_codes_tags,
+  -- emb_codes,
+  -- entry_dates_tags,
+  -- food_groups_tags,
+  -- generic_name,
+  -- images,
+  -- informers_tags,
+  -- ingredients_analysis_tags,
+  -- ingredients_from_palm_oil_n,
+  -- ingredients_n,
+  -- ingredients_original_tags,
+  -- ingredients_percent_analysis,
+  -- ingredients_tags,
+  -- ingredients_text,
+  -- ingredients_with_specified_percent_n,
+  -- ingredients_with_unspecified_percent_n,
+  -- ingredients_without_ciqual_codes_n,
+  -- ingredients_without_ciqual_codes,
+  -- ingredients,
+  -- known_ingredients_n,
+  -- labels_tags,
+  -- labels,
+  -- lang,
+  -- languages_tags,
+  -- last_edit_dates_tags,
+  -- last_editor,
+  -- last_image_t,
+  -- last_modified_by,
+  -- last_modified_t,
+  -- last_updated_t,
+  -- link,
+  -- main_countries_tags,
+  -- manufacturing_places_tags,
+  -- manufacturing_places,
+  -- max_imgid,
+  -- minerals_tags,
+  -- misc_tags,  -- Could be useful
+  -- new_additives_n,
+  -- no_nutrition_data,
+  nova_group,
+  -- nova_groups_tags,
+  -- nova_groups,
+  -- nucleotides_tags,  -- What is this?
+  -- nutrient_levels_tags,
+  nutriments,
+  -- nutriscore_grade,
+  nutriscore_score,
+  -- nutrition_data_per,
+  -- obsolete,
+  -- origins_tags,
+  -- origins,
+  -- owner_fields,
+  -- owner,
+  -- packagings_complete,
+  -- packaging_recycling_tags,
+  -- packaging_shapes_tags,
+  -- packaging_tags,
+  -- packaging_text,
+  -- packaging,
+  -- packagings,
+  -- photographers,
+  -- popularity_key,
+  -- popularity_tags,
+  product_name,
+  product_quantity_unit,
+  product_quantity,
+  -- purchase_places_tags,
+  quantity,
+  -- rev,
+  -- scans_n,
+  -- serving_quantity,
+  -- serving_size,
+  -- states_tags,
+  -- stores_tags,
+  -- stores,
+  -- traces_tags,
+  -- unique_scans_n,
+  -- unknown_ingredients_n,
+  -- unknown_nutrients_tags,
+  -- vitamins_tags,
+  -- with_non_nutritive_sweeteners,
+  -- with_sweeteners,
+FROM read_parquet($products_path)
+WHERE code IS NOT NULL AND
+      'en:france' IN countries_tags OR 'en:switzerland' IN countries_tags
+LIMIT 100
+""",
+    params={"products_path": str(food)},
+).to_csv("products_sample.csv")
 
 # %%
