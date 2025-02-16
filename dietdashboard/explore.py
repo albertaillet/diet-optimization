@@ -300,30 +300,17 @@ set(top_nutriments[:45]) - set(nutrients_to_add)
 set(nutrients_to_add) - set(top_nutriments[:105])
 
 # %%
-unnest_expressions = ",\n".join([
-    f"""
-      MAX(CASE WHEN t.unnest.name = '{nutriment}' THEN t.unnest.value END)) as {nutriment}
-"""
-    for nutriment in nutrients_to_add
-])
-unnest_query = f"""
+duckdb.sql(
+    """
 WITH products AS (
-  SELECT nutriments
+  SELECT code, nutriments
   FROM read_parquet($products_path)
   WHERE nutriments IS NOT NULL
   LIMIT 100
 )
-SELECT
-  code,
-  quantity,
-  {unnest_expressions}
+SELECT code, t.unnest.name, t.unnest.value, t.unnest."100g", t.unnest.serving, t.unnest.unit
 FROM products, UNNEST(nutriments) AS t
-GROUP BY code, quantity
-"""
-print(unnest_query)
-
-duckdb.sql(
-    unnest_query,
+""",
     params={"products_path": str(food)},
 ).to_csv("products_sample.csv")
 

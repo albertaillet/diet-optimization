@@ -120,17 +120,27 @@ with_non_nutritive_sweeteners,
 with_sweeteners,
 */
 CREATE OR REPLACE TABLE products AS
-SELECT
-  code,
-  countries_tags,
-  ecoscore_score,
-  nova_group,
-  nutriments,
-  nutriscore_score,
-  product_name,
-  product_quantity_unit,
-  product_quantity,
-  quantity,
-FROM read_parquet($products_path)
-WHERE code IS NOT NULL AND nutriments IS NOT NULL AND
-      'en:france' IN countries_tags OR 'en:switzerland' IN countries_tags
+WITH
+relevant_products AS (
+    SELECT
+    code,
+    countries_tags,
+    ecoscore_score,
+    nova_group,
+    nutriments,
+    nutriscore_score,
+    product_name,
+    product_quantity_unit,
+    product_quantity,
+    quantity,
+    FROM read_parquet($products_path)
+    WHERE code IS NOT NULL AND nutriments IS NOT NULL AND
+          'en:france' IN countries_tags OR 'en:switzerland' IN countries_tags
+),
+unnest_nutriments AS (
+    SELECT code, t.unnest.name, t.unnest.value, t.unnest."100g", t.unnest.serving, t.unnest.unit
+    FROM relevant_products, UNNEST(nutriments) AS t
+    WHERE nutriments IS NOT NULL
+)
+SELECT * FROM unnest_nutriments
+LIMIT 1000
