@@ -1,4 +1,5 @@
 # %%
+import csv
 import json
 from pathlib import Path
 
@@ -9,6 +10,7 @@ prices = data_path / "prices.parquet"
 food = data_path / "food.parquet"
 calnut_0 = data_path / "calnut.0.csv"
 calnut_1 = data_path / "calnut.1.csv"
+nutrient_map = data_path / "nutrient_map.csv"
 
 # %%
 duckdb.sql(f"SELECT * FROM read_parquet('{prices}') LIMIT 1").show()
@@ -254,5 +256,20 @@ ORDER BY count DESC
 """,
     params={"products_path": str(food)},
 ).to_csv("nutriments_names_n.csv")
+
+# %%
+# Get all unique nutriment names with their counts
+nutrients_to_add = [row["off_id"] for row in csv.DictReader(nutrient_map.open()) if row["off_id"]]
+
+# %%
+nutrients_to_add, len(nutrients_to_add)
+# %%
+top_nutriments = [row["name"] for row in csv.DictReader(open("nutriments_names_n.csv"))]  # noqa: SIM115, PTH123
+
+# %%
+set(top_nutriments[:45]) - set(nutrients_to_add)
+
+# %%
+set(nutrients_to_add) - set(top_nutriments[:105])
 
 # %%
