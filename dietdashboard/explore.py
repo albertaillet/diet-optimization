@@ -219,13 +219,13 @@ LIMIT 1000
 
 # %%
 duckdb.sql(f"DESCRIBE SELECT nutriments FROM read_parquet('{food}')").show(max_width=10000)  # type: ignore
-# ┌─────────────┬─────────────┬─────────┬─────────┬─────────┬─────────┐
-# │ column_name │ column_type │  null   │   key   │ default │  extra  │
-# │   varchar   │   varchar   │ varchar │ varchar │ varchar │ varchar │
-# ├─────────────┼─────────────┼─────────┼─────────┼─────────┼─────────┤
-# │ nutriments  │ STRUCT(...) │ YES     │ NULL    │ NULL    │ NULL    │
-# └─────────────┴─────────────┴─────────┴─────────┴─────────┴─────────┘
-# Where STRUCT(...) =
+# ┌─────────────┬───────────────┬─────────┬─────────┬─────────┬─────────┐
+# │ column_name │  column_type  │  null   │   key   │ default │  extra  │
+# │   varchar   │    varchar    │ varchar │ varchar │ varchar │ varchar │
+# ├─────────────┼───────────────┼─────────┼─────────┼─────────┼─────────┤
+# │ nutriments  │ STRUCT(...)[] │ YES     │ NULL    │ NULL    │ NULL    │
+# └─────────────┴───────────────┴─────────┴─────────┴─────────┴─────────┘
+# Where STRUCT(...)[] =
 # STRUCT("name" VARCHAR,
 #        "value" FLOAT,
 #        "100g" FLOAT,
