@@ -163,6 +163,7 @@ query = f"""
   SELECT
   ALIM_CODE,
   FOOD_LABEL,
+  CONST_LABEL,
   LB as lb,
   UB as ub,
   MB as mean,
