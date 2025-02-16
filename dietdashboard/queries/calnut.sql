@@ -17,6 +17,27 @@ calnut_1 AS (
     LB as lb, UB as ub, MB as mean, indic_combl as combl
     FROM read_csv($calnut_1_path)
 ),
+/* Pivoting the table to have one row per food
+Following is an illustrative example of before and after pivoting:
+Before:
+┌───────────┬─────────────────┬─────────────┬─────────┬─────────┬─────────┬────────────┬─────────────┐
+│ ALIM_CODE │   FOOD_LABEL    │ indic_combl │   LB    │   UB    │   MB    │ CONST_CODE │ CONST_LABEL │
+│   int64   │     varchar     │    int64    │ varchar │ varchar │ varchar │   int64    │   varchar   │
+├───────────┼─────────────────┼─────────────┼─────────┼─────────┼─────────┼────────────┼─────────────┤
+│     12114 │ Gruyère         │           0 │ 34,6    │ 34,6    │ 34,6    │      40000 │ lipides_g   │
+│     12049 │ Saint-Marcellin │           0 │ 24,3    │ 24,3    │ 24,3    │      40000 │ lipides_g   │
+│     12114 │ Gruyère         │           0 │ 28,4    │ 28,4    │ 28,4    │      25000 │ proteines_g │
+│     12049 │ Saint-Marcellin │           0 │ 15,1    │ 15,1    │ 15,1    │      25000 │ proteines_g │
+└───────────┴─────────────────┴─────────────┴─────────┴─────────┴─────────┴────────────┴─────────────┘
+After:
+┌───────────┬─────────────────┬──────────────┬────────────────┬──────────────┬─────────────────┬────────────────┬──────────────────┬────────────────┬───────────────────┐
+│ ALIM_CODE │   FOOD_LABEL    │ lipides_g_lb │ lipides_g_mean │ lipides_g_ub │ lipides_g_combl │ proteines_g_lb │ proteines_g_mean │ proteines_g_ub │ proteines_g_combl │
+│   int64   │     varchar     │    float     │     float      │    float     │      int32      │     float      │      float       │     float      │       int32       │
+├───────────┼─────────────────┼──────────────┼────────────────┼──────────────┼─────────────────┼────────────────┼──────────────────┼────────────────┼───────────────────┤
+│     12114 │ Gruyère         │         34.6 │           34.6 │         34.6 │               0 │           28.4 │             28.4 │           28.4 │                 0 │
+│     12049 │ Saint-Marcellin │         24.3 │           24.3 │         24.3 │               0 │           15.1 │             15.1 │           15.1 │                 0 │
+└───────────┴─────────────────┴──────────────┴────────────────┴──────────────┴─────────────────┴────────────────┴──────────────────┴────────────────┴───────────────────┘
+*/
 calnut_1_pivoted AS (
     SELECT ALIM_CODE, FOOD_LABEL,
 MAX(CAST(CASE WHEN CONST_LABEL = 'acides_organiques_g' THEN REPLACE(lb, ',', '.') END AS FLOAT)) as acides_organiques_g_lb,

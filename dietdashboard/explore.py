@@ -153,6 +153,7 @@ def make_pivot_column(label, stat):
     return f"MAX(CAST(CASE WHEN CONST_LABEL = '{label}' THEN REPLACE({stat}, ',', '.') END AS FLOAT)) as {label}_{stat}"
 
 
+# %%
 pivot_expressions = ",\n".join([
     make_pivot_column(label[0], stat) for label in const_labels for stat in ["lb", "mean", "ub", "combl"]
 ])
@@ -180,6 +181,42 @@ query = f"""
 """
 
 duckdb.sql(query).to_csv("calnut_pivoted.csv")
+
+# %%
+# Queries to get an example table to add as documentation
+# Before:
+duckdb.sql(f"""
+    SELECT * FROM read_csv('{calnut_1}')
+    WHERE (FOOD_LABEL == 'Gruyère' OR FOOD_LABEL == 'Saint-Marcellin') AND
+          (CONST_LABEL == 'lipides_g' OR CONST_LABEL == 'proteines_g')
+""").show()
+
+# After:
+pivot_expressions_example = ",\n".join([
+    make_pivot_column(label, stat) for label in ["lipides_g", "proteines_g"] for stat in ["lb", "mean", "ub", "combl"]
+])
+duckdb.sql(f"""
+  WITH source AS (
+  SELECT
+  ALIM_CODE,
+  FOOD_LABEL,
+  CONST_LABEL,
+  LB as lb,
+  UB as ub,
+  MB as mean,
+  indic_combl as combl
+  FROM read_csv('{calnut_1}')
+  WHERE (FOOD_LABEL == 'Gruyère' OR FOOD_LABEL == 'Saint-Marcellin') AND
+        (CONST_LABEL == 'lipides_g' OR CONST_LABEL == 'proteines_g')
+  )
+  SELECT
+  ALIM_CODE,
+  FOOD_LABEL,
+  {pivot_expressions_example}
+  FROM source
+  GROUP BY ALIM_CODE, FOOD_LABEL
+""").show(max_width=10000)  # type: ignore
+
 
 # %%
 # From columns to get from this:
@@ -271,5 +308,33 @@ set(top_nutriments[:45]) - set(nutrients_to_add)
 
 # %%
 set(nutrients_to_add) - set(top_nutriments[:105])
+
+# %%
+unnest_expressions = ",\n".join([
+    f"""
+      MAX(CAST(CASE WHEN t.unnest.name = '{nutriment}' THEN t.unnest.value END AS FLOAT)) as {nutriment}
+"""
+    for nutriment in nutrients_to_add
+])
+unnest_query = f"""
+WITH products AS (
+  SELECT nutriments
+  FROM read_parquet($products_path)
+  WHERE nutriments IS NOT NULL
+  LIMIT 100
+)
+SELECT
+  code,
+  quantity,
+  {unnest_expressions}
+FROM products, UNNEST(nutriments) AS t
+GROUP BY code, quantity
+"""
+print(unnest_query)
+
+duckdb.sql(
+    unnest_query,
+    params={"products_path": str(food)},
+).to_csv("products_sample.csv")
 
 # %%
