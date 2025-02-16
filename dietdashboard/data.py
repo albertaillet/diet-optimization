@@ -14,6 +14,7 @@ def create_calnut_table(con: duckdb.DuckDBPyConnection) -> None:
         CREATE_CALNUT_QUERY,
         parameters={"calnut_0_path": str(DATA_DIR / "calnut.0.csv"), "calnut_1_path": str(DATA_DIR / "calnut.1.csv")},
     )
+    # con.execute("CREATE INDEX calnut_alim_code_idx ON calnut (ALIM_CODE)")
 
 
 if __name__ == "__main__":

@@ -10,9 +10,11 @@ calnut_0 AS (
     alim_ssgrp_code, alim_ssgrp_nom_fr,
     alim_ssssgrp_code, alim_ssssgrp_nom_fr
     FROM read_csv($calnut_0_path)
+    WHERE HYPOTH = 'MB'  -- to only have one row per food
 ),
 calnut_1 AS (
-    SELECT ALIM_CODE, FOOD_LABEL, CONST_LABEL, LB as lb, UB as ub, MB as mean, indic_combl as combl
+    SELECT ALIM_CODE, FOOD_LABEL, CONST_LABEL,
+    LB as lb, UB as ub, MB as mean, indic_combl as combl
     FROM read_csv($calnut_1_path)
 ),
 calnut_1_pivoted AS (
@@ -268,8 +270,9 @@ MAX(CAST(CASE WHEN CONST_LABEL = 'zinc_mg' THEN combl END AS INT)) as zinc_mg_co
 FROM calnut_1
 GROUP BY ALIM_CODE, FOOD_LABEL
 )
-SELECT calnut_0.ALIM_CODE, calnut_0.alim_grp_code, calnut_0.alim_ssgrp_code, calnut_0.alim_ssssgrp_code,
-    calnut_0.FOOD_LABEL, calnut_0.alim_grp_nom_fr, calnut_0.alim_ssgrp_nom_fr, calnut_0.alim_ssssgrp_nom_fr,
-    calnut_1_pivoted.*
+SELECT calnut_0.alim_ssssgrp_code, calnut_0.alim_ssgrp_code, calnut_0.alim_grp_code,
+    calnut_1_pivoted.*,
+    calnut_0.alim_ssssgrp_nom_fr, calnut_0.alim_ssgrp_nom_fr, calnut_0.alim_grp_nom_fr
 FROM calnut_1_pivoted
 INNER JOIN calnut_0 ON calnut_1_pivoted.ALIM_CODE = calnut_0.ALIM_CODE
+ORDER BY calnut_0.alim_ssssgrp_code, calnut_0.alim_ssgrp_code, calnut_0.alim_grp_code, calnut_0.alim_code
