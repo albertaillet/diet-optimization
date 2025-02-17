@@ -8,7 +8,12 @@ https://world.openfoodfacts.org/data
 Code for exporting the dataset to Parquet:
 https://github.com/openfoodfacts/openfoodfacts-exports
 
-Available columns:
+However the parquet file is missing the column 'category_properties'
+that is needed to connect with the ciqual dataset.
+Therefore the jsonl file is used instead.
+https://static.openfoodfacts.org/data/openfoodfacts-products.jsonl.gz
+
+The following columns in the parquet file:
 additives_n,
 additives_tags,
 allergens_tags,
@@ -133,14 +138,15 @@ relevant_products AS (
     product_quantity_unit,
     product_quantity,
     quantity,
-    FROM read_parquet($products_path)
+    category_properties,
+    FROM read_ndjson($products_path)
     WHERE code IS NOT NULL AND nutriments IS NOT NULL AND
           'en:france' IN countries_tags OR 'en:switzerland' IN countries_tags
 ),
-unnest_nutriments AS (
-    SELECT code, t.unnest.name, t.unnest.value, t.unnest."100g", t.unnest.serving, t.unnest.unit
-    FROM relevant_products, UNNEST(nutriments) AS t
+nutriments AS (
+    SELECT code, nutriments.*
+    FROM relevant_products
     WHERE nutriments IS NOT NULL
 )
-SELECT * FROM unnest_nutriments
+SELECT * FROM nutriments
 LIMIT 1000

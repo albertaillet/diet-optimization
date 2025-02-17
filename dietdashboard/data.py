@@ -4,10 +4,11 @@ from pathlib import Path
 import duckdb
 
 DATA_DIR = Path(os.getenv("DATA_DIR", "data")).resolve()
+PRODUCTS_JSONL = DATA_DIR / "openfoodfacts-products.jsonl.gz"
 
 QUERIES_DIR = Path(__file__).parent / "queries"
 CREATE_CALNUT_QUERY = (QUERIES_DIR / "calnut.sql").read_text()
-CREATE_PRODUCTS_QUERY = (QUERIES_DIR / "products.sql").read_text().replace("$products_path", f"'{DATA_DIR / 'food.parquet'}'")
+CREATE_PRODUCTS_QUERY = (QUERIES_DIR / "products.sql").read_text().replace("$products_path", f"'{PRODUCTS_JSONL}'")
 
 
 def create_calnut_table(con: duckdb.DuckDBPyConnection) -> None:
@@ -31,4 +32,4 @@ if __name__ == "__main__":
 
     create_food_table(con)
 
-    # con.sql("SELECT * FROM products").to_csv("products_sample.csv")
+    con.sql("SELECT * FROM products").to_csv("products_sample.csv")

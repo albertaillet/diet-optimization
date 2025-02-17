@@ -11,6 +11,7 @@ food = data_path / "food.parquet"
 calnut_0 = data_path / "calnut.0.csv"
 calnut_1 = data_path / "calnut.1.csv"
 nutrient_map = data_path / "nutrient_map.csv"
+products = data_path / "openfoodfacts-products.jsonl.gz"
 
 # %%
 duckdb.sql(f"SELECT * FROM read_parquet('{prices}') LIMIT 1").show()
@@ -313,5 +314,103 @@ FROM products, UNNEST(nutriments) AS t
 """,
     params={"products_path": str(food)},
 ).to_csv("products_sample.csv")
+
+# %%
+duckdb.sql(f"SELECT count(*) FROM read_ndjson('{products}', ignore_errors=True)")
+# 3667647
+# %%
+columns = duckdb.sql(f"SELECT * FROM read_ndjson('{products}', ignore_errors=True) LIMIT 1").columns
+
+# %%
+# Write all the columns to a file
+with (Path.cwd().parent / "tmp.txt").open("w") as f:
+    for col in sorted(columns):
+        if "ingredients_text" in col or "product_name" in col or "generic_name" in col:
+            continue
+        f.write(f"{col},\n")
+
+# %%
+duckdb.sql(f"SELECT count(*) FROM read_ndjson('{products}', ignore_errors=True)")
+
+# %%
+con = duckdb.connect(":memory:")
+
+# Create and register the tables
+con.sql(f"""
+  CREATE TABLE products AS
+    SELECT
+    code,
+    countries_tags,
+    ecoscore_score,
+    nova_group,
+    nutriments,
+    nutriscore_score,
+    product_name,
+    product_quantity_unit,
+    product_quantity,
+    quantity,
+    category_properties,
+  FROM read_ndjson('{products}')
+  WHERE code IS NOT NULL AND nutriments IS NOT NULL AND
+      'en:france' IN countries_tags OR 'en:switzerland' IN countries_tags
+  LIMIT 1000
+""")
+
+# %%
+con.sql("SELECT code, nutriments FROM products LIMIT 10").show()
+
+# %%
+# One row per product and nutriment
+con.sql("""
+        SELECT
+  p.code,
+  v.nutrient_name,
+  v.nutrient_value,
+  v.nutrient_unit,
+  v.nutrient_100g
+FROM products p
+CROSS JOIN LATERAL (
+  VALUES
+    ('sodium',         p.nutriments.sodium_value,         p.nutriments.sodium_unit,         p.nutriments.sodium_100g),
+    ('proteins',       p.nutriments.proteins_value,       p.nutriments.proteins_unit,       p.nutriments.proteins_100g),
+    ('fat',            p.nutriments.fat_value,            p.nutriments.fat_unit,            p.nutriments.fat_100g),
+    ('carbohydrates',  p.nutriments.carbohydrates_value,  p.nutriments.carbohydrates_unit,  p.nutriments.carbohydrates_100g),
+    ('sugars',         p.nutriments.sugars_value,         p.nutriments.sugars_unit,         p.nutriments.sugars_100g)
+) AS v(nutrient_name, nutrient_value, nutrient_unit, nutrient_100g)
+WHERE v.nutrient_value IS NOT NULL;
+""").show()
+
+# %%
+# One row per product and a column for each nutriment
+con.sql("""
+SELECT
+  code,
+  nutriments.sodium_value AS sodium_value,
+  nutriments.sodium_unit AS sodium_unit,
+  nutriments.sodium_100g AS sodium_100g,
+  nutriments.proteins_value AS proteins_value,
+  nutriments.proteins_unit AS proteins_unit,
+  nutriments.proteins_100g AS proteins_100g,
+  nutriments.fat_value AS fat_value,
+  nutriments.fat_unit AS fat_unit,
+  nutriments.fat_100g AS fat_100g,
+  nutriments.carbohydrates_value AS carbohydrates_value,
+  nutriments.carbohydrates_unit AS carbohydrates_unit,
+  nutriments.carbohydrates_100g AS carbohydrates_100g,
+  nutriments.sugars_value AS sugars_value,
+  nutriments.sugars_unit AS sugars_unit,
+  nutriments.sugars_100g AS sugars_100g
+FROM products;
+""").show()
+
+# %%
+# One row per product and a column for each nutriment by using struct unpacking
+# https://duckdb.org/docs/sql/data_types/struct#struct
+con.sql("""
+SELECT
+  code,
+  nutriments.*
+FROM products;
+""").show()
 
 # %%
