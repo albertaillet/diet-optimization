@@ -323,11 +323,16 @@ columns = duckdb.sql(f"SELECT * FROM read_ndjson('{products}', ignore_errors=Tru
 
 # %%
 # Write all the columns to a file
+f = ["ingredients", "_name", "packaging", "origin", "nutri"]
+filtered_columns = [col for col in columns if not any(s in col for s in f)]
 with (Path.cwd().parent / "tmp.txt").open("w") as f:
-    for col in sorted(columns):
-        if "ingredients_text" in col or "product_name" in col or "generic_name" in col:
-            continue
+    for col in sorted(filtered_columns):
         f.write(f"{col},\n")
+
+# describe the categories_properties column
+duckdb.sql(f"""
+DESCRIBE SELECT categories_properties FROM read_ndjson('{products}')
+""").show()
 
 # %%
 duckdb.sql(f"SELECT count(*) FROM read_ndjson('{products}', ignore_errors=True)")
@@ -349,10 +354,11 @@ con.sql(f"""
     product_quantity_unit,
     product_quantity,
     quantity,
-    category_properties,
+    categories_properties,
   FROM read_ndjson('{products}')
   WHERE code IS NOT NULL AND nutriments IS NOT NULL AND
       'en:france' IN countries_tags OR 'en:switzerland' IN countries_tags
+  ORDER BY last_modified_t DESC
   LIMIT 1000
 """)
 
@@ -411,6 +417,31 @@ SELECT
   code,
   nutriments.*
 FROM products;
+""").show()
+
+# %%
+con.sql("""
+SELECT code, categories_properties FROM products LIMIT 1000
+""").show()
+
+# %%
+con.sql("""
+SELECT
+  code,
+  categories_properties,
+  COALESCE(
+    categories_properties['ciqual_food_code:en'],
+    categories_properties['agribalyse_food_code:en'],
+    categories_properties['agribalyse_proxy_food_code:en']
+  ) AS ciqual_food_code,
+  CASE
+    WHEN categories_properties['ciqual_food_code:en'] IS NOT NULL THEN 'food'
+    WHEN categories_properties['agribalyse_food_code:en'] IS NOT NULL THEN 'agribalyse'
+    WHEN categories_properties['agribalyse_proxy_food_code:en'] IS NOT NULL THEN 'agribalyse_proxy'
+    ELSE 'unknown'
+  END AS ciqual_food_code_origin
+FROM products
+LIMIT 10
 """).show()
 
 # %%
