@@ -428,20 +428,18 @@ SELECT code, categories_properties FROM products LIMIT 1000
 con.sql("""
 SELECT
   code,
-  categories_properties,
   COALESCE(
     categories_properties['ciqual_food_code:en'],
     categories_properties['agribalyse_food_code:en'],
     categories_properties['agribalyse_proxy_food_code:en']
   ) AS ciqual_food_code,
   CASE
-    WHEN categories_properties['ciqual_food_code:en'] IS NOT NULL THEN 'food'
+    WHEN categories_properties['ciqual_food_code:en'] IS NOT NULL THEN 'ciqual'
     WHEN categories_properties['agribalyse_food_code:en'] IS NOT NULL THEN 'agribalyse'
     WHEN categories_properties['agribalyse_proxy_food_code:en'] IS NOT NULL THEN 'agribalyse_proxy'
     ELSE 'unknown'
   END AS ciqual_food_code_origin
 FROM products
-LIMIT 10
 """).show()
 
 # %%

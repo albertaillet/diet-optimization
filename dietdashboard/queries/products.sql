@@ -140,12 +140,29 @@ relevant_products AS (
     quantity,
     categories_properties,
     FROM read_ndjson($products_path)
-    WHERE code IS NOT NULL AND nutriments IS NOT NULL AND
+    WHERE code IS NOT NULL AND
           'en:france' IN countries_tags OR 'en:switzerland' IN countries_tags
 ),
-nutriments AS (
-    SELECT code, nutriments.*
+relevant_products_with_ciqual AS (
+    SELECT
+    *,
+    COALESCE(
+        categories_properties['ciqual_food_code:en'],
+        categories_properties['agribalyse_food_code:en'],
+        categories_properties['agribalyse_proxy_food_code:en']
+    ) AS ciqual_food_code,
+    CASE
+        WHEN categories_properties['ciqual_food_code:en'] IS NOT NULL THEN 'ciqual'
+        WHEN categories_properties['agribalyse_food_code:en'] IS NOT NULL THEN 'agribalyse'
+        WHEN categories_properties['agribalyse_proxy_food_code:en'] IS NOT NULL THEN 'agribalyse_proxy'
+        ELSE 'unknown'
+    END AS ciqual_food_code_origin
     FROM relevant_products
+    WHERE categories_properties IS NOT NULL
+),
+nutriments AS (
+    SELECT code, ciqual_food_code, ciqual_food_code_origin, nutriments.*
+    FROM relevant_products_with_ciqual
     WHERE nutriments IS NOT NULL
 )
 SELECT * FROM nutriments
