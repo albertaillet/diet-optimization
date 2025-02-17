@@ -130,6 +130,22 @@ duckdb.sql(f"""
 """).show()
 
 # %%
+const_labels = duckdb.sql(f"""
+  SELECT DISTINCT CONST_LABEL, CONST_CODE
+  FROM read_csv('{calnut_1}')
+  ORDER BY CONST_LABEL
+""").fetchall()
+
+# write to a file
+with (Path.cwd().parent / "const_labels.csv").open("w") as f:
+    writer = csv.writer(f)
+    writer.writerow(["CONST_LABEL", "UNIT", "CONST_CODE"])
+    for row in const_labels:
+        unit = row[0].split("_")[-1]
+        label = row[0].replace(f"_{unit}", "")
+        writer.writerow([label, unit, row[1]])
+
+# %%
 # First get all unique CONST_LABELs
 const_labels = duckdb.sql(f"""
   SELECT DISTINCT CONST_LABEL
@@ -441,5 +457,120 @@ SELECT
   END AS ciqual_food_code_origin
 FROM products
 """).show()
+
+# %%
+# Try to merge the two tables
+con = duckdb.connect(":memory:")
+
+# Create and register the tables
+con.sql(
+    """CREATE TABLE products AS
+SELECT code, nutriments, categories_properties,
+FROM read_ndjson('$products_path')
+WHERE code IS NOT NULL AND nutriments IS NOT NULL AND
+    'en:france' IN countries_tags OR 'en:switzerland' IN countries_tags
+LIMIT 1000
+""".replace("$products_path", str(products))
+)
+
+# %%
+con.sql(
+    """DROP TABLE IF EXISTS calnut_0;
+CREATE TABLE calnut_0 AS
+SELECT ALIM_CODE, FOOD_LABEL, CONST_LABEL, CONST_CODE,
+CAST(indic_combl AS BOOL) as combl,
+CAST(REPLACE(LB, ',', '.') AS FLOAT) as lb,
+CAST(REPLACE(UB, ',', '.') AS FLOAT) as ub,
+CAST(REPLACE(MB, ',', '.') AS FLOAT) as mean,
+FROM read_csv('$calnut_1')
+""".replace("$calnut_1", str(calnut_1))
+)
+# %%
+con.sql("""DROP TABLE IF EXISTS products_ciqual;
+CREATE TABLE products_ciqual AS
+SELECT
+code,
+COALESCE(
+    categories_properties['ciqual_food_code:en'],
+    categories_properties['agribalyse_food_code:en'],
+    categories_properties['agribalyse_proxy_food_code:en']
+) AS ciqual_food_code,
+CASE
+    WHEN categories_properties['ciqual_food_code:en'] IS NOT NULL THEN 'ciqual'
+    WHEN categories_properties['agribalyse_food_code:en'] IS NOT NULL THEN 'agribalyse'
+    WHEN categories_properties['agribalyse_proxy_food_code:en'] IS NOT NULL THEN 'agribalyse_proxy'
+    ELSE 'unknown'
+END AS ciqual_food_code_origin,
+nutriments,
+FROM products
+WHERE categories_properties IS NOT NULL
+""")
+
+# %%
+con.sql("""DROP TABLE IF EXISTS products_nutriments;
+CREATE TABLE products_nutriments AS
+SELECT
+code,
+ciqual_food_code,
+ciqual_food_code_origin,
+p.code,
+v.nutrient_name,
+v.nutrient_value,
+v.nutrient_unit,
+v.nutrient_100g
+FROM products_ciqual p
+CROSS JOIN LATERAL (
+  VALUES
+    ('proteins',       p.nutriments.proteins_value,       p.nutriments.proteins_unit,       p.nutriments.proteins_100g),
+    ('fat',            p.nutriments.fat_value,            p.nutriments.fat_unit,            p.nutriments.fat_100g),
+    ('carbohydrates',  p.nutriments.carbohydrates_value,  p.nutriments.carbohydrates_unit,  p.nutriments.carbohydrates_100g),
+    ('sugars',         p.nutriments.sugars_value,         p.nutriments.sugars_unit,         p.nutriments.sugars_100g),
+    ('sodium',         p.nutriments.sodium_value,         p.nutriments.sodium_unit,         p.nutriments.sodium_100g),
+) AS v(nutrient_name, nutrient_value, nutrient_unit, nutrient_100g)
+WHERE v.nutrient_value IS NOT NULL
+""")
+
+# %%
+# Show the tables
+print("TABLE products_nutriments:")
+con.sql("SELECT * FROM products_nutriments LIMIT 5").show(max_width=10000)  # type: ignore
+print("TABLE calnut_0:")
+con.sql("SELECT * FROM calnut_0 LIMIT 5").show(max_width=10000)  # type: ignore
+
+# %%
+con.sql("""
+SELECT
+  p.code,
+  p.ciqual_food_code,
+  p.ciqual_food_code_origin,
+  p.nutrient_name,
+  p.nutrient_value,
+  p.nutrient_unit,
+  p.nutrient_100g,
+  c.ALIM_CODE,
+  c.FOOD_LABEL,
+  c.CONST_LABEL,
+  c.CONST_CODE,
+  c.combl,
+  c.lb,
+  c.ub,
+  c.mean,
+  -- Merge the two source indicators into one
+  CASE
+    WHEN p.ciqual_food_code_origin NOT IN ('ciqual', 'agribalyse', 'agribalyse_proxy')
+      THEN 'product'
+    WHEN p.ciqual_food_code_origin = 'ciqual' THEN
+      CASE WHEN c.combl = TRUE THEN 'ciqual_combl' ELSE 'ciqual' END
+    WHEN p.ciqual_food_code_origin = 'agribalyse' THEN
+      CASE WHEN c.combl = TRUE THEN 'agribalyse_combl' ELSE 'agribalyse' END
+    WHEN p.ciqual_food_code_origin = 'agribalyse_proxy' THEN
+      CASE WHEN c.combl = TRUE THEN 'agribalyse_proxy_combl' ELSE 'agribalyse_proxy' END
+  END AS merged_source
+FROM products_nutriments p
+LEFT JOIN calnut_0 c ON p.ciqual_food_code = c.ALIM_CODE;
+""").show(max_width=10000)  # type: ignore
+
+# Join on the ciqual code and the nutrient name
+
 
 # %%
