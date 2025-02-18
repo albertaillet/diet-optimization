@@ -479,8 +479,8 @@ LIMIT 1000
 
 # %%
 con.sql(
-    """DROP TABLE IF EXISTS calnut_0;
-CREATE TABLE calnut_0 AS
+    """DROP TABLE IF EXISTS calnut_1;
+CREATE TABLE calnut_1 AS
 SELECT ALIM_CODE, FOOD_LABEL, CONST_LABEL, CONST_CODE,
 CAST(indic_combl AS BOOL) as combl,
 CAST(REPLACE(LB, ',', '.') AS FLOAT) as lb,
@@ -519,18 +519,22 @@ WHERE categories_properties IS NOT NULL
 """)
 
 # %%
+con = duckdb.connect(data_path / "data.db")
+# %%
 con.sql("""DROP TABLE IF EXISTS products_nutriments;
 CREATE TABLE products_nutriments AS
+WITH products_ciqual_limit AS (
+    SELECT * FROM products_with_ciqual LIMIT 1000
+)
 SELECT
-code,
-ciqual_food_code,
-ciqual_food_code_origin,
 p.code,
+p.ciqual_food_code,
+p.ciqual_food_code_origin,
 v.nutrient_name,
 v.nutrient_value,
 v.nutrient_unit,
 v.nutrient_100g
-FROM products_ciqual p
+FROM products_ciqual_limit p
 CROSS JOIN LATERAL (
   VALUES
 ('energy-kcal',        p.nutriments."energy-kcal_value",        p.nutriments."energy-kcal_unit",        p.nutriments."energy-kcal_100g"        ),
@@ -575,8 +579,8 @@ CROSS JOIN LATERAL (
 # Show the tables
 print("TABLE products_nutriments:")
 con.sql("SELECT * FROM products_nutriments LIMIT 5").show(max_width=10000)  # type: ignore
-print("TABLE calnut_0:")
-con.sql("SELECT * FROM calnut_0 LIMIT 5").show(max_width=10000)  # type: ignore
+print("TABLE calnut_1:")
+con.sql("SELECT * FROM calnut_1 LIMIT 5").show(max_width=10000)  # type: ignore
 print("TABLE nutrient_map:")
 con.sql("SELECT * FROM nutrient_map LIMIT 10").show(max_width=10000)  # type: ignore
 
@@ -584,7 +588,7 @@ con.sql("SELECT * FROM nutrient_map LIMIT 10").show(max_width=10000)  # type: ig
 # %%
 con.sql("""DROP TABLE IF EXISTS calnut_mapped;
 CREATE TABLE calnut_mapped AS
-SELECT * FROM calnut_0 AS c
+SELECT * FROM calnut_1 AS c
 JOIN nutrient_map nm
 ON c.CONST_CODE = nm.calnut_const_code
 -- WHERE off_id IS NOT NULL  -- Remove rows that do not have a mapping
@@ -592,7 +596,8 @@ ON c.CONST_CODE = nm.calnut_const_code
 con.sql("SELECT * FROM calnut_mapped WHERE ALIM_CODE = 36205").show(max_width=10000, max_rows=1000)  # type: ignore
 
 # %%
-con.sql("""
+con.sql("""DROP TABLE IF EXISTS products_nutriments_mapped;
+CREATE TABLE products_nutriments_mapped AS
 SELECT
   p.code,
   p.ciqual_food_code,
@@ -601,15 +606,64 @@ SELECT
   p.nutrient_unit,
   c.ALIM_CODE,
   c.CONST_CODE,
+  c.lb,
+  c.ub,
   c.mean,
   c.CONST_LABEL,
+  c.calnut_name,
+  c.calnut_unit,
 FROM products_nutriments p
 JOIN calnut_mapped c
   ON p.ciqual_food_code = c.ALIM_CODE AND
      p.nutrient_name = c.off_id
-WHERE p.code = '0014100085621'
--- 0014100085621, 00024075
-""").show(max_width=10000, max_rows=1000)  # type: ignore
+""")
+con.sql("SELECT * FROM products_nutriments_mapped WHERE code = '00085236'").show(max_width=10000, max_rows=1000)  # type: ignore
 
+# %%
+con.sql("""DROP TABLE IF EXISTS nutriments_selected;
+CREATE TABLE nutriments_selected AS (
+  SELECT
+  code,
+  ciqual_food_code,
+  calnut_name,
+  CASE
+    WHEN nutrient_value IS NOT NULL
+      AND nutrient_unit IS NOT NULL
+      AND nutrient_unit != ''
+    THEN nutrient_value
+    ELSE mean
+  END AS final_nutrient_value,
+  CASE
+    WHEN nutrient_value IS NOT NULL
+      AND nutrient_unit IS NOT NULL
+      AND nutrient_unit != ''
+    THEN nutrient_unit
+    ELSE calnut_unit
+  END AS final_nutrient_unit
+  FROM products_nutriments_mapped
+);
+
+""")
+con.sql("SELECT * FROM nutriments_selected LIMIT 10").show(max_width=10000, max_rows=1000)  # type: ignore
+
+# %%
+calnut_names = con.sql("SELECT DISTINCT calnut_name FROM nutriments_selected").fetchall()
+calnut_names_str = str(tuple(label[0] for label in sorted(calnut_names)))
+print(calnut_names_str)
+
+# %%
+con.sql("""
+SELECT *
+FROM nutriments_selected
+PIVOT (
+    first(final_nutrient_value) AS value,
+    first(final_nutrient_unit) AS unit
+    FOR calnut_name IN
+    ('agmi', 'agpi', 'ags', 'amidon', 'calcium', 'cholesterol', 'cuivre', 'fer', 'fibres', 'glucides', 'iode', 'lactose',
+    'lipides', 'magnesium', 'manganese', 'nrj', 'polyols', 'potassium', 'proteines', 'sel', 'selenium', 'sucres', 'vitamine_b12',
+    'vitamine_b6', 'vitamine_c', 'vitamine_d', 'vitamine_e', 'zinc')
+    GROUP BY code, ciqual_food_code
+)
+""").show(max_width=10000, max_rows=1000)  # type: ignore
 
 # %%
