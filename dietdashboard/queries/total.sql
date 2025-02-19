@@ -1,6 +1,37 @@
+-- Nutrient mapping table
+CREATE OR REPLACE TABLE nutrient_map AS (
+    SELECT id, ciqual_name, ciqual_id, ciqual_unit, calnut_name, calnut_unit, calnut_const_code,
+    off_id, countprep, nnr2023_id, nutrient_type, disabled,
+    FROM read_csv('nutrient_map.csv')
+);
+/* Documentation: https://ciqual.anses.fr/cms/sites/default/files/inline-files/Table%20CALNUT%202020_doc_FR_2020%2007%2007.pdf
+Table 0 contains food group information
+Table 1 contains nutrient information for each food and nutrient
+Both tables are joined on the ALIM_CODE and FOOD_LABEL columns
+*/
+CREATE OR REPLACE TABLE calnut_0 AS (
+    SELECT ALIM_CODE, FOOD_LABEL,
+    alim_grp_code, alim_ssgrp_code, alim_ssssgrp_code,
+    alim_grp_nom_fr, alim_ssgrp_nom_fr, alim_ssssgrp_nom_fr,
+    FROM read_csv('calnut.0.csv')
+    WHERE HYPOTH = 'MB'  -- to only have one row per food
+);
+CREATE OR REPLACE TABLE calnut_1 AS (
+    SELECT ALIM_CODE, FOOD_LABEL, CONST_LABEL, CONST_CODE,
+    CAST(indic_combl AS BOOL) as combl,
+    CAST(REPLACE(LB, ',', '.') AS FLOAT) as lb,
+    CAST(REPLACE(UB, ',', '.') AS FLOAT) as ub,
+    CAST(REPLACE(MB, ',', '.') AS FLOAT) as mean,
+    FROM read_csv('calnut.1.csv')
+);
+-- Huggingface Documentation for open-prices data: https://huggingface.co/datasets/openfoodfacts/open-prices
 CREATE OR REPLACE TABLE prices AS (
     SELECT * FROM read_parquet('prices.parquet')
 );
+/* Open Food Facts data page: https://world.openfoodfacts.org/data
+The exported parquet file is missing the 'categories_properties' that contains the ciqual information.
+Therefore the jsonl databse dump is used, available at: https://static.openfoodfacts.org/data/openfoodfacts-products.jsonl.gz
+*/
 CREATE OR REPLACE TABLE products AS (
     SELECT
     products.code,
@@ -15,27 +46,10 @@ CREATE OR REPLACE TABLE products AS (
     products.quantity,
     products.categories_properties,
     FROM read_ndjson('openfoodfacts-products.jsonl.gz') AS products
-    -- WHERE code IS NOT NULL AND
-    --       'en:france' IN countries_tags OR 'en:switzerland' IN countries_tags
+    -- WHERE code IS NOT NULL AND 'en:france' IN countries_tags OR 'en:switzerland' IN countries_tags
     -- french and swiss products: 1190620
     JOIN prices ON products.code = prices.product_code
     -- products with prices: 58706
-);
-CREATE OR REPLACE TABLE calnut_0 AS (
-    SELECT alim_code, FOOD_LABEL, HYPOTH, alim_grp_code,
-      alim_grp_nom_fr, alim_ssgrp_code, alim_ssgrp_nom_fr, alim_ssssgrp_code, alim_ssssgrp_nom_fr
-    FROM read_csv('calnut.0.csv')
-);
-CREATE OR REPLACE TABLE calnut_1 AS (
-    SELECT ALIM_CODE, FOOD_LABEL, CONST_LABEL, CONST_CODE,
-    CAST(indic_combl AS BOOL) as combl,
-    CAST(REPLACE(LB, ',', '.') AS FLOAT) as lb,
-    CAST(REPLACE(UB, ',', '.') AS FLOAT) as ub,
-    CAST(REPLACE(MB, ',', '.') AS FLOAT) as mean,
-    FROM read_csv('calnut.1.csv')
-);
-CREATE OR REPLACE TABLE nutrient_map AS (
-    SELECT calnut_name, calnut_unit, calnut_const_code, off_id FROM read_csv('nutrient_map.csv')
 );
 CREATE OR REPLACE TABLE products_with_ciqual AS (
     SELECT
