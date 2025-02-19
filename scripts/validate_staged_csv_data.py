@@ -15,6 +15,7 @@ def validate_nutrient_map(reader):
         assert row["disabled"] in {"", "TRUE"}
         if row["disabled"]:
             continue
+        assert row["id"], row
         assert row["nutrient_type"] in {"micro", "macro"}, row
         assert row["off_id"], row
         assert row["ciqual_id"], row
@@ -25,7 +26,7 @@ def validate_nutrient_map(reader):
 
 def validate_recommendations_macro(reader):
     for row in reader:
-        assert row["off_id"], row
+        assert row["id"], row
         assert row["unit"] in POSSIBLE_UNITS, row
         assert float(row["value_males"]) >= 0, row
         assert float(row["value_females"]) >= 0, row
@@ -34,7 +35,7 @@ def validate_recommendations_macro(reader):
 
 def validate_recommendations_nnr2023(reader):
     for row in reader:
-        assert row["nutrient"], row
+        assert row["id"], row
         assert row["unit"] in POSSIBLE_UNITS, row
         assert not row["value_males"] or float(row["value_males"]) >= 0, row
         assert not row["value_females"] or float(row["value_females"]) >= 0, row

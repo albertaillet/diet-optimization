@@ -135,7 +135,7 @@ def create_rangeslider(data: dict[str, str]) -> dict[str, float | str]:
     #     marks[upper] = {"label": f"{upper}{unit}", "style": {"color": "#f53d3d"}}  # type: ignore
     return {
         "name": data["ciqual_name"],
-        "id": data["off_id"],
+        "id": data["id"],
         "unit": unit,
         "min": _min,
         "max": _max,
@@ -147,8 +147,8 @@ def create_rangeslider(data: dict[str, str]) -> dict[str, float | str]:
 
 
 def filter_nutrients(nutrient_map: list[dict[str, str]], recommendations: list[dict[str, str]]) -> list[dict[str, str]]:
-    available = {rec["off_id"] for rec in recommendations}
-    return [{"name": row["ciqual_name"], "id": row["off_id"]} for row in nutrient_map if row["off_id"] in available]
+    available = {rec["id"] for rec in recommendations}
+    return [{"name": row["ciqual_name"], "id": row["id"]} for row in nutrient_map if row["id"] in available]
 
 
 def create_app(
@@ -159,7 +159,7 @@ def create_app(
 ) -> Flask:
     app = Flask(__name__)
 
-    nutrient_ids = [nutrient["off_id"] for nutrient in nutrient_map]
+    nutrient_ids = [nutrient["id"] for nutrient in nutrient_map]
 
     macronutrients = filter_nutrients(nutrient_map, macro_recommendations)
     micronutrients = filter_nutrients(nutrient_map, micro_recommendations)
@@ -264,11 +264,11 @@ if __name__ == "__main__":
         nutrient_map = [row_dict for row_dict in csv.DictReader(file) if not row_dict["disabled"]]
 
     with (DATA_DIR / "user_data" / OFF_USERNAME / "product_prices_and_nutrients.csv").open("r") as file:
-        products_and_prices = load_and_filter_products(file, used_nutrients=[row_dict["off_id"] for row_dict in nutrient_map])
+        products_and_prices = load_and_filter_products(file, used_nutrients=[row_dict["id"] for row_dict in nutrient_map])
     fix_prices(products_and_prices)
 
     with (DATA_DIR / "recommendations_macro.csv").open("r") as file:
-        macro_recommendations = inner_merge(list(csv.DictReader(file)), nutrient_map, left_key="off_id", right_key="off_id")
+        macro_recommendations = inner_merge(list(csv.DictReader(file)), nutrient_map, left_key="id", right_key="id")
 
     with (DATA_DIR / "recommendations_nnr2023.csv").open("r") as file:
         micro_recommendations = inner_merge(list(csv.DictReader(file)), nutrient_map, left_key="nutrient", right_key="nnr2023_id")

@@ -91,9 +91,9 @@ def ciqual_load_table(file, nutrient_map: list[dict[str, str]]) -> dict[str, dic
         ciqual_code = ciqual_row["alim_code"]
         ciqual_table[ciqual_code] = {"ciqual_code": ciqual_row["alim_code"], "ciqual_name": ciqual_row["alim_nom_eng"]}
         for nmr in nutrient_map:
-            nutrient_off_id = nmr["off_id"]
-            ciqual_table[ciqual_code][nutrient_off_id + "_value"] = ciqual_entry_to_value(ciqual_row[nmr["ciqual_id"]])
-            ciqual_table[ciqual_code][nutrient_off_id + "_unit"] = nmr["ciqual_unit"]
+            nutrient_id = nmr["id"]
+            ciqual_table[ciqual_code][nutrient_id + "_value"] = ciqual_entry_to_value(ciqual_row[nmr["ciqual_id"]])
+            ciqual_table[ciqual_code][nutrient_id + "_unit"] = nmr["ciqual_unit"]
     return ciqual_table
 
 
@@ -102,10 +102,10 @@ def create_nutrient_row(
 ) -> dict[str, float | str]:
     nutrients = {}
     for nutrient_map_row in nutrient_map:
-        nutrient_off_id = nutrient_map_row["off_id"]
-        nurtient_value = nutrient_off_id + "_value"
-        nurtient_unit = nutrient_off_id + "_unit"
-        nutrient_source = nutrient_off_id + "_source"
+        nutrient_id = nutrient_map_row["id"]
+        nurtient_value = nutrient_id + "_value"
+        nurtient_unit = nutrient_id + "_unit"
+        nutrient_source = nutrient_id + "_source"
         if nurtient_value in reported_nutrients:
             nutrients[nurtient_value] = reported_nutrients[nurtient_value]
             nutrients[nurtient_unit] = reported_nutrients[nurtient_unit]
@@ -126,7 +126,7 @@ def create_csv(
 ):
     product_cols = ["product_code", "product_name", "ciqual_code", "ciqual_name"]
     price_cols = ["price", "currency", "price_date", "location", "location_osm_id"]
-    nutrient_cols = [d["off_id"] + suffix for d in nutrient_map for suffix in ("_value", "_unit", "_source")]
+    nutrient_cols = [d["id"] + suffix for d in nutrient_map for suffix in ("_value", "_unit", "_source")]
     header = ["id", *product_cols, *price_cols, *nutrient_cols]
 
     writer = csv.writer(file)
@@ -189,7 +189,7 @@ if __name__ == "__main__":
         products_dict = json.load(file)
 
     with (DATA_DIR / "nutrient_map.csv").open("r") as file:
-        nutrient_map = [nmr for nmr in csv.DictReader(file) if nmr["ciqual_id"] and nmr["off_id"]]
+        nutrient_map = [nmr for nmr in csv.DictReader(file) if nmr["ciqual_id"] and nmr["id"]]
 
     with (DATA_DIR / "ciqual2020.csv").open("r") as file:
         ciqual_table = ciqual_load_table(file, nutrient_map)

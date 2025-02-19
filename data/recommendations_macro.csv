@@ -1,9 +1,9 @@
-off_id,unit,value_males,value_females,value_upper_intake
-energy-kcal,kcal,2500,2500,3000
-proteins,g,150,150,300
-carbohydrates,g,0,0,400
+id,unit,value_males,value_females,value_upper_intake
+energy_kcal,kcal,2500,2500,3000
+protein,g,150,150,300
+carbohydrate,g,0,0,400
 fat,g,70,70,200
-saturated-fat,g,0,0,20
+saturated_fat,g,0,0,20
 fiber,g,40,40,70
 salt,g,1,1,2.3
 sugars,g,0,0,50
