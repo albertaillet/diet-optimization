@@ -584,7 +584,6 @@ con.sql("SELECT * FROM calnut_1 LIMIT 5").show(max_width=10000)  # type: ignore
 print("TABLE nutrient_map:")
 con.sql("SELECT * FROM nutrient_map LIMIT 10").show(max_width=10000)  # type: ignore
 
-
 # %%
 con.sql("""DROP TABLE IF EXISTS calnut_mapped;
 CREATE TABLE calnut_mapped AS
@@ -665,5 +664,45 @@ PIVOT (
     GROUP BY code, ciqual_food_code
 )
 """).show(max_width=10000, max_rows=1000)  # type: ignore
+
+# %%
+con.sql("""
+CREATE OR REPLACE TABLE final_table AS (
+  SELECT
+    -- Product columns
+    p.code                 AS product_code,
+    p.product_name         AS product_name,
+    -- ciqual_name,
+    -- Use the price id as an identifier (or generate one if needed)
+    pr.id                  AS price_id,
+    pr.price               AS price,
+    pr.currency            AS currency,
+    pr.date                AS price_date,
+    pr.location_osm_display_name AS location,
+    pr.location_osm_id     AS location_osm_id,
+    -- Nutrient columns (example list; add or remove as needed)
+    fnt.*,
+  FROM prices pr
+  JOIN final_nutrient_table fnt
+    ON pr.product_code = fnt.code
+  JOIN products p
+    ON pr.product_code = p.code
+)
+""")
+
+# %%
+print("TABLE prices:")
+con.sql("SELECT * FROM prices LIMIT 5").show(max_width=10000)  # type: ignore
+print("TABLE final_nutrient_table:")
+con.sql("SELECT * FROM final_nutrient_table LIMIT 5").show(max_width=10000)  # type: ignore
+print("TABLE products:")
+con.sql("SELECT * FROM products LIMIT 5").show(max_width=10000)  # type: ignore
+
+# %%
+con.sql("""
+SELECT
+  COUNT(*) AS appearance_count
+FROM prices
+""").show()
 
 # %%

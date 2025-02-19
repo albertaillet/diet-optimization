@@ -1,19 +1,25 @@
+CREATE OR REPLACE TABLE prices AS (
+    SELECT * FROM read_parquet('prices.parquet')
+);
 CREATE OR REPLACE TABLE products AS (
     SELECT
-    code,
-    countries_tags,
-    ecoscore_score,
-    nova_group,
-    nutriments,
-    nutriscore_score,
-    product_name,
-    product_quantity_unit,
-    product_quantity,
-    quantity,
-    categories_properties,
-    FROM read_ndjson('openfoodfacts-products.jsonl.gz')
-    WHERE code IS NOT NULL AND
-          'en:france' IN countries_tags OR 'en:switzerland' IN countries_tags
+    products.code,
+    products.countries_tags,
+    products.ecoscore_score,
+    products.nova_group,
+    products.nutriments,
+    products.nutriscore_score,
+    products.product_name,
+    products.product_quantity_unit,
+    products.product_quantity,
+    products.quantity,
+    products.categories_properties,
+    FROM read_ndjson('openfoodfacts-products.jsonl.gz') AS products
+    -- WHERE code IS NOT NULL AND
+    --       'en:france' IN countries_tags OR 'en:switzerland' IN countries_tags
+    -- french and swiss products: 1190620
+    JOIN prices ON products.code = prices.product_code
+    -- products with prices: 58706
 );
 CREATE OR REPLACE TABLE calnut_1 AS (
     SELECT ALIM_CODE, FOOD_LABEL, CONST_LABEL, CONST_CODE,
@@ -152,3 +158,25 @@ PIVOT (
     GROUP BY code, ciqual_food_code
 )
 );
+CREATE OR REPLACE TABLE final_table AS (
+  SELECT
+    -- Product columns
+    p.code                 AS product_code,
+    p.product_name         AS product_name,
+    fnt.ciqual_food_code   AS ciqual_code,
+    -- add ciqual name to nutrient table
+    -- Use the price id as an identifier (or generate one if needed)
+    pr.id                  AS price_id,
+    pr.price               AS price,
+    pr.currency            AS currency,
+    pr.date                AS price_date,
+    pr.location_osm_display_name AS location,
+    pr.location_osm_id     AS location_osm_id,
+    -- Nutrient columns
+    fnt.*,
+  FROM prices pr
+  JOIN final_nutrient_table fnt ON pr.product_code = fnt.code
+  JOIN products p ON pr.product_code = p.code
+);  -- Final table count: 70283
+SELECT *
+FROM final_table;
