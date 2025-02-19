@@ -58,7 +58,7 @@ locations: $(LOCATION_CSV)
 
 # ---------- Run the optmization dashboard. ----------
 
-opt: $(SUMMARY_CSV) $(NUTRIENT_MAP) $(NNR_SUMMARY_CSV)
+opt:
 	DATA_DIR=$(DATA_DIR) python dietdashboard/app.py
 
 # ---------- Run the diet logger. ----------

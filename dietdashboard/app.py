@@ -22,7 +22,9 @@ import math
 import operator
 import os
 from pathlib import Path
+from time import perf_counter
 
+import duckdb
 import numpy as np
 from flask import Flask, render_template, request
 from scipy.optimize import linprog
@@ -34,47 +36,42 @@ DATA_DIR = Path(os.getenv("DATA_DIR", ""))
 OFF_USERNAME = os.getenv("OFF_USERNAME")
 POSSIBLE_CURRENCIES = ["EUR", "CHF"]
 
-
-def load_and_filter_products(file, used_nutrients: list[str]) -> dict[str, list[str | float]]:
-    """Filters to only the relevant nutrients and drops all products with missing values."""
-    product_cols = {"id": int, "product_code": str, "product_name": str, "ciqual_code": str, "ciqual_name": str}
-    price_cols = {"price": float, "currency": str, "price_date": str, "location": str, "location_osm_id": str}
-    nutrient_cols = {
-        name + suffix: _type for name in used_nutrients for suffix, _type in (("_value", float), ("_unit", str), ("_source", str))
-    }
-    cols = product_cols | price_cols | nutrient_cols
-
-    products = {col: [] for col in cols}  # Column-oriented dict.
-    for row in csv.DictReader(file):
-        # Filter out rows where any values are missing.
-        if any(row[col] == "" for col in cols):
-            continue
-        # Filter out rows with unsupported currencies.
-        if row["currency"] not in POSSIBLE_CURRENCIES:
-            continue
-        # Append each of the row values to the correct col, while casting it to _type.
-        for col, _type in cols.items():
-            products[col].append(_type(row[col]))
-
-    n_rows = len(products["product_code"])
-    assert all(len(products[col]) == n_rows for col in products)  # check that all columns have all the rows.
-
-    # Check that all columns have the same unit and that the source are either reported or ciqual.
-    for nutrient in used_nutrients:
-        unique_units = set(products[nutrient + "_unit"])
-        assert len(unique_units) == 1, (nutrient, unique_units)
-        unique_sources = set(products[nutrient + "_source"])
-        assert unique_sources.issubset({"reported", "ciqual"}), (nutrient, unique_sources)
-
-    return products
+# Connect in read_only mode
+con = duckdb.connect(DATA_DIR / "data.db", read_only=True)
 
 
-def fix_prices(prices: dict[str, list[str | float]]):
-    """Set all prices to the same currency: CHF. Also removes duplicate prices of the same location."""
-    EUR_TO_CHF = 0.96  # TODO: fetch this from the internet.
-    assert all(c in POSSIBLE_CURRENCIES for c in set(prices["currency"])), set(prices["currency"])
-    prices["price_chf"] = [v * EUR_TO_CHF if c == "EUR" else v for v, c in zip(prices["price"], prices["currency"], strict=True)]  # type: ignore
-    prices["price_eur"] = [v / EUR_TO_CHF if c == "CHF" else v for v, c in zip(prices["price"], prices["currency"], strict=True)]  # type: ignore
+def generate_query(chosen_bounds: dict[str, list[float]]) -> str:
+    # List of nutrient names (assumed to correspond to columns in final_table: nutrient_value)
+    nutrients = [id_to_calnut_id_map[nutrient_id] for nutrient_id in chosen_bounds]
+    # Create the part of the SELECT statement that lists each nutrient's value.
+    nutrient_select = ", ".join([f"{nutrient}_value" for nutrient in nutrients])
+    # Create filter conditions to remove rows where any chosen nutrient value is NULL.
+    nutrient_filters = " AND ".join([f"{nutrient}_value IS NOT NULL" for nutrient in nutrients])
+
+    # TODO: SQL injection security
+    return f"""
+    SELECT
+    price_id,
+    product_code,
+    product_name,
+    ciqual_code,
+    ciqual_name,
+    price,
+    currency,
+    location,
+    location_osm_id,
+    -- Convert price to CHF using EUR_TO_CHF = 0.96:
+    CASE WHEN currency = 'EUR' THEN price * 0.96 ELSE price END AS price_chf,
+    CASE WHEN currency = 'CHF' THEN price / 0.96 ELSE price END AS price_eur,
+    {nutrient_select}
+    FROM final_table
+    WHERE currency IN ('EUR', 'CHF')
+    AND product_code <> ''
+    AND product_name <> ''
+    AND ciqual_code <> ''
+    AND price IS NOT NULL
+    AND {nutrient_filters}
+    """
 
 
 def get_arrays(
@@ -85,9 +82,11 @@ def get_arrays(
     #     product_unique_units = set(products_and_prices[nutrient + "_unit"])
     #     recommendation_unit = bounds[nutrient]["unit"]
     #     assert product_unique_units == {recommendation_unit}, (nutrient, product_unique_units, recommendation_unit)
+    # TODO: concatentation could be used for A and c is already a numpy array.
 
     # Nutrients of each product
-    A_nutrients = np.array([products_and_prices[nutrient + "_value"] for nutrient in bounds], dtype=np.float32)
+    keys = [id_to_calnut_id_map[nutrient] + "_value" for nutrient in bounds]
+    A_nutrients = np.array([products_and_prices[k] for k in keys], dtype=np.float32)
 
     # Costs of each product (* 0.1 to go from price per kg to price per 100g)
     c_costs = 0.1 * np.array(products_and_prices[f"price_{currency.lower()}"], dtype=np.float32)
@@ -154,7 +153,6 @@ def filter_nutrients(nutrient_map: list[dict[str, str]], recommendations: list[d
 def create_app(
     macro_recommendations: list[dict[str, str]],
     micro_recommendations: list[dict[str, str]],
-    products_and_prices: dict[str, list[str | float]],
     nutrient_map: list[dict[str, str]],
 ) -> Flask:
     app = Flask(__name__)
@@ -203,8 +201,21 @@ def create_app(
             chosen_nutrient_ids.append(nutrient_id)
             chosen_bounds[nutrient_id] = data[f"bounds_{nutrient_id}"]
 
+        # Time the query
+        start = perf_counter()
+        products_and_prices = con.execute(generate_query(chosen_bounds)).fetchnumpy()
+        print(f"Query time: {perf_counter() - start:.2f}s")
+
+        start = perf_counter()
         A_nutrients, lb, ub, c_costs = get_arrays(chosen_bounds, products_and_prices, currency)
+        print(f"Array conversion time: {perf_counter() - start:.2f}s")
+
+        print(f"Number of products: {A_nutrients.shape[1]}")
+        print(f"Number of nutrients: {A_nutrients.shape[0]}")
+
+        start = perf_counter()
         result = solve_optimization(A_nutrients, lb, ub, c_costs)
+        print(f"Optimization time: {perf_counter() - start:.2f}s")
         if result.status != 0:
             return "<h1>No solution</h1>"
 
@@ -219,13 +230,15 @@ def create_app(
         for i in range(n_products):
             if result.x[i] <= 0:  # Filter out products with zero quantity
                 continue
+            location = ",".join(products_and_prices["location"][i].split(", ")[:3])
+
             product = {
-                "id": products_and_prices["id"][i],
+                "price_id": int(products_and_prices["price_id"][i]),
                 "product_code": products_and_prices["product_code"][i],
                 "product_name": products_and_prices["product_name"][i],
                 "ciqual_name": products_and_prices["ciqual_name"][i],
                 "ciqual_code": products_and_prices["ciqual_code"][i],
-                "location": products_and_prices["location"][i],
+                "location": location,
                 "location_osm_id": products_and_prices["location_osm_id"][i],
                 "quantity_g": round(100 * result.x[i], 1),
                 "price": round(c_costs[i] * result.x[i], 2),
@@ -242,9 +255,9 @@ def create_app(
                     nutrients[nutrient_id] = []
                 if level == 0:
                     continue
-                nutrients[nutrient_id].append({"name": p["ciqual_name"], "id": p["id"], "level": level})
+                nutrients[nutrient_id].append({"name": p["ciqual_name"], "id": p["price_id"], "level": level})
 
-        product_indices = {p["id"]: i for i, p in enumerate(products)}
+        product_indices = {p["price_id"]: i for i, p in enumerate(products)}
         return render_template(
             "result.html",
             products=products,
@@ -258,14 +271,10 @@ def create_app(
 
 
 if __name__ == "__main__":
-    assert OFF_USERNAME is not None, f"Set OFF_USERNAME env variable {OFF_USERNAME=}"
-
     with (DATA_DIR / "nutrient_map.csv").open("r") as file:
         nutrient_map = [row_dict for row_dict in csv.DictReader(file) if not row_dict["disabled"]]
 
-    with (DATA_DIR / "user_data" / OFF_USERNAME / "product_prices_and_nutrients.csv").open("r") as file:
-        products_and_prices = load_and_filter_products(file, used_nutrients=[row_dict["id"] for row_dict in nutrient_map])
-    fix_prices(products_and_prices)
+    id_to_calnut_id_map = {row["id"]: row["calnut_name"] for row in nutrient_map}
 
     with (DATA_DIR / "recommendations_macro.csv").open("r") as file:
         macro_recommendations = inner_merge(list(csv.DictReader(file)), nutrient_map, left_key="id", right_key="id")
@@ -273,5 +282,5 @@ if __name__ == "__main__":
     with (DATA_DIR / "recommendations_nnr2023.csv").open("r") as file:
         micro_recommendations = inner_merge(list(csv.DictReader(file)), nutrient_map, left_key="nutrient", right_key="nnr2023_id")
 
-    app = create_app(macro_recommendations, micro_recommendations, products_and_prices, nutrient_map)
-    app.run(debug=True)
+    app = create_app(macro_recommendations, micro_recommendations, nutrient_map)
+    app.run(debug=True, host="localhost", port=5001)

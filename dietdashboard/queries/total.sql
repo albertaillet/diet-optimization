@@ -21,6 +21,11 @@ CREATE OR REPLACE TABLE products AS (
     JOIN prices ON products.code = prices.product_code
     -- products with prices: 58706
 );
+CREATE OR REPLACE TABLE calnut_0 AS (
+    SELECT alim_code, FOOD_LABEL, HYPOTH, alim_grp_code,
+      alim_grp_nom_fr, alim_ssgrp_code, alim_ssgrp_nom_fr, alim_ssssgrp_code, alim_ssssgrp_nom_fr
+    FROM read_csv('calnut.0.csv')
+);
 CREATE OR REPLACE TABLE calnut_1 AS (
     SELECT ALIM_CODE, FOOD_LABEL, CONST_LABEL, CONST_CODE,
     CAST(indic_combl AS BOOL) as combl,
@@ -164,6 +169,7 @@ CREATE OR REPLACE TABLE final_table AS (
     p.code                 AS product_code,
     p.product_name         AS product_name,
     fnt.ciqual_food_code   AS ciqual_code,
+    c.FOOD_LABEL           AS ciqual_name,
     -- add ciqual name to nutrient table
     -- Use the price id as an identifier (or generate one if needed)
     pr.id                  AS price_id,
@@ -177,6 +183,7 @@ CREATE OR REPLACE TABLE final_table AS (
   FROM prices pr
   JOIN final_nutrient_table fnt ON pr.product_code = fnt.code
   JOIN products p ON pr.product_code = p.code
+  JOIN calnut_0 c ON fnt.ciqual_food_code = c.ALIM_CODE
 );  -- Final table count: 70283
 SELECT *
 FROM final_table;
