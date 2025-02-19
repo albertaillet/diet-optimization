@@ -207,6 +207,7 @@ Other apps:
 -   [Lolo](https://apps.apple.com/us/app/lolo-ai-food-calorie-tracker/id6448986851?l=en)
 -   [SnackFolio](https://www.snackfolio.com/), offline friendly nutrition tracker.
 -   [Cali AI](https://www.calai.app), calorie tracking app with a focus on tracking food portions from images using multimodal AI.
+-   [Truefood.tech](https://truefood.tech/), from a team of researchers to find least processed food.
 
 Other tools:
 -   [Terra](https://tryterra.co/) is a Health API for Wearable and Sensor Data that integrates with nutrition trackers.
