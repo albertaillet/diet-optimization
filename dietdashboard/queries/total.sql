@@ -149,11 +149,7 @@ CREATE OR REPLACE TABLE products_nutriments AS (
 ) AS v(nutrient_name, nutrient_value, nutrient_unit)
 );
 CREATE OR REPLACE TABLE final_nutrient_table AS (
-calnut_mapped AS (
-    SELECT * FROM calnut_1 AS c
-    JOIN nutrient_map nm
-    ON c.CONST_CODE = nm.calnut_const_code
-),
+WITH
 products_nutriments_mapped AS (
     SELECT
     p.code,
@@ -167,12 +163,14 @@ products_nutriments_mapped AS (
     c.ub,
     c.mean,
     c.CONST_LABEL,
-    c.calnut_name,
-    c.calnut_unit,
+    nm.calnut_name,
+    nm.calnut_unit,
     FROM products_nutriments p
-    JOIN calnut_mapped c
-    ON p.ciqual_food_code = c.ALIM_CODE AND
-        p.nutrient_name = c.off_id
+    JOIN calnut_1 c
+    ON p.ciqual_food_code = c.ALIM_CODE
+    JOIN nutrient_map nm
+    ON c.CONST_CODE = nm.calnut_const_code AND
+        p.nutrient_name = nm.off_id
 ),
 nutriments_selected AS (
     SELECT
