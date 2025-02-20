@@ -166,14 +166,14 @@ CREATE OR REPLACE TABLE products_nutriments_selected AS (
     CASE
       WHEN p.nutrient_value IS NOT NULL
       AND p.nutrient_unit IS NOT NULL
-      AND p.nutrient_unit != ''
+      AND p.nutrient_unit == nm.calnut_unit
       THEN p.nutrient_value
       ELSE c.mean
     END AS final_nutrient_value,
     CASE
       WHEN p.nutrient_value IS NOT NULL
       AND p.nutrient_unit IS NOT NULL
-      AND p.nutrient_unit != ''
+      AND p.nutrient_unit == nm.calnut_unit
       THEN p.nutrient_unit
       ELSE nm.calnut_unit
     END AS final_nutrient_unit
@@ -217,6 +217,7 @@ CREATE OR REPLACE TABLE final_table AS (
   pr.date                AS price_date,
   pr.location_osm_display_name AS location,
   pr.location_osm_id     AS location_osm_id,
+  pr.owner               AS price_owner,
   -- Nutrient columns
   fnt.*,
   FROM prices pr

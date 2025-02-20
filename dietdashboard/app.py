@@ -69,6 +69,7 @@ def generate_query(chosen_bounds: dict[str, list[float]]) -> str:
     AND ciqual_code <> ''
     AND price IS NOT NULL
     AND {nutrient_filters}
+    AND price_owner = '{OFF_USERNAME}'
     """
 
 
@@ -227,7 +228,7 @@ def create_app(
         for i in range(n_products):
             if result.x[i] <= 0:  # Filter out products with zero quantity
                 continue
-            location = ",".join(products_and_prices["location"][i].split(", ")[:3])
+            location = ", ".join(products_and_prices["location"][i].split(", ")[:3])
 
             product = {
                 "price_id": int(products_and_prices["price_id"][i]),
