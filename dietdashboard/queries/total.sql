@@ -64,10 +64,13 @@ CREATE OR REPLACE TABLE products AS (
     -- WHERE code IS NOT NULL AND 'en:france' IN countries_tags OR 'en:switzerland' IN countries_tags
     -- french and swiss products: 1 190 620
 );
-CREATE OR REPLACE TABLE products_with_prices AS (
+CREATE OR REPLACE TABLE products_with_ciqual_and_price AS (
     SELECT * FROM products
-    WHERE EXISTS ( SELECT 1 FROM prices WHERE products.code = prices.product_code )
+    WHERE ciqual_food_code IS NOT NULL
+    AND EXISTS ( SELECT 1 FROM prices WHERE products.code = prices.product_code )
+    -- products with ciqual: 1 027 480
     -- products with prices: 32 892
+    -- products with prices and ciqual: 23 650
 );
 CREATE OR REPLACE TABLE final_nutrient_table AS (
 WITH
