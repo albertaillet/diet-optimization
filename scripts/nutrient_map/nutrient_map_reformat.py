@@ -27,7 +27,7 @@ def extract_ciqual_cols(header: list[str]) -> Generator[tuple[str, str, str]]:
 
 
 def create_reformatted_csv(file, ciqual_cols: Generator[tuple[str, str, str]], prev_nutrient_map: list[dict[str, Any]]):
-    header = ("ciqual_name", "ciqual_id", "ciqual_unit", "off_id", "countprep", "nnr2023_id", "comments")
+    header = ("ciqual_name", "ciqual_id", "ciqual_unit", "off_id", "count", "nnr2023_id", "comments")
     writer = csv.writer(file)
     writer.writerow(header)  # Write header
 
@@ -47,7 +47,7 @@ def create_reformatted_csv(file, ciqual_cols: Generator[tuple[str, str, str]], p
                 if ciqual_name.lower() == possible_match_row_dict["off_id"]:
                     print("Adding matched", ciqual_name, possible_match_row_dict["off_id"])
                     row_dict["off_id"] = possible_match_row_dict["off_id"]
-                    row_dict["countprep"] = possible_match_row_dict["countprep"]
+                    row_dict["count"] = possible_match_row_dict["countprep"]
                     break
             writer.writerow([row_dict.get(col) for col in header])
     # Then write possible other rows (with comments).

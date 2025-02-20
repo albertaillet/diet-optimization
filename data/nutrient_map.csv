@@ -1,29 +1,29 @@
-id,ciqual_name,ciqual_id,ciqual_unit,calnut_name,calnut_unit,calnut_const_code,off_id,countprep,nnr2023_id,nutrient_type,disabled,comments
-energy_kj,Energy,"Energy, Regulation EU No 1169/2011 (kJ/100g)",kj,nrj,kj,332,,,,macro,TRUE,
-energy_kcal,Energy,"Energy, Regulation EU No 1169/2011 (kcal/100g)",kcal,nrj,kcal,333,energy-kcal,2039010,,macro,,
+id,ciqual_name,ciqual_id,ciqual_unit,calnut_name,calnut_unit,calnut_const_code,off_id,count,nnr2023_id,nutrient_type,disabled,comments
+energy_kj,Energy,"Energy, Regulation EU No 1169/2011 (kJ/100g)",kj,nrj,kj,332,energy-kj,362551,,macro,TRUE,
+energy_kcal,Energy,"Energy, Regulation EU No 1169/2011 (kcal/100g)",kcal,nrj,kcal,333,energy-kcal,2670928,,macro,,
 energy_fibre_kj,"Energy, N x Jones' factor, with fibres","Energy, N x Jones' factor, with fibres (kJ/100g)",kj,,,,,,,macro,TRUE,
 energy_fibre_kcal,"Energy, N x Jones' factor, with fibres","Energy, N x Jones' factor, with fibres (kcal/100g)",kcal,,,,,,,macro,TRUE,
-water,Water,Water (g/100g),g,eau,g,400,water,,,macro,,
-protein,Protein,Protein (g/100g),g,proteines,g,25000,proteins,2075645,,macro,,
+water,Water,Water (g/100g),g,eau,g,400,,,,macro,TRUE,
+protein,Protein,Protein (g/100g),g,proteines,g,25000,proteins,2692193,,macro,,
 protein_crude,"Protein, crude, N x 6.25","Protein, crude, N x 6.25 (g/100g)",g,,,,,,,macro,TRUE,
-carbohydrate,Carbohydrate,Carbohydrate (g/100g),g,glucides,g,31000,carbohydrates,2073749,,macro,,
-fat,Fat,Fat (g/100g),g,lipides,g,40000,fat,2073742,,macro,,
-sugars,Sugars,Sugars (g/100g),g,sucres,g,32000,sugars,2057784,,macro,,
+carbohydrate,Carbohydrate,Carbohydrate (g/100g),g,glucides,g,31000,carbohydrates,2691662,,macro,,
+fat,Fat,Fat (g/100g),g,lipides,g,40000,fat,2686998,,macro,,
+sugars,Sugars,Sugars (g/100g),g,sucres,g,32000,sugars,2590454,,macro,,
 fructose,Fructose,fructose (g/100g),g,fructose,g,32210,fructose,93,,macro,,
 galactose,Galactose,galactose (g/100g),g,galactose,g,32220,galactose,9,,macro,,
 glucose,Glucose,glucose (g/100g),g,glucose,g,32250,glucose,130,,macro,,
-lactose,Lactose,lactose (g/100g),g,lactose,g,32410,lactose,1110,,macro,,
+lactose,Lactose,lactose (g/100g),g,lactose,g,32410,lactose,1595,,macro,,
 maltose,Maltose,maltose (g/100g),g,maltose,g,32430,maltose,112,,macro,,
 sucrose,Sucrose,sucrose (g/100g),g,saccharose,g,32480,sucrose,207,,macro,,Saccharose name in calnut seems outdated
-starch,Starch,Starch (g/100g),g,amidon,g,33110,starch,592,,macro,,
-fiber,Fibres,Fibres (g/100g),g,fibres,g,34100,fiber,867716,,macro,,
-polyols,Polyols,Polyols (g/100g),g,polyols,g,34000,polyols,3904,,macro,,
+starch,Starch,Starch (g/100g),g,amidon,g,33110,starch,760,,macro,,
+fiber,Fibres,Fibres (g/100g),g,fibres,g,34100,fiber,1276352,,macro,,
+polyols,Polyols,Polyols (g/100g),g,polyols,g,34000,polyols,6623,,macro,,
 ash,Ash,Ash (g/100g),g,,,,,,,macro,TRUE,
-alcohol,Alcohol,Alcohol (g/100g),g,alcool,g,60000,alcohol,27268,,macro,TRUE,
+alcohol,Alcohol,Alcohol (g/100g),g,alcool,g,60000,alcohol,34684,,macro,TRUE,
 organic_acids,Organic acids,Organic acids (g/100g),g,acides_organiques,g,65000,,,,micro,TRUE,
-saturated_fat,Saturated fat,FA saturated (g/100g),g,ags,g,40302,saturated-fat,2031183,,macro,,
-monounsaturated_fat,Monounsaturated fat,FA mono (g/100g),g,agmi,g,40303,monounsaturated-fat,49138,,macro,,
-polyunsaturated_fat,Polyunsaturated fat,FA poly (g/100g),g,agpi,g,40304,polyunsaturated-fat,49095,,macro,,
+saturated_fat,Saturated fat,FA saturated (g/100g),g,ags,g,40302,saturated-fat,2551268,,macro,,
+monounsaturated_fat,Monounsaturated fat,FA mono (g/100g),g,agmi,g,40303,monounsaturated-fat,57855,,macro,,
+polyunsaturated_fat,Polyunsaturated fat,FA poly (g/100g),g,agpi,g,40304,polyunsaturated-fat,57577,,macro,,
 fa_04_0,FA 4:0,FA 4:0 (g/100g),g,ag_04_0,g,40400,,,,micro,TRUE,
 fa_06_0,FA 6:0,FA 6:0 (g/100g),g,ag_06_0,g,40600,,,,micro,TRUE,
 fa_08_0,FA 8:0,FA 8:0 (g/100g),g,ag_08_0,g,40800,,,,micro,TRUE,
@@ -38,35 +38,35 @@ fa_18_3_a_lino,"FA 18:3 c9,c12,c15 (n-3)","FA 18:3 c9,c12,c15 (n-3) (g/100g)",g,
 fa_20_4_ara,"FA 20:4 5c,8c,11c,14c (n-6)","FA 20:4 5c,8c,11c,14c (n-6) (g/100g)",g,ag_20_4_ara,g,42046,,,,micro,TRUE,
 fa_20_5_epa,"FA 20:5 5c,8c,11c,14c,17c (n-3) EPA","FA 20:5 5c,8c,11c,14c,17c (n-3) EPA (g/100g)",g,ag_20_5_epa,g,42053,,,,micro,TRUE,
 fa_20_6_dha,"FA 22:6 4c,7c,10c,13c,16c,19c (n-3) DHA","FA 22:6 4c,7c,10c,13c,16c,19c (n-3) DHA (g/100g)",g,ag_20_6_dha,g,42263,,,,micro,TRUE,
-cholesterol,Cholesterol,Cholesterol (mg/100g),mg,cholesterol,mg,75100,cholesterol,271288,,macro,,
-salt,Salt,Salt (g/100g),g,sel,g,10004,salt,1865462,,macro,,
-calcium,Calcium,Calcium (mg/100g),mg,calcium,mg,10200,calcium,275041,Calcium,micro,,
+cholesterol,Cholesterol,Cholesterol (mg/100g),mg,cholesterol,mg,75100,cholesterol,352022,,macro,,
+salt,Salt,Salt (g/100g),g,sel,g,10004,salt,2335221,,macro,,
+calcium,Calcium,Calcium (mg/100g),mg,calcium,mg,10200,calcium,349144,Calcium,micro,,
 chloride,Chloride,Chloride (mg/100g),mg,,,,chloride,1228,Choline,micro,,
-copper,Copper,Copper (mg/100g),mg,cuivre,mg,10290,copper,4475,Copper,micro,,
-iron,Iron,Iron (mg/100g),mg,fer,mg,10260,iron,267996,Iron,micro,,
-iodine,Iodine,Iodine (µg/100g),µg,iode,mcg,10530,iodine,2677,Iodine,micro,,
-magnesium,Magnesium,Magnesium (mg/100g),mg,magnesium,mg,10120,magnesium,15608,Magnesium,micro,,
-manganese,Manganese,Manganese (mg/100g),mg,manganese,mg,10251,manganese,4281,Manganese,micro,,
-phosphorus,Phosphorus,Phosphorus (mg/100g),mg,phosphore,mg,10150,phosphorus,14537,Phosphorus,micro,TRUE,TODO: fix units
-potassium,Potassium,Potassium (mg/100g),mg,potassium,mg,10190,potassium,94142,Potassium,micro,,
-selenium,Selenium,Selenium (µg/100g),µg,selenium,mcg,10340,selenium,2731,Selenium,micro,,
-sodium,Sodium,Sodium (mg/100g),mg,sodium,mg,10110,sodium,1865460,Sodium,micro,TRUE,TODO: fix units
-zinc,Zinc,Zinc (mg/100g),mg,zinc,mg,10300,zinc,10787,Zinc,micro,,
+copper,Copper,Copper (mg/100g),mg,cuivre,mg,10290,copper,6171,Copper,micro,,
+iron,Iron,Iron (mg/100g),mg,fer,mg,10260,iron,332501,Iron,micro,,
+iodine,Iodine,Iodine (µg/100g),µg,iode,mcg,10530,iodine,3498,Iodine,micro,,
+magnesium,Magnesium,Magnesium (mg/100g),mg,magnesium,mg,10120,magnesium,21983,Magnesium,micro,,
+manganese,Manganese,Manganese (mg/100g),mg,manganese,mg,10251,manganese,6176,Manganese,micro,,
+phosphorus,Phosphorus,Phosphorus (mg/100g),mg,phosphore,mg,10150,phosphorus,18266,Phosphorus,micro,TRUE,TODO: fix units
+potassium,Potassium,Potassium (mg/100g),mg,potassium,mg,10190,potassium,164412,Potassium,micro,,
+selenium,Selenium,Selenium (µg/100g),µg,selenium,mcg,10340,selenium,4421,Selenium,micro,,
+sodium,Sodium,Sodium (mg/100g),mg,sodium,mg,10110,sodium,2335220,Sodium,micro,TRUE,TODO: fix units
+zinc,Zinc,Zinc (mg/100g),mg,zinc,mg,10300,zinc,15242,Zinc,micro,,
 retinol,Retinol,Retinol (µg/100g),µg,retinol,mcg,51200,retinol,2,,micro,TRUE,Questionable match with NNR2023 (Vitamin A != Retinol)
 beta_carotene,Beta-carotene,Beta-carotene (µg/100g),µg,beta_carotene,mcg,51330,beta-carotene,84,,micro,TRUE,
-vitamin_d,Vitamin D,Vitamin D (µg/100g),µg,vitamine_d,mcg,52100,vitamin-d,11261,Vitamin D,micro,,
-vitamin_e,Vitamin E,Vitamin E (mg/100g),mg,vitamine_e,mg,53100,vitamin-e,4289,Vitamin E,micro,,
+vitamin_d,Vitamin D,Vitamin D (µg/100g),µg,vitamine_d,mcg,52100,vitamin-d,58124,Vitamin D,micro,,
+vitamin_e,Vitamin E,Vitamin E (mg/100g),mg,vitamine_e,mg,53100,vitamin-e,9732,Vitamin E,micro,,
 vitamin_k1,Vitamin K1,Vitamin K1 (µg/100g),µg,vitamine_k1,mcg,54101,,,,micro,TRUE,How to sum to get similar to Vitamin K
 vitamin_k2,Vitamin K2,Vitamin K2 (µg/100g),µg,vitamine_k2,mcg,54104,,,,micro,TRUE,
-vitamin_c,Vitamin C,Vitamin C (mg/100g),mg,vitamine_c,mg,55100,vitamin-c,221743,Vitamin C,micro,,
-vitamin_b1,Vitamin B1,Vitamin B1 or Thiamin (mg/100g),mg,vitamine_b1,mg,56100,vitamin-b1,24952,Thiamin,micro,TRUE,TODO: fix units
-vitamin_b2,Vitamin B2,Vitamin B2 or Riboflavin (mg/100g),mg,vitamine_b2,mg,56200,vitamin-b2,24088,Riboflavin,micro,TRUE,TODO: fix units
-vitamin_pp,Vitamin B3,Vitamin B3 or Niacin (mg/100g),mg,vitamine_b3,mg,56310,vitamin-pp,24523,Niacin,micro,TRUE,A component of B3? TODO: fix units
-pantothenic_acid,Vitamin B5,Vitamin B5 or Pantothenic acid (mg/100g),mg,vitamine_b5,mg,56400,pantothenic-acid,6658,Pantothenic acid,micro,TRUE,
-vitamin_b6,Vitamin B6,Vitamin B6 (mg/100g),mg,vitamine_b6,mg,56500,vitamin-b6,16923,Vitamin B6,micro,,
-vitamin_b9,Vitamin B9,Vitamin B9 or Folate (µg/100g),µg,vitamine_b9,mcg,56700,vitamin-b9,10872,Folate,micro,TRUE,TODO: fix units
-folates,Vitamin B9,Vitamin B9 or Folate (µg/100g),µg,vitamine_b9,mcg,56700,folates,8560,,micro,TRUE,
-vitamin_b12,Vitamin B12,Vitamin B12 (µg/100g),µg,vitamine_b12,mcg,56600,vitamin-b12,13943,Vitamin B12,micro,,
-vitamin_a,,,,,,,vitamin-a,214147,Vitamin A,,TRUE,Need a formula to combine retinol and beta-carotene (and vitamin A)
-trans_fat,,,,,,,trans-fat,266865,,,TRUE,Unclear which CIQUAL FA should be used or if it is a sum of a number
-cocoa,,,,,,,cocoa,6989,,,TRUE,?
+vitamin_c,Vitamin C,Vitamin C (mg/100g),mg,vitamine_c,mg,55100,vitamin-c,226229,Vitamin C,micro,,
+vitamin_b1,Vitamin B1,Vitamin B1 or Thiamin (mg/100g),mg,vitamine_b1,mg,56100,vitamin-b1,31359,Thiamin,micro,TRUE,TODO: fix units
+vitamin_b2,Vitamin B2,Vitamin B2 or Riboflavin (mg/100g),mg,vitamine_b2,mg,56200,vitamin-b2,31293,Riboflavin,micro,TRUE,TODO: fix units
+vitamin_pp,Vitamin B3,Vitamin B3 or Niacin (mg/100g),mg,vitamine_b3,mg,56310,vitamin-pp,26810,Niacin,micro,TRUE,A component of B3? TODO: fix units
+pantothenic_acid,Vitamin B5,Vitamin B5 or Pantothenic acid (mg/100g),mg,vitamine_b5,mg,56400,pantothenic-acid,10238,Pantothenic acid,micro,TRUE,
+vitamin_b6,Vitamin B6,Vitamin B6 (mg/100g),mg,vitamine_b6,mg,56500,vitamin-b6,23337,Vitamin B6,micro,,
+vitamin_b9,Vitamin B9,Vitamin B9 or Folate (µg/100g),µg,vitamine_b9,mcg,56700,vitamin-b9,15335,Folate,micro,TRUE,TODO: fix units
+folates,Vitamin B9,Vitamin B9 or Folate (µg/100g),µg,vitamine_b9,mcg,56700,folates,8872,,micro,TRUE,
+vitamin_b12,Vitamin B12,Vitamin B12 (µg/100g),µg,vitamine_b12,mcg,56600,vitamin-b12,21218,Vitamin B12,micro,,
+vitamin_a,,,,,,,vitamin-a,221673,Vitamin A,,TRUE,Need a formula to combine retinol and beta-carotene (and vitamin A)
+trans_fat,,,,,,,trans-fat,337969,,,TRUE,Unclear which CIQUAL FA should be used or if it is a sum of a number
+cocoa,,,,,,,cocoa,8119,,,TRUE,?
