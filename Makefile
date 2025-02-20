@@ -43,6 +43,11 @@ $(NNR_SUMMARY_CSV): $(NNR_EXTRACTED_TABLES)
 opt:
 	DATA_DIR=$(DATA_DIR) python dietdashboard/app.py
 
+# ---------- Create the nutrient extraction template. ----------
+
+template:
+	DATA_DIR=$(DATA_DIR) python scripts/template_nutriments_query.py
+
 # ---------- Run the diet logger. ----------
 
 log: $(SUMMARY_CSV) $(NUTRIENT_MAP) $(NNR_SUMMARY_CSV)
