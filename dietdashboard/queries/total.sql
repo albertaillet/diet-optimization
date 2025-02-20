@@ -1,12 +1,13 @@
 -- Nutrient mapping table
 CREATE OR REPLACE TABLE nutrient_map AS (
     SELECT id, ciqual_name, ciqual_id, ciqual_unit, calnut_name, calnut_unit, calnut_const_code,
-    off_id, countprep, nnr2023_id, nutrient_type, disabled,
+    off_id, countprep, nnr2023_id, nutrient_type,
     FROM read_csv('nutrient_map.csv')
+    WHERE disabled IS NULL
 );
 /* Documentation: https://ciqual.anses.fr/cms/sites/default/files/inline-files/Table%20CALNUT%202020_doc_FR_2020%2007%2007.pdf
-Table 0 contains food group information
-Table 1 contains nutrient information for each food and nutrient
+Table 0 contains food group information (2 119 rows)
+Table 1 contains nutrient information for each food and nutrient (131 378 rows)
 Both tables are joined on the ALIM_CODE and FOOD_LABEL columns
 */
 CREATE OR REPLACE TABLE calnut_0 AS (
@@ -31,25 +32,32 @@ CREATE OR REPLACE TABLE prices AS (
 /* Open Food Facts data page: https://world.openfoodfacts.org/data
 The exported parquet file is missing the 'categories_properties' that contains the ciqual information.
 Therefore the jsonl databse dump is used, available at: https://static.openfoodfacts.org/data/openfoodfacts-products.jsonl.gz
+Note: there are duplicates of the code, it is not a unique key
 */
 CREATE OR REPLACE TABLE products AS (
     SELECT
-    products.code,
-    products.countries_tags,
-    products.ecoscore_score,
-    products.nova_group,
-    products.nutriments,
-    products.nutriscore_score,
-    products.product_name,
-    products.product_quantity_unit,
-    products.product_quantity,
-    products.quantity,
-    products.categories_properties,
-    FROM read_ndjson('openfoodfacts-products.jsonl.gz') AS products
+    p._id,
+    p.code,
+    p.countries_tags,
+    p.ecoscore_score,
+    p.nova_group,
+    p.nutriments,
+    p.nutriscore_score,
+    p.product_name,
+    p.product_quantity_unit,
+    p.product_quantity,
+    p.quantity,
+    p.categories_properties,
+    FROM read_ndjson('openfoodfacts-products.jsonl.gz') AS p
+    -- with no filtering: 3 667 647
     -- WHERE code IS NOT NULL AND 'en:france' IN countries_tags OR 'en:switzerland' IN countries_tags
-    -- french and swiss products: 1190620
-    JOIN prices ON products.code = prices.product_code
-    -- products with prices: 58706
+    -- french and swiss products: 1 190 620
+    -- JOIN prices ON p.code = prices.product_code
+    -- products with prices: 32 892
+);
+CREATE OR REPLACE TABLE products_with_prices AS (
+    SELECT * FROM products
+    WHERE EXISTS ( SELECT 1 FROM prices WHERE products.code = prices.product_code )
 );
 CREATE OR REPLACE TABLE products_with_ciqual AS (
     SELECT
@@ -66,7 +74,7 @@ CREATE OR REPLACE TABLE products_with_ciqual AS (
         ELSE 'unknown'
     END AS ciqual_food_code_origin,
     nutriments,
-    FROM products
+    FROM products_with_prices
 );
 CREATE OR REPLACE TABLE final_nutrient_table AS (
 WITH
