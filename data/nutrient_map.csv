@@ -41,7 +41,7 @@ fa_20_6_dha,"FA 22:6 4c,7c,10c,13c,16c,19c (n-3) DHA","FA 22:6 4c,7c,10c,13c,16c
 cholesterol,Cholesterol,Cholesterol (mg/100g),mg,cholesterol,mg,75100,cholesterol,352022,TRUE,,macro,,
 salt,Salt,Salt (g/100g),g,sel,g,10004,salt,2335221,TRUE,,macro,,
 calcium,Calcium,Calcium (mg/100g),mg,calcium,mg,10200,calcium,349144,TRUE,Calcium,micro,,
-chloride,Chloride,Chloride (mg/100g),mg,,,,chloride,1228,,Choline,micro,,
+chloride,Chloride,Chloride (mg/100g),mg,,,,chloride,1228,,Choline,micro,TRUE,
 copper,Copper,Copper (mg/100g),mg,cuivre,mg,10290,copper,6171,TRUE,Copper,micro,,
 iron,Iron,Iron (mg/100g),mg,fer,mg,10260,iron,332501,TRUE,Iron,micro,,
 iodine,Iodine,Iodine (µg/100g),µg,iode,mcg,10530,iodine,3498,TRUE,Iodine,micro,,

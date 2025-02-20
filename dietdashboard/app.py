@@ -41,12 +41,10 @@ con = duckdb.connect(DATA_DIR / "data.db", read_only=True)
 
 
 def generate_query(chosen_bounds: dict[str, list[float]]) -> str:
-    # List of nutrient names (assumed to correspond to columns in final_table: nutrient_value)
-    nutrients = [id_to_calnut_id_map[nutrient_id] for nutrient_id in chosen_bounds]
     # Create the part of the SELECT statement that lists each nutrient's value.
-    nutrient_select = ", ".join([f"{nutrient}_value" for nutrient in nutrients])
+    nutrient_select = ", ".join([f"{nutrient_id}_value" for nutrient_id in chosen_bounds])
     # Create filter conditions to remove rows where any chosen nutrient value is NULL.
-    nutrient_filters = " AND ".join([f"{nutrient}_value IS NOT NULL" for nutrient in nutrients])
+    nutrient_filters = " AND ".join([f"{nutrient_id}_value IS NOT NULL" for nutrient_id in chosen_bounds])
 
     # TODO: SQL injection security
     return f"""
@@ -85,8 +83,7 @@ def get_arrays(
     # TODO: concatentation could be used for A and c is already a numpy array.
 
     # Nutrients of each product
-    keys = [id_to_calnut_id_map[nutrient] + "_value" for nutrient in bounds]
-    A_nutrients = np.array([products_and_prices[k] for k in keys], dtype=np.float32)
+    A_nutrients = np.array([products_and_prices[nutrient_id + "_value"] for nutrient_id in bounds], dtype=np.float32)
 
     # Costs of each product (* 0.1 to go from price per kg to price per 100g)
     c_costs = 0.1 * np.array(products_and_prices[f"price_{currency.lower()}"], dtype=np.float32)
