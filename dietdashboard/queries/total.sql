@@ -1,9 +1,9 @@
 -- Nutrient mapping table
 CREATE OR REPLACE TABLE nutrient_map AS (
     SELECT id, ciqual_name, ciqual_id, ciqual_unit, calnut_name, calnut_unit, calnut_const_code,
-    off_id, countprep, nnr2023_id, nutrient_type,
+    off_id, count, nnr2023_id, nutrient_type,
     FROM read_csv('nutrient_map.csv')
-    WHERE disabled IS NULL
+    WHERE off_id IS NOT NULL OR calnut_const_code IS NOT NULL
 );
 /* Documentation: https://ciqual.anses.fr/cms/sites/default/files/inline-files/Table%20CALNUT%202020_doc_FR_2020%2007%2007.pdf
 Table 0 contains food group information (2 119 rows)
@@ -77,7 +77,7 @@ CREATE OR REPLACE TABLE products_nutriments AS (
     p.code,
     p.ciqual_food_code,
     p.ciqual_food_code_origin,
-    v.nutrient_name,
+    v.nutrient_id,
     v.nutrient_value,
     v.nutrient_unit,
     FROM products_with_ciqual_and_price p
@@ -146,16 +146,13 @@ CREATE OR REPLACE TABLE products_nutriments AS (
 ('vitamin_b9',         p.nutriments."vitamin-b9_value",         p.nutriments."vitamin-b9_unit"         ),
 ('folates',            p.nutriments."folates_value",            p.nutriments."folates_unit"            ),
 ('vitamin_b12',        p.nutriments."vitamin-b12_value",        p.nutriments."vitamin-b12_unit"        ),
-) AS v(nutrient_name, nutrient_value, nutrient_unit)
+) AS v(nutrient_id, nutrient_value, nutrient_unit)
 );
-CREATE OR REPLACE TABLE final_nutrient_table AS (
-WITH
-products_nutriments_mapped AS (
+CREATE OR REPLACE TABLE products_nutriments_selected AS (
     SELECT
     p.code,
     p.ciqual_food_code,
     p.nutrient_value,
-    p.nutrient_name,
     p.nutrient_unit,
     c.ALIM_CODE,
     c.CONST_CODE,
@@ -163,47 +160,47 @@ products_nutriments_mapped AS (
     c.ub,
     c.mean,
     c.CONST_LABEL,
+    nm.id AS nutrient_id,
     nm.calnut_name,
     nm.calnut_unit,
+    CASE
+      WHEN p.nutrient_value IS NOT NULL
+      AND p.nutrient_unit IS NOT NULL
+      AND p.nutrient_unit != ''
+      THEN p.nutrient_value
+      ELSE c.mean
+    END AS final_nutrient_value,
+    CASE
+      WHEN p.nutrient_value IS NOT NULL
+      AND p.nutrient_unit IS NOT NULL
+      AND p.nutrient_unit != ''
+      THEN p.nutrient_unit
+      ELSE nm.calnut_unit
+    END AS final_nutrient_unit
     FROM products_nutriments p
     JOIN calnut_1 c
     ON p.ciqual_food_code = c.ALIM_CODE
     JOIN nutrient_map nm
     ON c.CONST_CODE = nm.calnut_const_code AND
-        p.nutrient_name = nm.off_id
-),
-nutriments_selected AS (
-    SELECT
-    code,
-    ciqual_food_code,
-    calnut_name,
-    CASE
-      WHEN nutrient_value IS NOT NULL
-      AND nutrient_unit IS NOT NULL
-      AND nutrient_unit != ''
-      THEN nutrient_value
-      ELSE mean
-    END AS final_nutrient_value,
-    CASE
-      WHEN nutrient_value IS NOT NULL
-      AND nutrient_unit IS NOT NULL
-      AND nutrient_unit != ''
-      THEN nutrient_unit
-      ELSE calnut_unit
-    END AS final_nutrient_unit
-    FROM products_nutriments_mapped
-)
-SELECT *
-FROM nutriments_selected
+        p.nutrient_id = nm.id
+);
+CREATE OR REPLACE TABLE final_nutrient_table AS (
+SELECT * FROM products_nutriments_selected
 PIVOT (
     first(final_nutrient_value) AS value,
     first(final_nutrient_unit) AS unit
-    FOR calnut_name IN
-    ('agmi', 'agpi', 'ags', 'amidon', 'calcium', 'cholesterol', 'cuivre', 'fer', 'fibres', 'glucides', 'iode', 'lactose', 'lipides',
-    'magnesium', 'manganese', 'nrj', 'polyols', 'potassium', 'proteines', 'sel', 'selenium', 'sucres', 'vitamine_b12',
-    'vitamine_b6', 'vitamine_c', 'vitamine_d', 'vitamine_e', 'zinc')
+    FOR nutrient_id IN
+    ('energy_kj', 'energy_kcal', 'water', 'protein', 'carbohydrate', 'fat',
+    'sugars', 'fructose', 'galactose', 'glucose', 'lactose', 'maltose', 'sucrose', 'starch', 'fiber', 'polyols',
+    'alcohol', 'organic_acids', 'saturated_fat', 'monounsaturated_fat', 'polyunsaturated_fat',
+    'fa_04_0', 'fa_06_0', 'fa_08_0', 'fa_10_0', 'fa_12_0', 'fa_14_0', 'fa_16_0', 'fa_18_0', 'fa_18_1_ole', 'fa_18_2_lino',
+    'fa_18_3_a_lino', 'fa_20_4_ara', 'fa_20_5_epa', 'fa_20_6_dha', 'cholesterol', 'salt', 'calcium', 'copper', 'iron', 'iodine',
+    'magnesium', 'manganese', 'phosphorus', 'potassium', 'selenium', 'sodium', 'zinc', 'retinol', 'beta_carotene',
+    'vitamin_d', 'vitamin_e', 'vitamin_k1', 'vitamin_k2', 'vitamin_c', 'vitamin_b1', 'vitamin_b2', 'vitamin_pp',
+    'pantothenic_acid', 'vitamin_b6', 'vitamin_b9', 'folates', 'vitamin_b12')
     GROUP BY code, ciqual_food_code
 )
+-- Final nutrient table count: 19 369
 );
 CREATE OR REPLACE TABLE final_table AS (
   SELECT
@@ -226,6 +223,7 @@ CREATE OR REPLACE TABLE final_table AS (
   JOIN final_nutrient_table fnt ON pr.product_code = fnt.code
   JOIN products p ON pr.product_code = p.code
   JOIN calnut_0 c ON fnt.ciqual_food_code = c.ALIM_CODE
-);  -- Final table count: 70283
+  -- final table count: 36 904
+);
 SELECT *
 FROM final_table;
