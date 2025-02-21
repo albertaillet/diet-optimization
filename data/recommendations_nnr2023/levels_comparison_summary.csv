@@ -1,0 +1,30 @@
+,NNR2023,NNR2012,Comments
+,RI or AI,RI,
+,FEMALES,MALES,FEMALES,MALES,
+"Vitamin A, RE",700,800,700,900,
+"Vitamin D, µg",10,10,10,10,
+"Vitamin E, α-TE",10,11,8,10,AI in NNR2023
+"Vitamin K, µg",65,75,ND,ND,AI  in NNR2023
+"Thiamin, mg",0.9,1.1,1.1,1.3,
+"Riboflavin, mg",1.6,1.6,1.3,1.6,
+"Niacin, NE",14,18,14,18,
+"Vitamin B6, mg",1.6,1.8,1.2,1.5,
+"Folate, µg",330,330,300,300,
+"Vitamin B12, µg",4,4,2,2,AI in NNR2023
+"Biotin, µg",40,40,ND,ND,AI in NNR2023
+"Pantothenic acid, mg",5,5,ND,ND,AI in NNR2023
+"Choline, mg",400,400,ND,ND,AI in NNR2023
+"Vitamin C, mg",95,110,75,75,
+"Calcium, mg",950,950,800,800,
+"Phosphorus, mg",520,520,600,600,AI in NNR2023
+"Magnesium, mg",300,350,280,350,AI in NNR2023
+"Sodium, g",1.5,1.5,ND,ND,AI in NNR2023
+"Potassium, g",3.5,3.5,3.1,3.5,AI in NNR2023
+"Iron, mg",15,9,15,9,
+"Zinc, mg",9.7,12.7,7,9,
+"Iodine, µg",150,150,150,150,AI in NNR2023
+"Selenium, µg",75,90,50,60,AI in NNR2023
+"Copper, µg",900,900,900,900,
+"Manganese, mg",3,3,ND,ND,AI in NNR2023
+"Molybdenum, µg",65,65,ND,ND,AI in NNR2023
+"Fluoride, µg",3.2,3.7,ND,ND,AI in NNR2023

@@ -47,6 +47,8 @@ if __name__ == "__main__":
 
     for file_path in FILE_PATHS:
         assert file_path.suffix == ".csv"
+        if file_path.parent.name == "recommendations_nnr2023":
+            continue
         with file_path.open("r") as file:
             reader = csv.DictReader(file)
             match file_path.stem:
