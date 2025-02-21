@@ -67,6 +67,14 @@ $(NNR_EXTRACTED_TABLES): $(NNR_HTML)
 $(NNR_SUMMARY_CSV): $(NNR_EXTRACTED_TABLES)
 	DATA_DIR=$(DATA_DIR) python scripts/recommendations_nnr2023/recommendations_summarize_general.py
 
+# ---------- Load the data into the database. ----------
+
+load:
+	duckdb data/data.db < ./dietdashboard/queries/load.sql
+
+process:
+	duckdb data/data.db < ./dietdashboard/queries/process.sql
+
 # ---------- Run the optmization dashboard. ----------
 
 opt:
