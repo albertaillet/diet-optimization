@@ -25,13 +25,3 @@ https://github.com/openfoodfacts/openfoodfacts-server/blob/main/lib/ProductOpene
 
 The consulted repository version is available using the same URL, but replacing main with the permalink:
 main -> ab5c4410cd0f3017803cdfe4304f91dfa7636034
-
-TODO: When using off exports, remove the following scripts:
-- scripts/ciqual_fetch.py
-- scripts/comparison_app.py
-- scripts/livsmedelsdatabasen_explore.py
-- scripts/locations_summarize.py
-- scripts/make_ciqual_summary.py
-- scripts/prices_fetch.py
-- scripts/products_fetch.py
-- scripts/products_summarize.py
