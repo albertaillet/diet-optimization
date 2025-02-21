@@ -80,6 +80,7 @@ CREATE OR REPLACE TABLE products_nutriments AS (
     v.nutrient_id,
     v.nutrient_value,
     v.nutrient_unit,
+    v.nutrient_value IS NOT NULL AND v.nutrient_unit IS NOT NULL AS nutrient_is_valid,
     FROM products_with_ciqual_and_price p
     CROSS JOIN LATERAL (
     VALUES
@@ -152,10 +153,12 @@ CREATE OR REPLACE TABLE products_nutriments_selected AS (
     SELECT
     p.code,
     p.ciqual_food_code,
+    p.ciqual_food_code_origin,
     p.nutrient_value,
     p.nutrient_unit,
     c.ALIM_CODE,
     c.CONST_CODE,
+    c.combl,
     c.lb,
     c.ub,
     c.mean,
@@ -164,19 +167,17 @@ CREATE OR REPLACE TABLE products_nutriments_selected AS (
     nm.calnut_name,
     nm.calnut_unit,
     CASE
-      WHEN p.nutrient_value IS NOT NULL
-      AND p.nutrient_unit IS NOT NULL
-      AND p.nutrient_unit == nm.calnut_unit
-      THEN p.nutrient_value
-      ELSE c.mean
+        WHEN p.nutrient_is_valid AND p.nutrient_unit == nm.calnut_unit
+        THEN p.nutrient_value ELSE c.mean
     END AS final_nutrient_value,
     CASE
-      WHEN p.nutrient_value IS NOT NULL
-      AND p.nutrient_unit IS NOT NULL
-      AND p.nutrient_unit == nm.calnut_unit
-      THEN p.nutrient_unit
-      ELSE nm.calnut_unit
-    END AS final_nutrient_unit
+        WHEN p.nutrient_is_valid AND p.nutrient_unit == nm.calnut_unit
+        THEN p.nutrient_unit ELSE nm.calnut_unit
+    END AS final_nutrient_unit,
+    CASE
+        WHEN p.nutrient_is_valid AND p.nutrient_unit == nm.calnut_unit
+        THEN 'product' ELSE CONCAT(p.ciqual_food_code_origin, CASE WHEN c.combl THEN '_combl' ELSE '' END)
+    END AS final_nutrient_origin,
     FROM products_nutriments p
     JOIN calnut_1 c
     ON p.ciqual_food_code = c.ALIM_CODE
@@ -188,7 +189,8 @@ CREATE OR REPLACE TABLE final_nutrient_table AS (
 SELECT * FROM products_nutriments_selected
 PIVOT (
     first(final_nutrient_value) AS value,
-    first(final_nutrient_unit) AS unit
+    first(final_nutrient_unit) AS unit,
+    first(final_nutrient_origin) AS origin,
     FOR nutrient_id IN
     ('energy_kj', 'energy_kcal', 'water', 'protein', 'carbohydrate', 'fat',
     'sugars', 'fructose', 'galactose', 'glucose', 'lactose', 'maltose', 'sucrose', 'starch', 'fiber', 'polyols',
