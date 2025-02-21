@@ -56,11 +56,3 @@ template:
 
 log: $(SUMMARY_CSV) $(NUTRIENT_MAP) $(NNR_SUMMARY_CSV)
 	DATA_DIR=$(DATA_DIR) python dietlogger/app.py
-
-# ---------- Clean data. ----------
-
-# cleans current OFF_USERNAME data
-clean-user-data:
-	rm -f $(PRICES_JSON)
-	rm -f $(PRODUCTS_JSON)
-	rm -f $(SUMMARY_CSV)
