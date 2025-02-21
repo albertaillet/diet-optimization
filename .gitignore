@@ -17,7 +17,7 @@ tmp/
 **/products.json
 # Fetched and extracted NNR2023 data
 */recommendations_nnr2023/*.csv
-*/recommendations_nnr2023.html
+*/*.html
 # Ciqual 2020 table
 */ciqual2020.csv
 */ciqual_XML_2020_07_07/*.xml

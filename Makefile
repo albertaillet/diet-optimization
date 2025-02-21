@@ -38,9 +38,12 @@ nutrient-map-update-counts:
 NNR_HTML := $(DATA_DIR)/recommendations_nnr2023.html
 NNR_EXTRACTED_TABLES := $(DATA_DIR)/recommendations_nnr2023/*.csv
 NNR_SUMMARY_CSV := $(DATA_DIR)/recommendations_nnr2023.csv
+# Original URL: https://pub.norden.org/nord2023-003/recommendations.html
+# Snapshot 29 July 2024:
+NNR_HTML_URL := https://web.archive.org/web/20240729193940/https://pub.norden.org/nord2023-003/recommendations.html
 
 $(NNR_HTML):
-	DATA_DIR=$(DATA_DIR) python scripts/recommendations_nnr2023/recommendations_fetch.py
+	wget -O $(NNR_HTML) $(NNR_HTML_URL)
 
 $(NNR_EXTRACTED_TABLES): $(NNR_HTML)
 	DATA_DIR=$(DATA_DIR) python scripts/recommendations_nnr2023/recommendations_extract_tables.py
