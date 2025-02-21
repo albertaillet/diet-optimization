@@ -7,19 +7,30 @@ import csv
 import sys
 from pathlib import Path
 
-POSSIBLE_UNITS = {"kcal", "g", "mg", "µg", "NE", "RE"}  # noqa: RUF001  # TODO: fix NE and RE
+CIQUAL_UNITS = {"kj", "kcal", "g", "mg", "µg"}  # noqa: RUF001
+CALNUT_UNITS = {"kj", "kcal", "g", "mg", "mcg"}
+MACRO_UNITS = {"kcal", "g", "mg"}
+NNR2023_UNITS = {"g", "mg", "mcg", "µg", "NE", "RE"}  # noqa: RUF001  # TODO: fix NE and RE
 
 
 def validate_nutrient_map(reader):
     for row in reader:
-        assert row["disabled"] in {"", "TRUE"}
+        assert row["id"], row
+        assert row["disabled"] in {"", "TRUE"}, row
+        assert row["template"] in {"", "TRUE"}, row
+        assert row["nutrient_type"] in {"micro", "macro"}, row
         if row["disabled"]:
             continue
-        assert row["id"], row
-        assert row["nutrient_type"] in {"micro", "macro"}, row
-        assert row["off_id"], row
-        assert row["ciqual_id"], row
+        # assert row["nutrient_type"] in {"micro", "macro"}, row
+        assert row["ciqual_unit"] in CIQUAL_UNITS, row
         assert row["ciqual_name"], row
+        assert row["calnut_name"], row
+        assert row["calnut_unit"] in CALNUT_UNITS, row
+        assert row["calnut_const_code"], row
+        if row["off_id"]:
+            assert int(row["count"]) > 0, row
+        else:
+            assert not row["count"], row
         if row["nutrient_type"] == "micro":
             assert row["nnr2023_id"], row
 
@@ -27,7 +38,7 @@ def validate_nutrient_map(reader):
 def validate_recommendations_macro(reader):
     for row in reader:
         assert row["id"], row
-        assert row["unit"] in POSSIBLE_UNITS, row
+        assert row["unit"] in MACRO_UNITS, row
         assert float(row["value_males"]) >= 0, row
         assert float(row["value_females"]) >= 0, row
         assert float(row["value_upper_intake"]) >= 0, row
@@ -35,10 +46,15 @@ def validate_recommendations_macro(reader):
 
 def validate_recommendations_nnr2023(reader):
     for row in reader:
-        assert row["id"], row
-        assert row["unit"] in POSSIBLE_UNITS, row
-        assert not row["value_males"] or float(row["value_males"]) >= 0, row
-        assert not row["value_females"] or float(row["value_females"]) >= 0, row
+        assert row["nutrient"], row
+        assert row["unit"] in NNR2023_UNITS, row
+        if row["RI_or_AI"] in {"RI", "AI"}:
+            assert float(row["value_males"]) >= 0, row
+            assert float(row["value_females"]) >= 0, row
+        else:
+            assert row["RI_or_AI"] == "", row
+            assert not row["value_males"], row
+            assert not row["value_females"], row
         assert not row["value_upper_intake"] or float(row["value_upper_intake"]) >= 0, row
 
 

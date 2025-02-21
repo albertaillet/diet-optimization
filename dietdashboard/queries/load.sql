@@ -3,7 +3,7 @@ CREATE OR REPLACE TABLE nutrient_map AS (
     SELECT id, ciqual_name, ciqual_id, ciqual_unit, calnut_name, calnut_unit, calnut_const_code,
     off_id, count, nnr2023_id, nutrient_type,
     FROM read_csv('data/nutrient_map.csv')
-    WHERE off_id IS NOT NULL OR calnut_const_code IS NOT NULL
+    WHERE calnut_const_code IS NOT NULL
 );
 /* Documentation: https://ciqual.anses.fr/cms/sites/default/files/inline-files/Table%20CALNUT%202020_doc_FR_2020%2007%2007.pdf
 Table 0 contains food group information (2 119 rows)

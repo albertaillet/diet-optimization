@@ -64,9 +64,6 @@ def generate_query(chosen_bounds: dict[str, list[float]]) -> str:
     {nutrient_select}
     FROM final_table
     WHERE currency IN ('EUR', 'CHF')
-    AND product_code <> ''
-    AND product_name <> ''
-    AND ciqual_code <> ''
     AND price_per_quantity IS NOT NULL
     AND {nutrient_filters}
     -- AND price_owner = '{OFF_USERNAME}'
@@ -272,8 +269,6 @@ def create_app(
 if __name__ == "__main__":
     with (DATA_DIR / "nutrient_map.csv").open("r") as file:
         nutrient_map = [row_dict for row_dict in csv.DictReader(file) if not row_dict["disabled"]]
-
-    id_to_calnut_id_map = {row["id"]: row["calnut_name"] for row in nutrient_map}
 
     with (DATA_DIR / "recommendations_macro.csv").open("r") as file:
         macro_recommendations = inner_merge(list(csv.DictReader(file)), nutrient_map, left_key="id", right_key="id")
