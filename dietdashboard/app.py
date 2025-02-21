@@ -172,14 +172,6 @@ def create_app(
             nutrient_groups=nutrient_groups,
         )
 
-    @app.route("/sliders")
-    def sliders():
-        sliders = [create_rangeslider(rec) for rec in [*macro_recommendations, *micro_recommendations]]
-        return render_template(
-            "sliders.html",
-            sliders=sliders,
-        )
-
     @app.route("/optimize", methods=["POST"])
     def optimize():
         data = request.get_json()

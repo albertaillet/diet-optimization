@@ -86,6 +86,7 @@
         function handleOptimitzationInputs() {
             const data = {};
             optimizationInput().forEach(function (element) {
+                // TODO: Fix this, the checkbox unchecking is not working
                 if ((element.type === 'checkbox' || element.type === 'radio')) {
                     if (element.checked) {
                         if (!data[element.dataset.optimization]) { data[element.dataset.optimization] = []; }
