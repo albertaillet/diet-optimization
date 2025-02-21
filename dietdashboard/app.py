@@ -182,11 +182,9 @@ def create_app(
 
         # Remove previous level markers
         chosen_bounds = {}
-        chosen_nutrient_ids = []
         for nutrient_id in nutrient_ids:
             if data.get(f"bounds_{nutrient_id}") is None:
                 continue
-            chosen_nutrient_ids.append(nutrient_id)
             chosen_bounds[nutrient_id] = data[f"bounds_{nutrient_id}"]
 
         # Time the query
@@ -230,7 +228,7 @@ def create_app(
                 "location_osm_id": products_and_prices["price_location_osm_id"][i],
                 "quantity_g": round(100 * result.x[i], 1),
                 "price": round(c_costs[i] * result.x[i], 2),
-                "levels": {nutrient_id: nutrients_levels[j, i] for j, nutrient_id in enumerate(chosen_nutrient_ids)},
+                "levels": {nutrient_id: nutrients_levels[j, i] for j, nutrient_id in enumerate(chosen_bounds)},
             }
             products.append(product)
 
