@@ -229,7 +229,7 @@ CREATE OR REPLACE TABLE final_table AS (
     pr.location_osm_id AS price_location_osm_id,
     pr.owner AS price_owner,
     -- Price per quantity
-    pr.price / p.product_quantity AS price_per_quantity,
+    1000 * pr.price / p.product_quantity AS price_per_quantity,
     -- Nutrient columns
     fnt.*,
     FROM prices pr

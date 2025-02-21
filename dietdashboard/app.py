@@ -56,8 +56,8 @@ def generate_query(chosen_bounds: dict[str, list[float]]) -> str:
     ciqual_name,
     price_per_quantity,
     currency,
-    location,
-    location_osm_id,
+    price_location,
+    price_location_osm_id,
     -- Convert price to CHF using EUR_TO_CHF = 0.96:
     CASE WHEN currency = 'EUR' THEN price_per_quantity * 0.96 ELSE price_per_quantity END AS price_chf,
     CASE WHEN currency = 'CHF' THEN price_per_quantity / 0.96 ELSE price_per_quantity END AS price_eur,
@@ -69,7 +69,8 @@ def generate_query(chosen_bounds: dict[str, list[float]]) -> str:
     AND ciqual_code <> ''
     AND price_per_quantity IS NOT NULL
     AND {nutrient_filters}
-    AND price_owner = '{OFF_USERNAME}'
+    -- AND price_owner = '{OFF_USERNAME}'
+    AND product_quantity > 0
     """
 
 
@@ -228,7 +229,7 @@ def create_app(
         for i in range(n_products):
             if result.x[i] <= 0:  # Filter out products with zero quantity
                 continue
-            location = ", ".join(products_and_prices["location"][i].split(", ")[:3])
+            location = ", ".join(str(products_and_prices["price_location"][i]).split(", ")[:3])
 
             product = {
                 "price_id": int(products_and_prices["price_id"][i]),
@@ -237,7 +238,7 @@ def create_app(
                 "ciqual_name": products_and_prices["ciqual_name"][i],
                 "ciqual_code": products_and_prices["ciqual_code"][i],
                 "location": location,
-                "location_osm_id": products_and_prices["location_osm_id"][i],
+                "location_osm_id": products_and_prices["price_location_osm_id"][i],
                 "quantity_g": round(100 * result.x[i], 1),
                 "price": round(c_costs[i] * result.x[i], 2),
                 "levels": {nutrient_id: nutrients_levels[j, i] for j, nutrient_id in enumerate(chosen_nutrient_ids)},
