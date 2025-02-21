@@ -36,5 +36,5 @@ print(formatted_rows)
 
 # query = "SELECT count(*) as count FROM products p CROSS JOIN LATERAL (VALUES"
 # query += formatted_rows + ") AS v(nutrient_name, nutrient_value, nutrient_unit)"
-# con = duckdb.connect(DATA_PATH / "data.db")
+# con = duckdb.connect(DATA_PATH / "data.db", read_only=True)
 # con.sql(query).show()
