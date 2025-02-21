@@ -45,8 +45,8 @@ CREATE OR REPLACE TABLE products AS (
     p.nutriscore_score,
     p.product_name,
     p.product_quantity_unit,
-    p.product_quantity,
-    p.quantity,
+    CAST(p.product_quantity AS FLOAT) as product_quantity,
+    p.quantity as quantity_str,
     p.categories_properties,
     COALESCE(
         p.categories_properties['ciqual_food_code:en'],
@@ -205,28 +205,38 @@ PIVOT (
 -- Final nutrient table count: 19 369
 );
 CREATE OR REPLACE TABLE final_table AS (
-  SELECT
-  -- Product columns
-  p.code                 AS product_code,
-  p.product_name         AS product_name,
-  fnt.ciqual_food_code   AS ciqual_code,
-  c.FOOD_LABEL           AS ciqual_name,
-  -- add ciqual name to nutrient table
-  -- Use the price id as an identifier (or generate one if needed)
-  pr.id                  AS price_id,
-  pr.price               AS price,
-  pr.currency            AS currency,
-  pr.date                AS price_date,
-  pr.location_osm_display_name AS location,
-  pr.location_osm_id     AS location_osm_id,
-  pr.owner               AS price_owner,
-  -- Nutrient columns
-  fnt.*,
-  FROM prices pr
-  JOIN final_nutrient_table fnt ON pr.product_code = fnt.code
-  JOIN products p ON pr.product_code = p.code
-  JOIN calnut_0 c ON fnt.ciqual_food_code = c.ALIM_CODE
-  -- final table count: 36 904
+    SELECT
+    -- Product columns
+    p.code AS product_code,
+    p.product_name,
+    p.product_quantity,
+    p.product_quantity_unit,
+    fnt.ciqual_food_code AS ciqual_code,
+    -- Ciual 0 columns
+    c.FOOD_LABEL AS ciqual_name,
+    c.alim_grp_code AS ciqual_group_code,
+    c.alim_grp_nom_fr AS ciqual_group_name,
+    c.alim_ssgrp_code AS ciqual_subgroup_code,
+    c.alim_ssgrp_nom_fr AS ciqual_subgroup_name,
+    c.alim_ssssgrp_code AS ciqual_subsubgroup_code,
+    c.alim_ssssgrp_nom_fr AS ciqual_subsubgroup_name,
+    -- Price columns
+    pr.id AS price_id,
+    pr.price AS product_price,
+    pr.currency,
+    pr.date AS price_date,
+    pr.location_osm_display_name AS price_location,
+    pr.location_osm_id AS price_location_osm_id,
+    pr.owner AS price_owner,
+    -- Price per quantity
+    pr.price / p.product_quantity AS price_per_quantity,
+    -- Nutrient columns
+    fnt.*,
+    FROM prices pr
+    JOIN final_nutrient_table fnt ON pr.product_code = fnt.code
+    JOIN products p ON pr.product_code = p.code
+    JOIN calnut_0 c ON fnt.ciqual_food_code = c.ALIM_CODE
+    -- final table count: 36 904
 );
 SELECT *
 FROM final_table;

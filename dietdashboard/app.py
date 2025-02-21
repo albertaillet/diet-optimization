@@ -54,20 +54,20 @@ def generate_query(chosen_bounds: dict[str, list[float]]) -> str:
     product_name,
     ciqual_code,
     ciqual_name,
-    price,
+    price_per_quantity,
     currency,
     location,
     location_osm_id,
     -- Convert price to CHF using EUR_TO_CHF = 0.96:
-    CASE WHEN currency = 'EUR' THEN price * 0.96 ELSE price END AS price_chf,
-    CASE WHEN currency = 'CHF' THEN price / 0.96 ELSE price END AS price_eur,
+    CASE WHEN currency = 'EUR' THEN price_per_quantity * 0.96 ELSE price_per_quantity END AS price_chf,
+    CASE WHEN currency = 'CHF' THEN price_per_quantity / 0.96 ELSE price_per_quantity END AS price_eur,
     {nutrient_select}
     FROM final_table
     WHERE currency IN ('EUR', 'CHF')
     AND product_code <> ''
     AND product_name <> ''
     AND ciqual_code <> ''
-    AND price IS NOT NULL
+    AND price_per_quantity IS NOT NULL
     AND {nutrient_filters}
     AND price_owner = '{OFF_USERNAME}'
     """
