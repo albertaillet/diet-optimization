@@ -51,8 +51,3 @@ opt:
 
 template:
 	DATA_DIR=$(DATA_DIR) python scripts/template_nutriments_query.py
-
-# ---------- Run the diet logger. ----------
-
-log: $(SUMMARY_CSV) $(NUTRIENT_MAP) $(NNR_SUMMARY_CSV)
-	DATA_DIR=$(DATA_DIR) python dietlogger/app.py
