@@ -57,17 +57,6 @@ template:
 log: $(SUMMARY_CSV) $(NUTRIENT_MAP) $(NNR_SUMMARY_CSV)
 	DATA_DIR=$(DATA_DIR) python dietlogger/app.py
 
-# ---------- OCR. ----------
-
-ocr:
-	DATA_DIR=$(DATA_DIR) python datacollection/run_ocr.py
-
-view-ocr:
-	DATA_DIR=$(DATA_DIR) python datacollection/view_ocr_app.py
-
-init-db:
-	DATA_DIR=$(DATA_DIR) python datacollection/init_db.py
-
 # ---------- Clean data. ----------
 
 # cleans current OFF_USERNAME data
