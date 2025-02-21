@@ -9,6 +9,7 @@ CREATE OR REPLACE TABLE nutrient_map AS (
 Table 0 contains food group information (2 119 rows)
 Table 1 contains nutrient information for each food and nutrient (131 378 rows)
 Both tables are joined on the ALIM_CODE and FOOD_LABEL columns
+Fetched from https://github.com/openfoodfacts/openfoodfacts-server/tree/main/external-data/ciqual/calnut
 */
 CREATE OR REPLACE TABLE calnut_0 AS (
     SELECT ALIM_CODE, FOOD_LABEL,
