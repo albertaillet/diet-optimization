@@ -3,7 +3,7 @@ from pathlib import Path
 
 import duckdb
 
-DATA_DIR = Path(os.getenv("DATA_DIR", "data")).resolve()
+DATA_DIR = Path(os.getenv("DATA_DIR", "")).resolve()
 PRODUCTS_JSONL = DATA_DIR / "openfoodfacts-products.jsonl.gz"
 
 QUERIES_DIR = Path(__file__).parent / "queries"

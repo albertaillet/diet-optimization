@@ -7,7 +7,7 @@ import csv
 import os
 from pathlib import Path
 
-DATA_PATH = Path(os.getenv("DATA_PATH", "data"))
+DATA_PATH = Path(os.getenv("DATA_DIR", ""))
 CSV_FILE = DATA_PATH / "nutrient_map.csv"
 nutrients = [(row["id"], row["off_id"], row["template"], row["calnut_const_code"]) for row in csv.DictReader(CSV_FILE.open())]
 

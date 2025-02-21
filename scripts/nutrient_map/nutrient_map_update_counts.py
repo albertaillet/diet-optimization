@@ -10,7 +10,7 @@ from pathlib import Path
 import duckdb
 
 # Connect to the database
-data_path = Path(os.getenv("DATA_PATH", "data"))
+data_path = Path(os.getenv("DATA_DIR", ""))
 nutrient_map = data_path / "nutrient_map.csv"
 con = duckdb.connect(data_path / "data.db")
 
