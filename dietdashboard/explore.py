@@ -4,7 +4,8 @@ from pathlib import Path
 import duckdb
 
 DATA_DIR = Path(__file__).parent.parent / "data"
-con = duckdb.connect(DATA_DIR / "explore.db")
+DB_PATH = DATA_DIR / "explore.db"
+con = duckdb.connect(DB_PATH)
 
 # %%
 # Get the owners that have prices in both Switzerland and France
@@ -32,11 +33,12 @@ print(owner_id)
 # %%
 # Get the data for the owner and save it to a CSV file
 con.sql(
-    """SELECT * FROM prices
+    """SELECT products.code, products.product_name, price, location_osm_display_name, -- prices.*
+    FROM prices
     LEFT JOIN products ON prices.product_code = products.code
     WHERE prices.owner = $owner_id""",
     params={"owner_id": owner_id},
-)
+).to_csv("owner_data.csv")
 
 # %%
 # Pivot the ciqual 1 table to have on column per CONST_LABEL
@@ -141,5 +143,67 @@ FROM products LIMIT 50;
 # One row per product and a column for each nutriment by using struct unpacking
 # https://duckdb.org/docs/sql/data_types/struct#struct
 con.sql("""SELECT code, nutriments.* FROM products LIMIT 50""")
+
+# %%
+# I wan to find a price about chickpeas
+con.sql("""
+SELECT id, product_code, product_name
+FROM prices
+WHERE product_code IN (
+  SELECT code
+  FROM products
+  WHERE product_name LIKE '%pois%' AND product_name IS NOT NULL
+)
+""")
+# %%
+# Close the connection to explore.db
+con.close()
+
+# %%
+# Connect to the in-memory database
+con = duckdb.connect(":memory:")
+# Attach the explore database with the full data to the in-memory database,
+# Then create a subset of the tables for the example
+con.sql(f"ATTACH DATABASE '{DATA_DIR / 'data.db'}' AS full_tables;")
+con.sql("""
+CREATE OR REPLACE TABLE nutrient_map AS
+SELECT id, calnut_name, calnut_unit, calnut_const_code, off_id
+FROM full_tables.nutrient_map WHERE id IN ('sodium', 'protein');
+
+CREATE OR REPLACE TABLE calnut_0 AS
+SELECT * FROM full_tables.calnut_0
+WHERE alim_code IN ('20532', '20904', '19644');
+
+CREATE OR REPLACE TABLE calnut_1 AS
+SELECT * FROM full_tables.calnut_1
+WHERE CONST_LABEL in ('sodium_mg', 'proteins_g')
+AND ALIM_CODE IN ('20532', '20904', '19644');
+
+CREATE OR REPLACE TABLE prices AS
+SELECT id, product_code, price, currency, date, owner, location_osm_display_name, location_osm_id
+FROM full_tables.prices WHERE product_code IN ('3111950001928', '4099200179193');
+
+CREATE OR REPLACE TABLE products AS
+SELECT code, product_quantity, product_name, product_quantity_unit, product_quantity
+ciqual_food_code, ciqual_food_code_origin, nutriments
+FROM full_tables.products WHERE code IN ('3111950001928', '4099200179193');
+""")
+
+
+# %%
+def print_tables(*tables: str):
+    for table in tables:
+        print(f'Table "{table}"')
+        con.table(table).show(max_width=10000)  # type: ignore
+
+
+print_tables("nutrient_map", "calnut_0", "calnut_1", "products", "prices")
+
+# %%
+process_query = Path(__file__).parent / "queries/process.sql"
+con.execute(process_query.read_text())
+
+# %%
+print_tables("products_with_ciqual_and_price", "products_nutriments", "products_nutriments_selected", "final_nutrient_table")
 
 # %%
