@@ -69,7 +69,7 @@ $(NNR_SUMMARY_CSV): $(NNR_EXTRACTED_TABLES)
 
 # ---------- Load the data into the database. ----------
 
-load:
+load: $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(PRICES_PARQUET) $(PRODUCT_JSONL_GZ)
 	duckdb data/data.db < ./dietdashboard/queries/load.sql
 
 process:
