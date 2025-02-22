@@ -1,4 +1,5 @@
 # %%
+import re
 from pathlib import Path
 
 import duckdb
@@ -200,8 +201,11 @@ def print_tables(*tables: str):
 print_tables("nutrient_map", "calnut_0", "calnut_1", "products", "prices")
 
 # %%
-process_query = Path(__file__).parent / "queries/process.sql"
-con.execute(process_query.read_text())
+process_query_path = Path(__file__).parent / "queries/process.sql"
+process_query = process_query_path.read_text()
+process_query = re.sub(r"^\s*\('(?!sodium|protein)[^']*',.*?\),?$\n", "", process_query, flags=re.MULTILINE)
+process_query = re.sub(r"\('\w+'(?:,\s+'\w+'\s?)+\)", "('sodium', 'protein')", process_query)
+con.execute(process_query)
 
 # %%
 print_tables("products_with_ciqual_and_price", "products_nutriments", "products_nutriments_selected", "final_nutrient_table")
