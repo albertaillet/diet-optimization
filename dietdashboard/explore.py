@@ -1,5 +1,4 @@
 # %%
-import csv
 from pathlib import Path
 
 import duckdb
@@ -52,12 +51,6 @@ con.sql("SELECT * FROM products LIMIT 1")
 con.sql("DESCRIBE SELECT * FROM products")
 
 # %%
-with (Path.cwd().parent / "tmp.txt").open("w") as f:
-    columns = con.sql("SELECT * FROM products LIMIT 0").columns
-    for col in columns:
-        f.write(f"{col},\n")
-
-# %%
 # Get the data for the owner
 con.sql(
     """SELECT * FROM prices AS prices
@@ -78,24 +71,14 @@ con.sql("SELECT * FROM calnut_1")
 con.sql("SELECT DISTINCT combl FROM calnut_1")
 
 # %%
-# Write all the distince nutrient labels to a file
+# Pivot the ciqual 1 table to have on column per CONST_LABEL
+# Get the unique values for the CONST_LABEL and CONST_CODE columns
 const_labels = con.sql("""
   SELECT DISTINCT CONST_LABEL, CONST_CODE
   FROM calnut_1
   ORDER BY CONST_LABEL
 """).fetchall()
 
-# write to a file
-with (Path.cwd().parent / "const_labels.csv").open("w") as f:
-    writer = csv.writer(f)
-    writer.writerow(["CONST_LABEL", "UNIT", "CONST_CODE"])
-    for row in const_labels:
-        unit = row[0].split("_")[-1]
-        label = row[0].replace(f"_{unit}", "")
-        writer.writerow([label, unit, row[1]])
-
-# %%
-# Pivot the ciqual 1 table to have on column per CONST_LABEL
 # First get all unique CONST_LABELs
 duplicates = con.sql("""
   SELECT COUNT(*)
@@ -149,18 +132,6 @@ PIVOT (
 """).show(max_width=10000)  # type: ignore
 
 # %%
-# From columns to get from this:
-# alim_code,FOOD_LABEL,alim_grp_code,alim_grp_nom_fr,alim_ssgrp_code,alim_ssgrp_nom_fr,alim_ssssgrp_code,alim_ssssgrp_nom_fr
-con.sql("""
-  SELECT
-  ALIM_CODE,FOOD_LABEL,
-  alim_grp_code,alim_grp_nom_fr,
-  alim_ssgrp_code,alim_ssgrp_nom_fr,
-  alim_ssssgrp_code,alim_ssssgrp_nom_fr
-  FROM calnut_0
-""")
-
-# %%
 # Count the number of rows in the products table
 con.sql("SELECT count(*) FROM products")
 # 3667647
@@ -169,29 +140,6 @@ con.sql("SELECT count(*) FROM products")
 # Count the number of rows in the prices table
 con.sql("SELECT count(*) FROM prices")
 # 70283
-
-# %%
-# Write all the columns to a file
-columns = con.sql("SELECT * FROM products LIMIT 1").columns
-f = ["ingredients", "_name", "packaging", "origin", "nutri"]
-filtered_columns = [col for col in columns if not any(s in col for s in f)]
-with (Path.cwd().parent / "tmp.txt").open("w") as f:
-    for col in sorted(filtered_columns):
-        f.write(f"{col},\n")
-
-# %%
-# Describe the categories_properties column
-con.sql("""
-DESCRIBE SELECT * FROM products
-""")
-
-# %%
-# How the fields in the nutriments column are structured
-out = con.sql("DESCRIBE SELECT nutriments FROM products").fetchall()[0][1]
-with (Path.cwd().parent / "nutriment_fields.csv").open("w") as f:
-    fields = str(out).replace("STRUCT(", "").replace(")", "").split(", ")
-    f.write(",\n".join(fields))
-
 
 # %%
 # One row per product and nutriment
