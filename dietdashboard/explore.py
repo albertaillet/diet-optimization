@@ -177,7 +177,7 @@ WHERE alim_code IN ('20532', '20904', '19644');
 
 CREATE OR REPLACE TABLE calnut_1 AS
 SELECT * FROM full_tables.calnut_1
-WHERE CONST_LABEL in ('sodium_mg', 'proteins_g')
+WHERE CONST_LABEL in ('sodium_mg', 'proteines_g')
 AND ALIM_CODE IN ('20532', '20904', '19644');
 
 CREATE OR REPLACE TABLE prices AS
@@ -185,7 +185,7 @@ SELECT id, product_code, price, currency, date, owner, location_osm_display_name
 FROM full_tables.prices WHERE product_code IN ('3111950001928', '4099200179193');
 
 CREATE OR REPLACE TABLE products AS
-SELECT code, product_quantity, product_name, product_quantity_unit, product_quantity
+SELECT code, product_quantity, product_name, product_quantity_unit, product_quantity,
 ciqual_food_code, ciqual_food_code_origin, nutriments
 FROM full_tables.products WHERE code IN ('3111950001928', '4099200179193');
 """)
