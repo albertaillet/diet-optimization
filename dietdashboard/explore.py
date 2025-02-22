@@ -32,12 +32,11 @@ print(owner_id)
 # %%
 # Get the data for the owner and save it to a CSV file
 con.sql(
-    """SELECT * FROM prices AS prices
-  LEFT JOIN products AS food ON prices.product_code = food.code
-  WHERE prices.owner = $owner_id
-""",
+    """SELECT * FROM prices
+    LEFT JOIN products ON prices.product_code = products.code
+    WHERE prices.owner = $owner_id""",
     params={"owner_id": owner_id},
-).to_csv(f"price_{owner_id}.csv")
+)
 
 # %%
 # Pivot the ciqual 1 table to have on column per CONST_LABEL
@@ -141,11 +140,6 @@ FROM products LIMIT 50;
 # %%
 # One row per product and a column for each nutriment by using struct unpacking
 # https://duckdb.org/docs/sql/data_types/struct#struct
-con.sql("""
-SELECT
-  code,
-  nutriments.*
-FROM products LIMIT 50;
-""")
+con.sql("""SELECT code, nutriments.* FROM products LIMIT 50""")
 
 # %%
