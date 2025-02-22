@@ -6,14 +6,8 @@ import duckdb
 DATA_DIR = Path(__file__).parent.parent / "data"
 con = duckdb.connect(DATA_DIR / "explore.db")
 
-
 # %%
-con.sql("SELECT * FROM prices LIMIT 1")
-
-# %%
-con.sql("DESCRIBE SELECT * FROM prices")
-
-# %%
+# Get the owners that have prices in both Switzerland and France
 owner_id = con.sql("""
     WITH
     swiss_owners AS (
@@ -36,48 +30,19 @@ owner_id = owner_id[0]
 print(owner_id)
 
 # %%
-con.sql(
-    """
-    SELECT location_osm_address_city
-    FROM prices
-    WHERE owner = '$owner_id'
-""".replace("$owner_id", owner_id)
-)
-
-# %%
-con.sql("SELECT * FROM products LIMIT 1")
-
-# %%
-con.sql("DESCRIBE SELECT * FROM products")
-
-# %%
-# Get the data for the owner
+# Get the data for the owner and save it to a CSV file
 con.sql(
     """SELECT * FROM prices AS prices
   LEFT JOIN products AS food ON prices.product_code = food.code
   WHERE prices.owner = $owner_id
 """,
     params={"owner_id": owner_id},
-).to_csv("my_prices.csv")
-
-# %%
-# Documentation here: https://ciqual.anses.fr/cms/sites/default/files/inline-files/Table%20CALNUT%202020_doc_FR_2020%2007%2007.pdf
-# From table 1 we get upper_bound, lower_bound, mean, and an indicator of the completeness of the data
-# From table 0 we get the food group and subgroup
-# Both tables are linked by the ALIM_CODE and FOOD_LABEL columns
-con.sql("SELECT * FROM calnut_1")
-
-# %%
-con.sql("SELECT DISTINCT combl FROM calnut_1")
+).to_csv(f"price_{owner_id}.csv")
 
 # %%
 # Pivot the ciqual 1 table to have on column per CONST_LABEL
-# Get the unique values for the CONST_LABEL and CONST_CODE columns
-const_labels = con.sql("""
-  SELECT DISTINCT CONST_LABEL, CONST_CODE
-  FROM calnut_1
-  ORDER BY CONST_LABEL
-""").fetchall()
+# Get the unique values for the CONST_LABEL columns
+const_labels = con.sql("SELECT DISTINCT CONST_LABEL FROM calnut_1 ORDER BY CONST_LABEL").fetchall()
 
 # First get all unique CONST_LABELs
 duplicates = con.sql("""
@@ -91,7 +56,7 @@ assert len(duplicates) == 0, "Found duplicate combinations of ALIM_CODE and CONS
 # Available columns:
 # ALIM_CODE,FOOD_LABEL,indic_combl,LB,UB,MB,CONST_CODE,CONST_LABEL
 const_labels_str = str(tuple(label[0] for label in const_labels))
-query = f"""
+con.sql(f"""
   SELECT *
   FROM calnut_1
   PIVOT (
@@ -103,9 +68,7 @@ query = f"""
     {const_labels_str}
     GROUP BY ALIM_CODE, FOOD_LABEL
   )
-"""
-print(query)
-con.sql(query).to_csv("calnut_pivoted.csv")
+""")
 
 # %%
 # Queries to get an example table to add as documentation
@@ -132,28 +95,15 @@ PIVOT (
 """).show(max_width=10000)  # type: ignore
 
 # %%
-# Count the number of rows in the products table
-con.sql("SELECT count(*) FROM products")
-# 3667647
-
-# %%
-# Count the number of rows in the prices table
-con.sql("SELECT count(*) FROM prices")
-# 70283
-
-# %%
 # One row per product and nutriment
 con.sql("""
-WITH few_products AS (
-  SELECT * FROM products LIMIT 50
-)
 SELECT
   p.code,
   v.nutrient_name,
   v.nutrient_value,
   v.nutrient_unit,
   v.nutrient_100g
-FROM few_products p
+FROM (SELECT * FROM products LIMIT 50) p
 CROSS JOIN LATERAL (
   VALUES
     ('sodium',         p.nutriments.sodium_value,         p.nutriments.sodium_unit,         p.nutriments.sodium_100g),
@@ -197,3 +147,5 @@ SELECT
   nutriments.*
 FROM products LIMIT 50;
 """)
+
+# %%

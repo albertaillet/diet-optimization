@@ -27,6 +27,7 @@ CREATE OR REPLACE TABLE calnut_1 AS (
     FROM read_csv('data/calnut.1.csv')
 );
 -- Huggingface Documentation for open-prices data: https://huggingface.co/datasets/openfoodfacts/open-prices
+-- Number of rows as of 27/01/2025: 70 283
 CREATE OR REPLACE TABLE prices AS (
     SELECT * FROM read_parquet('data/prices.parquet')
 );
@@ -34,6 +35,7 @@ CREATE OR REPLACE TABLE prices AS (
 The exported parquet file is missing the 'categories_properties' that contains the ciqual information.
 Therefore the jsonl databse dump is used, available at: https://static.openfoodfacts.org/data/openfoodfacts-products.jsonl.gz
 Note: there are duplicates of the code, it is not a unique key
+Number of rows as of 17/02/2025: 3 667 647
 */
 CREATE OR REPLACE TABLE products AS (
     SELECT
@@ -61,7 +63,4 @@ CREATE OR REPLACE TABLE products AS (
         ELSE 'unknown'
     END AS ciqual_food_code_origin,
     FROM read_ndjson('data/openfoodfacts-products.jsonl.gz') AS p
-    -- with no filtering: 3 667 647
-    -- WHERE code IS NOT NULL AND 'en:france' IN countries_tags OR 'en:switzerland' IN countries_tags
-    -- french and swiss products: 1 190 620
 );
