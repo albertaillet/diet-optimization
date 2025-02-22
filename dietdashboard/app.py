@@ -7,9 +7,7 @@ TODO: have link to load info card for each of the chosen products.
 TODO: User authentication and save optimization input.
 TODO: Advanced filter: location, vegan, vegetarian, indiviudal off categories
 
-Long term todos:
-- Retrieve prices in SQL database.
-- User authenticaiton.
+TODO: Able to save preferences in DB and User authenticaiton.
 
 TODO: Include other objectives than price minimization with tunable hyperparameters.
 For example being able to minimize enivronmental impact, added sugar, staruated fat.
@@ -36,9 +34,6 @@ DATA_DIR = Path(os.getenv("DATA_DIR", ""))
 OFF_USERNAME = os.getenv("OFF_USERNAME")
 POSSIBLE_CURRENCIES = ["EUR", "CHF"]
 
-# Connect in read_only mode
-con = duckdb.connect(DATA_DIR / "data.db", read_only=True)
-
 
 def generate_query(chosen_bounds: dict[str, list[float]]) -> str:
     # Create the part of the SELECT statement that lists each nutrient's value.
@@ -47,6 +42,7 @@ def generate_query(chosen_bounds: dict[str, list[float]]) -> str:
     nutrient_filters = " AND ".join([f"{nutrient_id}_value IS NOT NULL" for nutrient_id in chosen_bounds])
 
     # TODO: SQL injection security
+    # https://duckdb.org/docs/sql/query_syntax/prepared_statements.html
     return f"""
     SELECT
     price_id,
@@ -147,6 +143,7 @@ def filter_nutrients(nutrient_map: list[dict[str, str]], recommendations: list[d
 
 
 def create_app(
+    con: duckdb.DuckDBPyConnection,
     macro_recommendations: list[dict[str, str]],
     micro_recommendations: list[dict[str, str]],
     nutrient_map: list[dict[str, str]],
@@ -180,14 +177,12 @@ def create_app(
 
         currency = data["currency"]
 
-        # Remove previous level markers
         chosen_bounds = {}
         for nutrient_id in nutrient_ids:
             if data.get(f"bounds_{nutrient_id}") is None:
                 continue
             chosen_bounds[nutrient_id] = data[f"bounds_{nutrient_id}"]
 
-        # Time the query
         start = perf_counter()
         products_and_prices = con.execute(generate_query(chosen_bounds)).fetchnumpy()
         print(f"Query time: {perf_counter() - start:.2f}s")
@@ -257,6 +252,8 @@ def create_app(
 
 
 if __name__ == "__main__":
+    con = duckdb.connect(DATA_DIR / "data.db", read_only=True)
+
     with (DATA_DIR / "nutrient_map.csv").open("r") as file:
         nutrient_map = [row_dict for row_dict in csv.DictReader(file) if not row_dict["disabled"]]
 
@@ -266,5 +263,5 @@ if __name__ == "__main__":
     with (DATA_DIR / "recommendations_nnr2023.csv").open("r") as file:
         micro_recommendations = inner_merge(list(csv.DictReader(file)), nutrient_map, left_key="nutrient", right_key="nnr2023_id")
 
-    app = create_app(macro_recommendations, micro_recommendations, nutrient_map)
+    app = create_app(con, macro_recommendations, micro_recommendations, nutrient_map)
     app.run(debug=True, host="localhost", port=5001)
