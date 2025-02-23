@@ -16,7 +16,8 @@ data/*.html
 # Ciqual 2020 table
 data/ciqual2020.csv
 data/XML_2020_07_07.zip
-data/XML_2020_07_07/*.xml
+data/ciqual2020/*.xml
+data/ciqual2020/*.csv
 # Calnut tables
 data/calnut.0.csv
 data/calnut.1.csv
