@@ -11,35 +11,30 @@ venv/
 tmp/
 
 # Data to exclude
-# Fetched price data
-**/prices.json
-# Fetched product data
-**/products.json
 # Fetched and extracted NNR2023 data
-*/*.html
+data/*.html
 # Ciqual 2020 table
-*/ciqual2020.csv
-*/ciqual_XML_2020_07_07/*.xml
+data/ciqual2020.csv
+data/XML_2020_07_07.zip
+data/XML_2020_07_07/*.xml
+# Calnut tables
+data/calnut.0.csv
+data/calnut.1.csv
 # Livsmedelsdatabasen table
-*/LivsmedelsDB_*.csv
-*/LivsmedelsDB_*.xlsx
-# Summarized product prices and nutrients table
-**/product_prices_and_nutrients.csv
-**/locations.csv
+data/LivsmedelsDB_*.csv
+data/LivsmedelsDB_*.xlsx
 # Fetched nutrient_map
-**/nutrient_map_recipe_estimator.csv
-# SQLite databases
-**/*.db
-# Any image
-*/exported_images/*
-*.png
-
+data/nutrient_map_recipe_estimator.csv
+# Open food facts database dump
+openfoodfacts-products.jsonl.gz
+# Open prices exports in parquet format
+data/prices.parquet
+# Any database in the data folder
+data/*.db
 
 # All python cache files
 *.pyc
+*.egg-info/
 
 # Mac hidden files
 .DS_Store
-
-
-*.egg-info/*
