@@ -37,6 +37,9 @@ nutrient-map-reformat: $(NUTRIENT_MAP_RE)
 nutrient-map-update-counts:
 	DATA_DIR=$(DATA_DIR) python scripts/nutrient_map/nutrient_map_update_counts.py
 
+nutrient-map-update-ciqual:
+	DATA_DIR=$(DATA_DIR) python scripts/nutrient_map/nutrient_map_update_ciqual.py
+
 # ---------- Fetch the prices parquet file and the products jsonl file. ----------
 
 PRICES_PARQUET := $(DATA_DIR)/prices.parquet

@@ -1,7 +1,4 @@
-"""This script reformats the fetched nutrient_map_recipe_estimator.
-
-Usage of script DATA_DIR=<path to data directory> python nutrient_map_reformat.py
-"""
+"""This script reformats the fetched nutrient_map_recipe_estimator."""
 
 import csv
 import os

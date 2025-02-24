@@ -1,7 +1,4 @@
-"""This script add updated counts to the nutrient_map.csv.
-
-Usage of script DATA_DIR=<path to data directory> python update_nutrient_map_counts.py
-"""
+"""This script add updated counts to the nutrient_map.csv."""
 
 import csv
 import os
