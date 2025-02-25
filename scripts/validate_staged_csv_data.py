@@ -25,19 +25,26 @@ def validate_nutrient_map(reader):
             assert row["ciqual_const_name_eng"], row
             assert row["ciqual_const_name_fr"], row
             assert row["ciqual_unit"] in CIQUAL_UNITS, row
+        else:
+            assert not row["ciqual_const_name_eng"], row
+            assert not row["ciqual_const_name_fr"], row
+            assert not row["ciqual_unit"], row
         if row["calnut_const_code"]:
             assert row["calnut_const_code"], row
             assert row["calnut_const_name"], row
             assert row["calnut_unit"] in CALNUT_UNITS, row
             assert int(row["calnut_const_code"]) == int(row["ciqual_const_code"]), row
-        if row["disabled"]:
-            continue
-        assert int(row["ciqual_const_code"]), row
-        assert int(row["calnut_const_code"]), row
+        else:
+            assert not row["calnut_const_name"], row
+            assert not row["calnut_unit"], row
         if row["off_id"]:
             assert int(row["count"]) > 0, row
         else:
             assert not row["count"], row
+        if row["disabled"]:
+            continue
+        assert int(row["ciqual_const_code"]), row
+        assert int(row["calnut_const_code"]), row
         if row["nutrient_type"] == "micro":
             assert row["nnr2023_id"], row
 
