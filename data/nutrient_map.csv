@@ -65,7 +65,7 @@ vitamin_pp,56310,Vitamin B3,Vitamin B3 or Niacin (mg/100g),Vitamine B3 ou PP ou 
 pantothenic_acid,56400,Vitamin B5,Vitamin B5 or Pantothenic acid (mg/100g),Vitamine B5 ou Acide pantothénique (mg/100 g),mg,vitamine_b5,mg,56400,pantothenic-acid,10238,TRUE,Pantothenic acid,micro,,
 vitamin_b6,56500,Vitamin B6,Vitamin B6 (mg/100g),Vitamine B6 (mg/100 g),mg,vitamine_b6,mg,56500,vitamin-b6,23337,TRUE,Vitamin B6,micro,,
 vitamin_b9,56700,Vitamin B9,Vitamin B9 or Folate (µg/100g),Vitamine B9 ou Folates totaux (µg/100 g),µg,vitamine_b9,mcg,56700,vitamin-b9,15335,TRUE,Folate,micro,,TODO: fix units
-folates,,Vitamin B9,Vitamin B9 or Folate (µg/100g),,µg,vitamine_b9,mcg,56700,folates,8872,TRUE,,micro,TRUE,
+folates,,Folates,,,,,,,folates,8872,TRUE,,micro,TRUE,
 vitamin_b12,56600,Vitamin B12,Vitamin B12 (µg/100g),Vitamine B12 (µg/100 g),µg,vitamine_b12,mcg,56600,vitamin-b12,21218,TRUE,Vitamin B12,micro,,
 vitamin_a,,Vitamin A,,,,,,,vitamin-a,221673,TRUE,Vitamin A,micro,TRUE,Need a formula to combine retinol and beta-carotene (and vitamin A)
 trans_fat,,Trans fat,,,,,,,trans-fat,337969,TRUE,,macro,TRUE,Unclear which CIQUAL FA should be used or if it is a sum of a number

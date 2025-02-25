@@ -20,13 +20,20 @@ def validate_nutrient_map(reader):
         assert row["disabled"] in {"", "TRUE"}, row
         assert row["template"] in {"", "TRUE"}, row
         assert row["nutrient_type"] in {"micro", "macro"}, row
+        if row["ciqual_const_code"]:
+            assert int(row["ciqual_const_code"]), row
+            assert row["ciqual_const_name_eng"], row
+            assert row["ciqual_const_name_fr"], row
+            assert row["ciqual_unit"] in CIQUAL_UNITS, row
+        if row["calnut_const_code"]:
+            assert row["calnut_const_code"], row
+            assert row["calnut_const_name"], row
+            assert row["calnut_unit"] in CALNUT_UNITS, row
+            assert int(row["calnut_const_code"]) == int(row["ciqual_const_code"]), row
         if row["disabled"]:
             continue
-        # assert row["nutrient_type"] in {"micro", "macro"}, row
-        assert row["ciqual_unit"] in CIQUAL_UNITS, row
-        assert row["calnut_const_name"], row
-        assert row["calnut_unit"] in CALNUT_UNITS, row
-        assert row["calnut_const_code"], row
+        assert int(row["ciqual_const_code"]), row
+        assert int(row["calnut_const_code"]), row
         if row["off_id"]:
             assert int(row["count"]) > 0, row
         else:
