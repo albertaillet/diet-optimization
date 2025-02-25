@@ -1,4 +1,4 @@
-id,ciqual_const_code,ciqual_name,ciqual_id,ciqual_const_name_fr,ciqual_unit,calnut_name,calnut_unit,calnut_const_code,off_id,count,template,nnr2023_id,nutrient_type,disabled,comments
+id,ciqual_const_code,name,ciqual_const_name_eng,ciqual_const_name_fr,ciqual_unit,calnut_const_name,calnut_unit,calnut_const_code,off_id,count,template,nnr2023_id,nutrient_type,disabled,comments
 energy_kj,327,Energy,"Energy, Regulation EU No 1169/2011 (kJ/100g)","Energie, Règlement UE N° 1169/2011 (kJ/100 g)",kj,,,,,,,,macro,TRUE,
 energy_kcal,328,Energy,"Energy, Regulation EU No 1169/2011 (kcal/100g)","Energie, Règlement UE N° 1169/2011 (kcal/100 g)",kcal,,,,,,,,macro,TRUE,
 energy_fibre_kj,332,"Energy, N x Jones' factor, with fibres","Energy, N x Jones' factor, with fibres (kJ/100g)","Energie, N x facteur Jones, avec fibres  (kJ/100 g)",kj,nrj,kj,332,energy-kj,362551,TRUE,,macro,TRUE,
@@ -67,6 +67,6 @@ vitamin_b6,56500,Vitamin B6,Vitamin B6 (mg/100g),Vitamine B6 (mg/100 g),mg,vitam
 vitamin_b9,56700,Vitamin B9,Vitamin B9 or Folate (µg/100g),Vitamine B9 ou Folates totaux (µg/100 g),µg,vitamine_b9,mcg,56700,vitamin-b9,15335,TRUE,Folate,micro,,TODO: fix units
 folates,,Vitamin B9,Vitamin B9 or Folate (µg/100g),,µg,vitamine_b9,mcg,56700,folates,8872,TRUE,,micro,TRUE,
 vitamin_b12,56600,Vitamin B12,Vitamin B12 (µg/100g),Vitamine B12 (µg/100 g),µg,vitamine_b12,mcg,56600,vitamin-b12,21218,TRUE,Vitamin B12,micro,,
-vitamin_a,,,,,,,,,vitamin-a,221673,TRUE,Vitamin A,micro,TRUE,Need a formula to combine retinol and beta-carotene (and vitamin A)
-trans_fat,,,,,,,,,trans-fat,337969,TRUE,,macro,TRUE,Unclear which CIQUAL FA should be used or if it is a sum of a number
-cocoa,,,,,,,,,cocoa,8119,TRUE,,macro,TRUE,?
+vitamin_a,,Vitamin A,,,,,,,vitamin-a,221673,TRUE,Vitamin A,micro,TRUE,Need a formula to combine retinol and beta-carotene (and vitamin A)
+trans_fat,,Trans fat,,,,,,,trans-fat,337969,TRUE,,macro,TRUE,Unclear which CIQUAL FA should be used or if it is a sum of a number
+cocoa,,Cocoa,,,,,,,cocoa,8119,TRUE,,macro,TRUE,?

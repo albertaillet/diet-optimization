@@ -1,6 +1,6 @@
 -- Nutrient mapping table
 CREATE OR REPLACE TABLE nutrient_map AS (
-    SELECT id, ciqual_name, ciqual_id, ciqual_unit, calnut_name, calnut_unit, calnut_const_code,
+    SELECT id, name, ciqual_const_name_eng, ciqual_unit, calnut_const_name, calnut_unit, calnut_const_code,
     off_id, count, nnr2023_id, nutrient_type,
     FROM read_csv('data/nutrient_map.csv')
     WHERE calnut_const_code IS NOT NULL

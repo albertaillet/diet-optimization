@@ -25,15 +25,15 @@ if __name__ == "__main__":
                 print(f"Missing const code: {code}")
                 continue
             row["ciqual_const_code"] = code
-            row["ciqual_const_name_fr"], row["ciqual_id"] = code_to_name.pop(code)
+            row["ciqual_const_name_fr"], row["ciqual_const_name_eng"] = code_to_name.pop(code)
     fieldnames = [
         "id",
         "ciqual_const_code",
-        "ciqual_name",
-        "ciqual_id",  # should be renamed to ciqual_const_name_eng
+        "name",
+        "ciqual_const_name_eng",
         "ciqual_const_name_fr",
         "ciqual_unit",
-        "calnut_name",
+        "calnut_const_name",
         "calnut_unit",
         "calnut_const_code",
         "off_id",

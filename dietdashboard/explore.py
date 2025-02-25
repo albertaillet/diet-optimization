@@ -168,7 +168,7 @@ con = duckdb.connect(":memory:")
 con.sql(f"ATTACH DATABASE '{DATA_DIR / 'data.db'}' AS full_tables;")
 con.sql("""
 CREATE OR REPLACE TABLE nutrient_map AS
-SELECT id, calnut_name, calnut_unit, calnut_const_code, off_id
+SELECT id, calnut_const_name, calnut_unit, calnut_const_code, off_id
 FROM full_tables.nutrient_map WHERE id IN ('sodium', 'protein');
 
 CREATE OR REPLACE TABLE calnut_0 AS

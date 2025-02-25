@@ -99,7 +99,6 @@ CREATE OR REPLACE TABLE products_nutriments_selected AS (
     c.mean,
     c.CONST_LABEL,
     nm.id AS nutrient_id,
-    nm.calnut_name,
     nm.calnut_unit,
     CASE
         WHEN p.nutrient_is_valid AND p.nutrient_unit == nm.calnut_unit

@@ -125,7 +125,7 @@ def create_rangeslider(data: dict[str, str]) -> dict[str, float | str]:
     # if micro and upper is not None:
     #     marks[upper] = {"label": f"{upper}{unit}", "style": {"color": "#f53d3d"}}  # type: ignore
     return {
-        "name": data["ciqual_name"],
+        "name": data["name"],
         "id": data["id"],
         "unit": unit,
         "min": _min,
@@ -139,7 +139,7 @@ def create_rangeslider(data: dict[str, str]) -> dict[str, float | str]:
 
 def filter_nutrients(nutrient_map: list[dict[str, str]], recommendations: list[dict[str, str]]) -> list[dict[str, str]]:
     available = {rec["id"] for rec in recommendations}
-    return [{"name": row["ciqual_name"], "id": row["id"]} for row in nutrient_map if row["id"] in available]
+    return [{"name": row["name"], "id": row["id"]} for row in nutrient_map if row["id"] in available]
 
 
 def create_app(

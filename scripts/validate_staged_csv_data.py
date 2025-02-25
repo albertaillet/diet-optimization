@@ -16,6 +16,7 @@ NNR2023_UNITS = {"g", "mg", "mcg", "µg", "NE", "RE"}  # noqa: RUF001  # TODO: f
 def validate_nutrient_map(reader):
     for row in reader:
         assert row["id"], row
+        assert row["name"], row
         assert row["disabled"] in {"", "TRUE"}, row
         assert row["template"] in {"", "TRUE"}, row
         assert row["nutrient_type"] in {"micro", "macro"}, row
@@ -23,8 +24,7 @@ def validate_nutrient_map(reader):
             continue
         # assert row["nutrient_type"] in {"micro", "macro"}, row
         assert row["ciqual_unit"] in CIQUAL_UNITS, row
-        assert row["ciqual_name"], row
-        assert row["calnut_name"], row
+        assert row["calnut_const_name"], row
         assert row["calnut_unit"] in CALNUT_UNITS, row
         assert row["calnut_const_code"], row
         if row["off_id"]:

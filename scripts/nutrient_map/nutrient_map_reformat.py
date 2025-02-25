@@ -24,32 +24,32 @@ def extract_ciqual_cols(header: list[str]) -> Generator[tuple[str, str, str]]:
 
 
 def create_reformatted_csv(file, ciqual_cols: Generator[tuple[str, str, str]], prev_nutrient_map: list[dict[str, Any]]):
-    header = ("ciqual_name", "ciqual_id", "ciqual_unit", "off_id", "count", "nnr2023_id", "comments")
+    header = ("name", "ciqual_const_name_eng", "ciqual_unit", "off_id", "count", "nnr2023_id", "comments")
     writer = csv.writer(file)
     writer.writerow(header)  # Write header
 
-    # First write all rows with a matching ciqual_id, but sorted
-    for ciqual_id, ciqual_name, ciqual_unit in ciqual_cols:
-        matching_rows = [row_dict for row_dict in prev_nutrient_map if row_dict["ciqual_id"] == ciqual_id]
+    # First write all rows with a matching ciqual_const_name_eng, but sorted
+    for ciqual_const_name_eng, name, ciqual_unit in ciqual_cols:
+        matching_rows = [row_dict for row_dict in prev_nutrient_map if row_dict["ciqual_const_name_eng"] == ciqual_const_name_eng]
         if matching_rows:
             for row_dict in matching_rows:
-                assert row_dict["ciqual_id"] == ciqual_id
+                assert row_dict["ciqual_const_name_eng"] == ciqual_const_name_eng
                 assert row_dict["ciqual_unit"] == ciqual_unit
-                row_dict["ciqual_name"] = ciqual_name
+                row_dict["name"] = name
                 writer.writerow([row_dict.get(col) for col in header])
         else:
-            row_dict = {"ciqual_id": ciqual_id, "ciqual_unit": ciqual_unit, "ciqual_name": ciqual_name}
+            row_dict = {"ciqual_const_name_eng": ciqual_const_name_eng, "ciqual_unit": ciqual_unit, "name": name}
             # Find possible off_id match and add it.
             for possible_match_row_dict in prev_nutrient_map:
-                if ciqual_name.lower() == possible_match_row_dict["off_id"]:
-                    print("Adding matched", ciqual_name, possible_match_row_dict["off_id"])
+                if name.lower() == possible_match_row_dict["off_id"]:
+                    print("Adding matched", name, possible_match_row_dict["off_id"])
                     row_dict["off_id"] = possible_match_row_dict["off_id"]
                     row_dict["count"] = possible_match_row_dict["countprep"]
                     break
             writer.writerow([row_dict.get(col) for col in header])
     # Then write possible other rows (with comments).
     for row_dict in prev_nutrient_map:
-        if row_dict["ciqual_id"] != "" or (row_dict["ciqual_unit"] == "" and row_dict["comments"] == ""):
+        if row_dict["ciqual_const_name_eng"] != "" or (row_dict["ciqual_unit"] == "" and row_dict["comments"] == ""):
             continue
         writer.writerow([row_dict.get(col) for col in header])
 
