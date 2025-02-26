@@ -109,19 +109,19 @@ CREATE OR REPLACE TABLE products_nutriments_selected AS (
         WHEN p.product_nutrient_is_valid AND p.nutrient_unit == nm.ciqual_unit THEN p.nutrient_value
         WHEN ciq.mean IS NOT NULL THEN ciq.mean
         WHEN cal.mean IS NOT NULL THEN cal.mean
-        ELSE NULL
+        ELSE 0  -- When unknown, assume 0
     END AS final_nutrient_value,
     CASE
         WHEN p.product_nutrient_is_valid AND p.nutrient_unit == nm.ciqual_unit THEN p.nutrient_unit
         WHEN ciq.mean IS NOT NULL THEN nm.ciqual_unit
         WHEN cal.mean IS NOT NULL THEN nm.calnut_unit
-        ELSE NULL
+        ELSE nm.ciqual_unit
     END AS final_nutrient_unit,
     CASE
         WHEN p.product_nutrient_is_valid AND p.nutrient_unit == nm.calnut_unit THEN 'product'
         WHEN ciq.mean IS NOT NULL THEN CONCAT('ciqual_', ciq.code_confiance, '_', ciq.source_code)
         WHEN ciq.mean IS NOT NULL THEN CONCAT('calnut_', CASE WHEN cal.combl THEN '_combl' ELSE '' END)
-        ELSE NULL
+        ELSE 'assumed 0'
     END AS final_nutrient_origin,
     FROM products_nutriments p
     JOIN nutrient_map nm ON p.nutrient_id = nm.id
@@ -157,14 +157,11 @@ CREATE OR REPLACE TABLE final_table AS (
     p.product_quantity,
     p.product_quantity_unit,
     -- Calnut 0 columns
-    c.ALIM_CODE AS ciqual_code,
-    c.FOOD_LABEL AS ciqual_name,
-    c.alim_grp_code AS ciqual_group_code,
-    c.alim_grp_nom_fr AS ciqual_group_name,
-    c.alim_ssgrp_code AS ciqual_subgroup_code,
-    c.alim_ssgrp_nom_fr AS ciqual_subgroup_name,
-    c.alim_ssssgrp_code AS ciqual_subsubgroup_code,
-    c.alim_ssssgrp_nom_fr AS ciqual_subsubgroup_name,
+    ciq.alim_nom_eng AS ciqual_name,
+    ciq.alim_code AS ciqual_code,
+    ciq.alim_grp_code AS ciqual_group_code,
+    ciq.alim_ssgrp_code AS ciqual_subgroup_code,
+    ciq.alim_ssssgrp_code AS ciqual_subsubgroup_code,
     -- Price columns
     pr.id AS price_id,
     pr.price AS product_price,
@@ -180,6 +177,7 @@ CREATE OR REPLACE TABLE final_table AS (
     FROM prices pr
     JOIN final_nutrient_table fnt ON pr.product_code = fnt.code
     JOIN products p ON pr.product_code = p.code
-    JOIN calnut_0 c ON fnt.ciqual_food_code = c.ALIM_CODE
+    -- TODO: may filter out a few codes available in calnut and not in ciqual
+    JOIN ciqual_alim ciq ON fnt.ciqual_food_code = ciq.alim_code
     -- final table count: 36 904
 );

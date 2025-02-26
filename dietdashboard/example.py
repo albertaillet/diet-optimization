@@ -49,7 +49,7 @@ def print_tables(*tables: str):
         con.table(table).show(max_width=350)  # type: ignore
 
 
-print_tables("nutrient_map", "ciqual_alim", "ciqual_compo", "calnut_0", "products", "prices")
+print_tables("nutrient_map", "ciqual_alim", "ciqual_compo", "calnut_1", "products", "prices")
 
 process_query_path = Path(__file__).parent / "queries/process.sql"
 process_query = process_query_path.read_text()
@@ -57,4 +57,6 @@ process_query = re.sub(r"^\s*\('(?!sodium|protein)[^']*',.*?\),?$\n", "", proces
 process_query = re.sub(r"\('\w+'(?:,\s+'\w+'\s?)+\)", "('sodium', 'protein')", process_query)
 con.execute(process_query)
 
-print_tables("products_with_ciqual_and_price", "products_nutriments", "products_nutriments_selected", "final_nutrient_table")
+print_tables(
+    "products_with_ciqual_and_price", "products_nutriments", "products_nutriments_selected", "final_nutrient_table", "final_table"
+)
