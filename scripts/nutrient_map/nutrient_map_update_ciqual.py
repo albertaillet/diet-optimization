@@ -28,14 +28,14 @@ if __name__ == "__main__":
             row["ciqual_const_name_fr"], row["ciqual_const_name_eng"] = code_to_name.pop(code)
     fieldnames = [
         "id",
-        "ciqual_const_code",
         "name",
+        "ciqual_const_code",
         "ciqual_const_name_eng",
         "ciqual_const_name_fr",
         "ciqual_unit",
+        "calnut_const_code",
         "calnut_const_name",
         "calnut_unit",
-        "calnut_const_code",
         "off_id",
         "count",
         "template",
