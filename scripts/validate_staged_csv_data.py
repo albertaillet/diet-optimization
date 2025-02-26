@@ -9,6 +9,7 @@ from pathlib import Path
 
 DATA_DIR = Path(__file__).parent.parent / "data"
 CIQUAL_CONST_PATH = DATA_DIR / "ciqual2020/const.csv"
+CALNUT_1_PATH = DATA_DIR / "calnut.1.csv"
 
 
 CIQUAL_UNITS = {"kj", "kcal", "g", "mg", "µg"}  # noqa: RUF001
@@ -24,8 +25,16 @@ def get_ciqual_const_codes():
         return {row["const_code"]: row for row in csv.DictReader(f)}
 
 
+def get_calnut_const_codes():
+    if not CALNUT_1_PATH.exists():
+        exit("Warning: CALNUT data not found, plase fetch it using `make data/calnut.1.csv`.")
+    with CALNUT_1_PATH.open("r") as f:
+        return {row["CONST_CODE"]: row["CONST_LABEL"] for row in csv.DictReader(f)}
+
+
 def validate_nutrient_map(reader):
     ciqual_const_codes = get_ciqual_const_codes()
+    calnut_const_codes = get_calnut_const_codes()
 
     for row in reader:
         assert row["id"], row
@@ -52,6 +61,10 @@ def validate_nutrient_map(reader):
             assert row["calnut_const_name"], row
             assert row["calnut_unit"] in CALNUT_UNITS, row
             assert int(row["calnut_const_code"]) == int(row["ciqual_const_code"]), row
+            assert row["calnut_const_code"] in calnut_const_codes, row
+            *name, unit = calnut_const_codes[row["calnut_const_code"]].split("_")
+            assert row["calnut_const_name"] == "_".join(name), row
+            assert row["calnut_unit"] == unit, row
         else:
             assert not row["calnut_const_name"], row
             assert not row["calnut_unit"], row
