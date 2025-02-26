@@ -7,13 +7,26 @@ import csv
 import sys
 from pathlib import Path
 
+DATA_DIR = Path(__file__).parent.parent / "data"
+CIQUAL_CONST_PATH = DATA_DIR / "ciqual2020/const.csv"
+
+
 CIQUAL_UNITS = {"kj", "kcal", "g", "mg", "µg"}  # noqa: RUF001
 CALNUT_UNITS = {"kj", "kcal", "g", "mg", "mcg"}
 MACRO_UNITS = {"kcal", "g", "mg"}
 NNR2023_UNITS = {"g", "mg", "mcg", "µg", "NE", "RE"}  # noqa: RUF001  # TODO: fix NE and RE
 
 
+def get_ciqual_const_codes():
+    if not CIQUAL_CONST_PATH.exists():
+        exit("Warning: CIQUAL data not found, plase fetch it using `make unzip_and_process_ciqual`.")
+    with CIQUAL_CONST_PATH.open("r") as f:
+        return {row["const_code"]: row for row in csv.DictReader(f)}
+
+
 def validate_nutrient_map(reader):
+    ciqual_const_codes = get_ciqual_const_codes()
+
     for row in reader:
         assert row["id"], row
         assert row["name"], row
@@ -21,10 +34,15 @@ def validate_nutrient_map(reader):
         assert row["template"] in {"", "TRUE"}, row
         assert row["nutrient_type"] in {"micro", "macro"}, row
         if row["ciqual_const_code"]:
-            assert int(row["ciqual_const_code"]), row
+            assert int(row["ciqual_const_code"]), row  # Check that the ciqual_const_code is a non-zero integer
             assert row["ciqual_const_name_eng"], row
             assert row["ciqual_const_name_fr"], row
             assert row["ciqual_unit"] in CIQUAL_UNITS, row
+            # Check that the ciqual_const_code in the const.csv file are present in the nutrient_map.csv
+            assert row["ciqual_const_code"] in ciqual_const_codes, row
+            ciqual_row = ciqual_const_codes[row["ciqual_const_code"]]
+            assert row["ciqual_const_name_eng"] == ciqual_row["const_nom_eng"], (row, ciqual_row)
+            assert row["ciqual_const_name_fr"] == ciqual_row["const_nom_fr"], (row, ciqual_row)
         else:
             assert not row["ciqual_const_name_eng"], row
             assert not row["ciqual_const_name_fr"], row
