@@ -238,3 +238,4 @@ Random links:
 Outdated projects:
 -   [MyDietCoach](https://www.mydietcoachapp.com/) (deprecated, now redirects to [Bending Spoons](https://www.bendingspoons.com/))
 -   [EuroFIR](https://www.eurofir.org/), a European network that provides a comprehensive food composition database. The project has ended, so support and database updates is questionable (https://www.eurofir.org/foodexplorer). It also seems to use Wordpress.
+-   🎖️[knowledge-mining-nutrition](https://forgemia.inra.fr/stephane.dervaux/knowledge-mining-nutrition) Ongoing research project on knowledge mining in nutrition (02/2025).
