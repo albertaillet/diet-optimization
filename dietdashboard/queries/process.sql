@@ -104,6 +104,7 @@ CREATE OR REPLACE TABLE products_nutriments_selected AS (
     nm.ciqual_const_code,
     nm.ciqual_unit,
     nm.calnut_unit,
+    -- TODO: convert product_value to correct unit to be able to use it
     CASE
         WHEN p.product_nutrient_is_valid AND p.nutrient_unit == nm.ciqual_unit THEN p.nutrient_value
         WHEN ciq.mean IS NOT NULL THEN ciq.mean
@@ -116,10 +117,12 @@ CREATE OR REPLACE TABLE products_nutriments_selected AS (
         WHEN cal.mean IS NOT NULL THEN nm.calnut_unit
         ELSE NULL
     END AS final_nutrient_unit,
-    -- CASE
-    --     WHEN p.nutrient_is_valid AND p.nutrient_unit == nm.calnut_unit
-    --     THEN 'product' ELSE CONCAT(p.ciqual_food_code_origin, CASE WHEN cal.combl THEN '_combl' ELSE '' END)
-    -- END AS final_nutrient_origin,
+    CASE
+        WHEN p.product_nutrient_is_valid AND p.nutrient_unit == nm.calnut_unit THEN 'product'
+        WHEN ciq.mean IS NOT NULL THEN CONCAT('ciqual_', ciq.code_confiance, '_', ciq.source_code)
+        WHEN ciq.mean IS NOT NULL THEN CONCAT('calnut_', CASE WHEN cal.combl THEN '_combl' ELSE '' END)
+        ELSE NULL
+    END AS final_nutrient_origin,
     FROM products_nutriments p
     JOIN nutrient_map nm ON p.nutrient_id = nm.id
     LEFT JOIN ciqual_compo ciq
@@ -132,7 +135,7 @@ SELECT * FROM products_nutriments_selected
 PIVOT (
     first(final_nutrient_value) AS value,
     first(final_nutrient_unit) AS unit,
-    -- first(final_nutrient_origin) AS origin,
+    first(final_nutrient_origin) AS origin,
     FOR nutrient_id IN
     ('energy_kj', 'energy_kcal', 'water', 'protein', 'carbohydrate', 'fat',
     'sugars', 'fructose', 'galactose', 'glucose', 'lactose', 'maltose', 'sucrose', 'starch', 'fiber', 'polyols',
@@ -171,7 +174,7 @@ CREATE OR REPLACE TABLE final_table AS (
     pr.location_osm_id AS price_location_osm_id,
     pr.owner AS price_owner,
     -- Price per quantity
-    1000 * pr.price / p.product_quantity AS price_per_quantity,
+    1000 * pr.price / p.product_quantity AS price_per_quantity,  -- TODO: this assumes that the quantity is in grams
     -- Nutrient columns
     fnt.*,
     FROM prices pr
