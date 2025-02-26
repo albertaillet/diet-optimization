@@ -15,7 +15,7 @@ CREATE OR REPLACE TABLE products_nutriments AS (
     v.nutrient_id,
     v.nutrient_value,
     v.nutrient_unit,
-    v.nutrient_value IS NOT NULL AND v.nutrient_unit IS NOT NULL AS nutrient_is_valid,
+    v.nutrient_value IS NOT NULL AND v.nutrient_unit IS NOT NULL AS product_nutrient_is_valid,
     FROM products_with_ciqual_and_price p
     CROSS JOIN LATERAL (
     VALUES
@@ -91,40 +91,48 @@ CREATE OR REPLACE TABLE products_nutriments_selected AS (
     p.ciqual_food_code_origin,
     p.nutrient_value,
     p.nutrient_unit,
-    c.ALIM_CODE,
-    c.CONST_CODE,
-    c.combl,
-    c.lb,
-    c.ub,
-    c.mean,
-    c.CONST_LABEL,
+    ciq.lb AS ciqual_lb,
+    ciq.ub AS ciqual_ub,
+    ciq.mean AS ciqual_mean,
+    ciq.code_confiance AS ciqual_code_confiance,
+    ciq.source_code AS ciqual_source_code,
+    cal.lb AS calnut_lb,
+    cal.ub AS calnut_ub,
+    cal.mean AS calnut_mean,
+    cal.combl AS calnut_combl,
     nm.id AS nutrient_id,
+    nm.ciqual_const_code,
+    nm.ciqual_unit,
     nm.calnut_unit,
     CASE
-        WHEN p.nutrient_is_valid AND p.nutrient_unit == nm.calnut_unit
-        THEN p.nutrient_value ELSE c.mean
+        WHEN p.product_nutrient_is_valid AND p.nutrient_unit == nm.ciqual_unit THEN p.nutrient_value
+        WHEN ciq.mean IS NOT NULL THEN ciq.mean
+        WHEN cal.mean IS NOT NULL THEN cal.mean
+        ELSE NULL
     END AS final_nutrient_value,
     CASE
-        WHEN p.nutrient_is_valid AND p.nutrient_unit == nm.calnut_unit
-        THEN p.nutrient_unit ELSE nm.calnut_unit
+        WHEN p.product_nutrient_is_valid AND p.nutrient_unit == nm.ciqual_unit THEN p.nutrient_unit
+        WHEN ciq.mean IS NOT NULL THEN nm.ciqual_unit
+        WHEN cal.mean IS NOT NULL THEN nm.calnut_unit
+        ELSE NULL
     END AS final_nutrient_unit,
-    CASE
-        WHEN p.nutrient_is_valid AND p.nutrient_unit == nm.calnut_unit
-        THEN 'product' ELSE CONCAT(p.ciqual_food_code_origin, CASE WHEN c.combl THEN '_combl' ELSE '' END)
-    END AS final_nutrient_origin,
+    -- CASE
+    --     WHEN p.nutrient_is_valid AND p.nutrient_unit == nm.calnut_unit
+    --     THEN 'product' ELSE CONCAT(p.ciqual_food_code_origin, CASE WHEN cal.combl THEN '_combl' ELSE '' END)
+    -- END AS final_nutrient_origin,
     FROM products_nutriments p
-    JOIN calnut_1 c
-    ON p.ciqual_food_code = c.ALIM_CODE
-    JOIN nutrient_map nm
-    ON c.CONST_CODE = nm.calnut_const_code AND
-        p.nutrient_id = nm.id
+    JOIN nutrient_map nm ON p.nutrient_id = nm.id
+    LEFT JOIN ciqual_compo ciq
+    ON p.ciqual_food_code = ciq.alim_code AND ciq.const_code = nm.ciqual_const_code
+    LEFT JOIN calnut_1 cal
+    ON p.ciqual_food_code = cal.ALIM_CODE AND cal.CONST_CODE = nm.calnut_const_code
 );
 CREATE OR REPLACE TABLE final_nutrient_table AS (
 SELECT * FROM products_nutriments_selected
 PIVOT (
     first(final_nutrient_value) AS value,
     first(final_nutrient_unit) AS unit,
-    first(final_nutrient_origin) AS origin,
+    -- first(final_nutrient_origin) AS origin,
     FOR nutrient_id IN
     ('energy_kj', 'energy_kcal', 'water', 'protein', 'carbohydrate', 'fat',
     'sugars', 'fructose', 'galactose', 'glucose', 'lactose', 'maltose', 'sucrose', 'starch', 'fiber', 'polyols',

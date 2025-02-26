@@ -1,7 +1,8 @@
 -- Nutrient mapping table
 CREATE OR REPLACE TABLE nutrient_map AS (
-    SELECT id, name, ciqual_const_name_eng, ciqual_unit, calnut_const_name, calnut_unit, calnut_const_code,
-    off_id, count, nnr2023_id, nutrient_type,
+    SELECT id, name, nutrient_type,
+    ciqual_const_code, ciqual_const_name_eng, ciqual_unit,
+    calnut_const_code, calnut_const_name, calnut_unit,
     FROM read_csv('data/nutrient_map.csv')
     WHERE calnut_const_code IS NOT NULL
 );
@@ -18,7 +19,10 @@ CREATE OR REPLACE TABLE ciqual_alim AS (
     FROM read_csv('data/ciqual2020/alim.csv')
 );
 CREATE OR REPLACE TABLE ciqual_compo AS (
-    SELECT alim_code, const_code, teneur AS mean, min, max, code_confiance, source_code
+    SELECT alim_code, const_code, code_confiance, source_code,
+    CASE WHEN min = '-' THEN NULL ELSE CAST(REPLACE(REPLACE(min, 'traces', '0'), ',', '.') AS FLOAT) END AS lb,
+    CASE WHEN max = '-' THEN NULL ELSE CAST(REPLACE(REPLACE(max, 'traces', '0'), ',', '.') AS FLOAT) END AS ub,
+    CASE WHEN teneur = '-' THEN NULL ELSE CAST(REPLACE(REPLACE(teneur, 'traces', '0'), ',', '.') AS FLOAT) END AS mean
     FROM read_csv('data/ciqual2020/compo.csv')
 );
 CREATE OR REPLACE TABLE ciqual_sources AS (
@@ -39,10 +43,10 @@ CREATE OR REPLACE TABLE calnut_0 AS (
 );
 CREATE OR REPLACE TABLE calnut_1 AS (
     SELECT ALIM_CODE, FOOD_LABEL, CONST_LABEL, CONST_CODE,
-    CAST(indic_combl AS BOOL) as combl,
-    CAST(REPLACE(LB, ',', '.') AS FLOAT) as lb,
-    CAST(REPLACE(UB, ',', '.') AS FLOAT) as ub,
-    CAST(REPLACE(MB, ',', '.') AS FLOAT) as mean,
+    CAST(indic_combl AS BOOL) AS combl,
+    CAST(REPLACE(LB, ',', '.') AS FLOAT) AS lb,
+    CAST(REPLACE(UB, ',', '.') AS FLOAT) AS ub,
+    CAST(REPLACE(MB, ',', '.') AS FLOAT) AS mean,
     FROM read_csv('data/calnut.1.csv')
 );
 -- Huggingface Documentation for open-prices data: https://huggingface.co/datasets/openfoodfacts/open-prices
@@ -67,8 +71,8 @@ CREATE OR REPLACE TABLE products AS (
     p.nutriscore_score,
     p.product_name,
     p.product_quantity_unit,
-    CAST(p.product_quantity AS FLOAT) as product_quantity,
-    p.quantity as quantity_str,
+    CAST(p.product_quantity AS FLOAT) AS product_quantity,
+    p.quantity AS quantity_str,
     p.categories_properties,
     COALESCE(
         p.categories_properties['ciqual_food_code:en'],
