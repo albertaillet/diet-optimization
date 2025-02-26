@@ -5,6 +5,25 @@ CREATE OR REPLACE TABLE nutrient_map AS (
     FROM read_csv('data/nutrient_map.csv')
     WHERE calnut_const_code IS NOT NULL
 );
+/* Documentation: https://ciqual.anses.fr/cms/sites/default/files/inline-files/Table%20Ciqual%202020_doc_XML_ENG_2020%2007%2007.pdf
+Downloaded from: https://ciqual.anses.fr/#/cms/telechargement/node/20 (XML format)
+Tables:
+- alim: information about the food (3 185 rows)
+- compo: information about the nutrients in the food (211 898 rows)
+- const: information about the nutrients (67 rows) (already in nutrient_map)
+- sources: information about the sources of the data (207 896 rows)
+*/
+CREATE OR REPLACE TABLE ciqual_alim AS (
+    SELECT alim_code, alim_nom_eng, alim_grp_code, alim_ssgrp_code, alim_ssssgrp_code
+    FROM read_csv('data/ciqual2020/alim.csv')
+);
+CREATE OR REPLACE TABLE ciqual_compo AS (
+    SELECT alim_code, const_code, teneur AS mean, min, max, code_confiance, source_code
+    FROM read_csv('data/ciqual2020/compo.csv')
+);
+CREATE OR REPLACE TABLE ciqual_sources AS (
+    SELECT source_code,ref_citation FROM read_csv('data/ciqual2020/sources.csv')
+);
 /* Documentation: https://ciqual.anses.fr/cms/sites/default/files/inline-files/Table%20CALNUT%202020_doc_FR_2020%2007%2007.pdf
 Table 0 contains food group information (2 119 rows)
 Table 1 contains nutrient information for each food and nutrient (131 378 rows)
