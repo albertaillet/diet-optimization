@@ -1,0 +1,32 @@
+.brush .selection {
+    fill: #69a0e8;
+    fill-opacity: 0.8;
+    stroke: none;
+}
+
+.brush .handle--custom circle {
+    fill: #444;
+    fill-opacity: 0.9;
+    stroke: #000;
+    stroke-width: 1.5px;
+}
+
+.axis text {
+    font-size: 10px;
+}
+
+/* Tooltip styling */
+.segment-label {
+    font: 12px sans-serif;
+    text-anchor: middle;
+    fill: #000;
+    pointer-events: none;
+    opacity: 0;
+    /* Hidden by default */
+}
+
+.segment:hover+.segment-label,
+.segment-label:hover {
+    opacity: 1;
+    /* Show label on hover */
+}
