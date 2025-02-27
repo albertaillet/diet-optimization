@@ -19,8 +19,8 @@ CREATE OR REPLACE TABLE products_nutriments AS (
     FROM products_with_ciqual_and_price p
     CROSS JOIN LATERAL (
     VALUES
-('energy_kj',          p.nutriments."energy-kj_value",          p.nutriments."energy-kj_unit"          ),
-('energy_kcal',        p.nutriments."energy-kcal_value",        p.nutriments."energy-kcal_unit"        ),
+('energy_fibre_kj',    p.nutriments."energy-kj_value",          p.nutriments."energy-kj_unit"          ),
+('energy_fibre_kcal',  p.nutriments."energy-kcal_value",        p.nutriments."energy-kcal_unit"        ),
 ('water',              NULL,                                    NULL,                                  ),
 ('protein',            p.nutriments."proteins_value",           p.nutriments."proteins_unit"           ),
 ('carbohydrate',       p.nutriments."carbohydrates_value",      p.nutriments."carbohydrates_unit"      ),
@@ -80,7 +80,6 @@ CREATE OR REPLACE TABLE products_nutriments AS (
 ('pantothenic_acid',   p.nutriments."pantothenic-acid_value",   p.nutriments."pantothenic-acid_unit"   ),
 ('vitamin_b6',         p.nutriments."vitamin-b6_value",         p.nutriments."vitamin-b6_unit"         ),
 ('vitamin_b9',         p.nutriments."vitamin-b9_value",         p.nutriments."vitamin-b9_unit"         ),
-('folates',            p.nutriments."folates_value",            p.nutriments."folates_unit"            ),
 ('vitamin_b12',        p.nutriments."vitamin-b12_value",        p.nutriments."vitamin-b12_unit"        ),
 ) AS v(nutrient_id, nutrient_value, nutrient_unit)
 );
@@ -137,7 +136,7 @@ PIVOT (
     first(final_nutrient_unit) AS unit,
     first(final_nutrient_origin) AS origin,
     FOR nutrient_id IN
-    ('energy_kj', 'energy_kcal', 'water', 'protein', 'carbohydrate', 'fat',
+    ('energy_fibre_kj', 'energy_fibre_kcal', 'water', 'protein', 'carbohydrate', 'fat',
     'sugars', 'fructose', 'galactose', 'glucose', 'lactose', 'maltose', 'sucrose', 'starch', 'fiber', 'polyols',
     'alcohol', 'organic_acids', 'saturated_fat', 'monounsaturated_fat', 'polyunsaturated_fat',
     'fa_04_0', 'fa_06_0', 'fa_08_0', 'fa_10_0', 'fa_12_0', 'fa_14_0', 'fa_16_0', 'fa_18_0', 'fa_18_1_ole', 'fa_18_2_lino',

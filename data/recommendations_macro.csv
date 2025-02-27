@@ -1,5 +1,5 @@
 id,unit,value_males,value_females,value_upper_intake
-energy_kcal,kcal,2500,2500,3000
+energy_fibre_kcal,kcal,2500,2500,3000
 protein,g,150,150,300
 carbohydrate,g,0,0,400
 fat,g,70,70,200
