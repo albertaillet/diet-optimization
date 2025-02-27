@@ -248,6 +248,11 @@ def create_app(
             product_indices=product_indices,
         )
 
+    # serve all static files TODO: do this in a better way
+    @app.route("/static/<path:path>")
+    def send_static(path):
+        return app.send_static_file(path)
+
     return app
 
 
