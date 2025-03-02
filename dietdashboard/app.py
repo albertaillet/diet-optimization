@@ -17,6 +17,7 @@ TODO: Include breakdown source of each nutrient (either in popup, other page or 
 
 import csv
 import io
+import json
 import math
 import os
 from pathlib import Path
@@ -30,7 +31,7 @@ from scipy.optimize import linprog
 from utils.table import inner_merge
 
 DEBUG = os.getenv("DEBUG")
-DEBUG_CSV = Path(__file__).parent / "debug.csv"
+DEBUG_DIR = Path(__file__).parent.parent / "tmp"
 DATA_DIR = Path(os.getenv("DATA_DIR", ""))
 OFF_USERNAME = os.getenv("OFF_USERNAME")
 POSSIBLE_CURRENCIES = ["EUR", "CHF"]
@@ -69,7 +70,7 @@ def generate_query(chosen_bounds: dict[str, list[float]]) -> str:
 
 
 def get_arrays(
-    bounds: dict[str, list[float]], products_and_prices: dict[str, list[str | float]], currency: str
+    bounds: dict[str, list[float]], products_and_prices: dict[str, np.ndarray], currency: str
 ) -> tuple[np.ndarray, ...]:
     # Check that the upper and lower bounds nutrients use the same units as the product nutrients.
     # for nutrient in bounds:
@@ -174,10 +175,12 @@ def create_app(
     def optimize():
         data = request.get_json()
         currency = data["currency"]
-
+        if DEBUG:
+            with (DEBUG_DIR / "input.json").open("w+") as f:
+                f.write(json.dumps(data, indent=2))
         chosen_bounds = {}
-        for nutrient_id in nutrient_ids:
-            if data.get(f"bounds_{nutrient_id}") is None:
+        for nutrient_id in data["macro"] + data["micro"]:
+            if nutrient_id not in nutrient_ids or data.get(f"bounds_{nutrient_id}") is None:
                 continue
             chosen_bounds[nutrient_id] = data[f"bounds_{nutrient_id}"]
 
@@ -237,10 +240,9 @@ def create_app(
             }
             writer.writerow(product)
         output.seek(0)
-
         if DEBUG:
-            with DEBUG_CSV.open("output.csv") as file:
-                file.write(output.getvalue())
+            with (DEBUG_DIR / "output.csv").open("w+") as f:
+                f.write(output.read())
             output.seek(0)
         return output.read()
 
