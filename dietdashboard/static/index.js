@@ -1,6 +1,8 @@
+import { updateBars } from './sliders.js';
+
 function optimizationInput() { return document.querySelectorAll('[data-optimization]'); }
 
-function handleOptimitzationInputs() {
+export function handleOptimitzationInputs() {
     const data = {};
     optimizationInput().forEach(function (element) {
         // TODO: Fix this, the checkbox unchecking is not working
@@ -49,6 +51,4 @@ document.addEventListener('DOMContentLoaded', () => {
         // Initialize visibility based on initial checkbox state
         toggleSliderRowVisibility(sliderRow, checkbox.checked);
     });
-
-    console.log(checkedNutrientIds);
 });

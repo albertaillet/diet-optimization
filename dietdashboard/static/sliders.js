@@ -1,3 +1,5 @@
+import * as d3 from 'https://cdn.jsdelivr.net/npm/d3@7/+esm';
+import { handleOptimitzationInputs } from './index.js';
 // Inspired by https://observablehq.com/@sarah37/snapping-range-slider-with-d3-brush
 
 // Object to store references to sliders and their components
@@ -108,7 +110,7 @@ function initializeSliders() {
     });
 }
 
-function updateBars() {
+export function updateBars() {
     const nutrientLevelsData = JSON.parse(document.getElementById('nutrient-levels').textContent);
     const productIndices = JSON.parse(document.getElementById('product-indices').textContent);
 
