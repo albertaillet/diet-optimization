@@ -1,4 +1,4 @@
-import { csvParse } from 'https://cdn.jsdelivr.net/npm/d3-dsv@3.0.1/+esm';
+import { csvParse } from './d3.js';
 import { updateResultTable } from './result.js';
 import { updateBars } from './sliders.js';
 

@@ -1,4 +1,4 @@
-import * as d3 from 'https://cdn.jsdelivr.net/npm/d3@7/+esm';
+import * as d3 from './d3.js';
 import { handleOptimitzationInputs } from './index.js';
 // Inspired by https://observablehq.com/@sarah37/snapping-range-slider-with-d3-brush
 
