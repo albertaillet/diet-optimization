@@ -1,9 +1,6 @@
 import * as d3 from './d3.js';
-import { handleOptimitzationInputs } from './index.js';
+import { handleOptimitzationInputs, isVisible } from './index.js';
 // Inspired by https://observablehq.com/@sarah37/snapping-range-slider-with-d3-brush
-
-// Object to store references to sliders and their components
-const sliderComponents = {};
 
 // Function to initialize sliders and bars
 function initializeSliders() {
@@ -17,16 +14,23 @@ function initializeSliders() {
         const svg = d3.select(container)
             .append('svg')
             .attr('width', '100%')
-            .attr('height', 60); // Adjust height as needed
+            .attr('height', 60) // Adjust height as needed
+            .attr('data-nutrient', container.id); // Store nutrient name as data attribute
 
-        const domainX = [min, max];
+        // Store configuration in data attributes
+        svg.attr('data-domain-min', min)
+           .attr('data-domain-max', max)
+           .attr('data-container-id', container.id);
+
         const margin = { top: 5, right: 10, bottom: 20, left: 10 };
         const width = container.clientWidth - margin.left - margin.right;
         const height = +svg.attr('height') - margin.top - margin.bottom;
         const nTicks = 10; // Adjust number of ticks as needed
 
+        svg.attr('data-range-width', width);
+
         const x = d3.scaleLinear()
-            .domain(domainX)
+            .domain([min, max])
             .range([0, width]);
 
         const g = svg.append('g')
@@ -49,6 +53,10 @@ function initializeSliders() {
         // Initialize empty stacked bar over the x-axis
         const barHeight = 10;
         const barYPosition = axisYPosition - barHeight - 2; // Position above the axis
+
+        // Store bar configuration in data attributes
+        svg.attr('data-bar-height', barHeight)
+           .attr('data-bar-y-position', barYPosition);
 
         const barGroup = g.append('g')
             .attr('class', 'stacked-bar');
@@ -83,7 +91,7 @@ function initializeSliders() {
         function brushed(event) {
             if (event.selection) {
                 // Update custom handle positions
-                handle.attr("transform", function (d, i) {
+                handle.attr("transform", (d, i) => {
                     return "translate(" + [event.selection[i], 0] + ")";
                 });
             }
@@ -93,29 +101,40 @@ function initializeSliders() {
             if (!event.sourceEvent) return; // Only transition after input
             const [lower, upper] = event.selection.map(x.invert).map(Math.round);
             d3.select(this).transition().call(brushSelection.move, [lower, upper].map(x));
-            container.setAttribute('data-lower', lower)
-            container.setAttribute('data-upper', upper)
+            container.dataset.lower = lower;
+            container.dataset.upper = upper;
             handleOptimitzationInputs(); // Ensure this function is defined elsewhere
         }
-
-        // Store references for updating later
-        sliderComponents[container.id] = {
-            x: x,
-            barGroup: barGroup,
-            barYPosition: barYPosition,
-            barHeight: barHeight,
-        };
     });
 }
 
 export function updateBars(products) {
-    Object.keys(sliderComponents).forEach((nutrientName) => {
-        // TODO: don't run this for hidden slider rows
-        const components = sliderComponents[nutrientName];
-        const x = components.x;
-        const barGroup = components.barGroup;
-        const barYPosition = components.barYPosition;
-        const barHeight = components.barHeight;
+    // Select all slider containers
+    const containers = document.querySelectorAll('.slider-container');
+
+    containers.forEach(container => {
+        // Skip hidden containers
+        if (!isVisible(container)) return;
+        const min = Number(container.dataset.min);
+        const max = Number(container.dataset.max);
+
+        const nutrientName = container.id;
+        const svgElement = container.querySelector('svg');
+        if (!svgElement) return; // Skip if SVG doesn't exist
+
+        const svg = d3.select(svgElement);
+
+        // Recreate scale from stored values
+        const rangeWidth = Number(svg.attr('data-range-width'));
+        const barYPosition = Number(svg.attr('data-bar-y-position'));
+        const barHeight = Number(svg.attr('data-bar-height'));
+
+        const x = d3.scaleLinear()
+            .domain([min, max])
+            .range([0, rangeWidth]);
+
+        // Get the barGroup within this SVG
+        const barGroup = svg.select('.stacked-bar');
 
         // Get the segments data for this nutrient
         const segments = products.map((product, i) => {

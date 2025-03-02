@@ -4,7 +4,7 @@ import { updateBars } from './sliders.js';
 
 function optimizationInput() { return document.querySelectorAll('[data-optimization]'); };
 
-export function isHidden(element) {return element.offsetParent !== null}
+export function isVisible(element) {return element.offsetParent !== null}
 
 export function handleOptimitzationInputs() {
     const data = {};
@@ -13,7 +13,7 @@ export function handleOptimitzationInputs() {
         if (element.tagName.toLowerCase() === 'select') {
             data[element.dataset.optimization] = element.value;  // Currency
         } else if (element.dataset.optimization == 'slider') {
-            if (isHidden(element))
+            if (isVisible(element))
             {data[element.id] = [Number(element.dataset.lower), Number(element.dataset.upper)]}
             else {}
         } else {
