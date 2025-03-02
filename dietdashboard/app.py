@@ -16,8 +16,8 @@ TODO: Include breakdown source of each nutrient (either in popup, other page or 
 """
 
 import csv
+import io
 import math
-import operator
 import os
 from pathlib import Path
 from time import perf_counter
@@ -30,6 +30,7 @@ from scipy.optimize import linprog
 from utils.table import inner_merge
 
 DEBUG = os.getenv("DEBUG")
+DEBUG_CSV = Path(__file__).parent / "debug.csv"
 DATA_DIR = Path(os.getenv("DATA_DIR", ""))
 OFF_USERNAME = os.getenv("OFF_USERNAME")
 POSSIBLE_CURRENCIES = ["EUR", "CHF"]
@@ -169,12 +170,9 @@ def create_app(
             nutrient_groups=nutrient_groups,
         )
 
-    @app.route("/optimize", methods=["POST"])
+    @app.route("/optimize.csv", methods=["POST"])
     def optimize():
         data = request.get_json()
-        if DEBUG:
-            return render_template("debug.html", data=data)
-
         currency = data["currency"]
 
         chosen_bounds = {}
@@ -200,21 +198,33 @@ def create_app(
         if result.status != 0:
             return "<h1>No solution</h1>"
 
-        n_products = A_nutrients.shape[1]
-
         # Calculate nutrient levels
-        nutrients_levels = A_nutrients * result.x  # TODO: use nutrient levels.
+        nutrients_levels = A_nutrients * result.x
         assert (nutrients_levels < 0).sum() == 0, "Negative values in nutrients_levels."
 
-        # Prepare data for rendering in the HTML table
-        products = []
-        for i in range(n_products):
-            if result.x[i] <= 0:  # Filter out products with zero quantity
-                continue
-            location = ", ".join(str(products_and_prices["price_location"][i]).split(", ")[:3])
+        # Sort by quantity and remove those with zero quantity
+        indices = np.argsort(result.x)[::-1]
+        indices = indices[result.x[indices] > 0]
 
+        # Prepare data for rendering in the HTML table
+        output = io.StringIO()
+        fieldnames = [
+            "id",
+            "product_code",
+            "product_name",
+            "ciqual_name",
+            "ciqual_code",
+            "location",
+            "location_osm_id",
+            "quantity_g",
+            "price",
+        ]
+        writer = csv.DictWriter(output, fieldnames=fieldnames + list(chosen_bounds))
+        writer.writeheader()
+        for i in indices:
+            location = ", ".join(str(products_and_prices["price_location"][i]).split(", ")[:3])
             product = {
-                "price_id": int(products_and_prices["price_id"][i]),
+                "id": int(products_and_prices["price_id"][i]),
                 "product_code": products_and_prices["product_code"][i],
                 "product_name": products_and_prices["product_name"][i],
                 "ciqual_name": products_and_prices["ciqual_name"][i],
@@ -223,30 +233,16 @@ def create_app(
                 "location_osm_id": products_and_prices["price_location_osm_id"][i],
                 "quantity_g": round(100 * result.x[i], 1),
                 "price": round(c_costs[i] * result.x[i], 2),
-                "levels": {nutrient_id: nutrients_levels[j, i] for j, nutrient_id in enumerate(chosen_bounds)},
+                **{nutrient_id: nutrients_levels[j, i].round(4) for j, nutrient_id in enumerate(chosen_bounds)},
             }
-            products.append(product)
+            writer.writerow(product)
+        output.seek(0)
 
-        products = sorted(products, key=operator.itemgetter("quantity_g"), reverse=True)
-
-        nutrients = {}
-        for p in products:
-            for nutrient_id, level in p["levels"].items():
-                if nutrient_id not in nutrients:
-                    nutrients[nutrient_id] = []
-                if level == 0:
-                    continue
-                nutrients[nutrient_id].append({"name": p["ciqual_name"], "id": p["price_id"], "level": level})
-
-        product_indices = {p["price_id"]: i for i, p in enumerate(products)}
-        return render_template(
-            "result.html",
-            products=products,
-            result=result,
-            currency=currency,
-            nutrients=nutrients,
-            product_indices=product_indices,
-        )
+        if DEBUG:
+            with DEBUG_CSV.open("output.csv") as file:
+                file.write(output.getvalue())
+            output.seek(0)
+        return output.read()
 
     # serve all static files TODO: do this in a better way
     @app.route("/static/<path:path>")

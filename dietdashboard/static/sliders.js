@@ -110,10 +110,7 @@ function initializeSliders() {
     });
 }
 
-export function updateBars() {
-    const nutrientLevelsData = JSON.parse(document.getElementById('nutrient-levels').textContent);
-    const productIndices = JSON.parse(document.getElementById('product-indices').textContent);
-
+export function updateBars(products) {
     Object.keys(sliderComponents).forEach((nutrientName) => {
         const components = sliderComponents[nutrientName];
         const x = components.x;
@@ -122,7 +119,14 @@ export function updateBars() {
         const barHeight = components.barHeight;
 
         // Get the segments data for this nutrient
-        const segments = nutrientLevelsData[nutrientName] || [];
+        const segments = products.map((product, i) => {
+            return {
+                i: i,
+                id: product.id,
+                name: product.product_name,
+                level: Number(product[nutrientName]),
+            };
+        });
 
         // Calculate cumulative values using actual levels
         let cum = 0;
@@ -179,7 +183,7 @@ export function updateBars() {
             .duration(750)
             .attr('x', d => x(d.startValue))
             .attr('width', d => x(d.endValue) - x(d.startValue))
-            .attr('fill', (d, i) => d3.schemeCategory10[+productIndices[d.id] % 10]);
+            .attr('fill', (d, i) => d3.schemeCategory10[d.i % 10]);
 
         // Update positions and text of labels
         segmentGroupsMerge.select('.segment-label')

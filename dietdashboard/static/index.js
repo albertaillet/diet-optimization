@@ -1,6 +1,8 @@
+import { csvParse } from 'https://cdn.jsdelivr.net/npm/d3-dsv@3.0.1/+esm';
+import { updateResultTable } from './result.js';
 import { updateBars } from './sliders.js';
 
-function optimizationInput() { return document.querySelectorAll('[data-optimization]'); }
+function optimizationInput() { return document.querySelectorAll('[data-optimization]'); };
 
 export function handleOptimitzationInputs() {
     const data = {};
@@ -18,7 +20,7 @@ export function handleOptimitzationInputs() {
             data[element.dataset.optimization].push(element.value);  // Slider selections
         }
     });
-    fetch('/optimize', {
+    fetch('/optimize.csv', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -26,9 +28,8 @@ export function handleOptimitzationInputs() {
         body: JSON.stringify(data)
     })
         .then(response => response.text())
-        .then(result => { document.getElementById('result').innerHTML = result })
-        .catch(error => console.error('Error:', error))
-        .then(updateBars)
+        .then(text => csvParse(text))
+        .then(csv => {updateResultTable(csv); updateBars(csv);})
 }
 function toggleSliderRowVisibility(sliderRow, isChecked) {
     // Toggle visibility of the slider row based on the checkbox state
