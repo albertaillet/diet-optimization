@@ -66,6 +66,7 @@ def generate_query(chosen_bounds: dict[str, list[float]]) -> str:
     AND {nutrient_filters}
     -- AND price_owner = '{OFF_USERNAME}'
     AND product_quantity > 0
+    LIMIT 1000
     """
 
 
@@ -245,6 +246,16 @@ def create_app(
                 f.write(output.read())
             output.seek(0)
         return output.read()
+
+    @app.route("/info/<price_id>", methods=["GET"])
+    def info(price_id: str) -> str:
+        ex = con.execute("SELECT * FROM final_table WHERE price_id = ?", parameters=[price_id])
+        row = ex.fetchone()
+        cols = ex.description
+        if row is None or cols is None:
+            return "<h1>Not found</h1>"
+        row_dict = {c[0]: r for c, r in zip(cols, row, strict=True)}
+        return render_template("info.html", item=row_dict)
 
     # serve all static files TODO: do this in a better way
     @app.route("/static/<path:path>")
