@@ -28,8 +28,8 @@
                             <li>
                                 <div class="form-check ms-3">
                                     <input class="form-check-input nutrient-checkbox" type="checkbox" value="{{ nutrient.id }}"
-                                        id="nutrient-{{ nutrient.id }}" checked data-optimization="{{ nutrient_group.id }}">
-                                    <label class="form-check-label" for="nutrient-{{ nutrient.id }}">
+                                        id="nutrient-checkbox-{{ nutrient.id }}" checked>
+                                    <label class="form-check-label" for="nutrient-checkbox-{{ nutrient.id }}">
                                         {{ nutrient.name }}
                                     </label>
                                 </div>
@@ -67,13 +67,11 @@
                                         {{ slider.name }} ({{ slider.unit }})
                                     </td>
                                     <td class="ps-3 pe-3">
-                                        <div id="{{ slider.id }}" class="slider-container p-0" style="height: 60px;"></div>
-                                        <input type="hidden" id="{{ slider.id }}-min" value="{{ slider.min }}">
-                                        <input type="hidden" id="{{ slider.id }}-max" value="{{ slider.max }}">
-                                        <input type="hidden" id="{{ slider.id }}-lower" value="{{ slider.lower }}"
-                                            data-optimization="bounds_{{ slider.id }}">
-                                        <input type="hidden" id="{{ slider.id }}-upper" value="{{ slider.upper }}"
-                                            data-optimization="bounds_{{ slider.id }}">
+                                        <div id="{{ slider.id }}" class="slider-container p-0" style="height: 60px;"
+                                            data-min="{{ slider.min }}" data-lower="{{ slider.lower }}"
+                                            data-max="{{ slider.max }}" data-upper="{{ slider.upper }}"
+                                            data-optimization="slider">
+                                        </div>
                                     </td>
                                 </tr>
                                 {% endfor %}

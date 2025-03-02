@@ -8,20 +8,20 @@ const sliderComponents = {};
 // Function to initialize sliders and bars
 function initializeSliders() {
     // Select all slider containers
-    const brushes = document.querySelectorAll('.slider-container');
-    brushes.forEach((brush, i) => {
-        const minDiv = document.getElementById(brush.id + '-min');
-        const maxDiv = document.getElementById(brush.id + '-max');
-        const lowerDiv = document.getElementById(brush.id + '-lower');
-        const upperDiv = document.getElementById(brush.id + '-upper');
-        const svg = d3.select(brush)
+    const containers = document.querySelectorAll('.slider-container');
+    containers.forEach(container => {
+        const min = Number(container.dataset.min);
+        const max = Number(container.dataset.max);
+        const lower = Number(container.dataset.lower);
+        const upper = Number(container.dataset.upper);
+        const svg = d3.select(container)
             .append('svg')
             .attr('width', '100%')
             .attr('height', 60); // Adjust height as needed
 
-        const domainX = [+minDiv.value, +maxDiv.value];
+        const domainX = [min, max];
         const margin = { top: 5, right: 10, bottom: 20, left: 10 };
-        const width = brush.clientWidth - margin.left - margin.right;
+        const width = container.clientWidth - margin.left - margin.right;
         const height = +svg.attr('height') - margin.top - margin.bottom;
         const nTicks = 10; // Adjust number of ticks as needed
 
@@ -78,12 +78,10 @@ function initializeSliders() {
             .attr('cy', axisYPosition); // Position handles on the axis line
 
         // Set initial brush position
-        brushGroup.call(brushSelection.move, [x(+lowerDiv.value), x(+upperDiv.value)]);
+        brushGroup.call(brushSelection.move, [x(lower), x(upper)]);
 
         function brushed(event) {
             if (event.selection) {
-                const [lower, upper] = event.selection.map(x.invert).map(Math.round);
-
                 // Update custom handle positions
                 handle.attr("transform", function (d, i) {
                     return "translate(" + [event.selection[i], 0] + ")";
@@ -95,13 +93,13 @@ function initializeSliders() {
             if (!event.sourceEvent) return; // Only transition after input
             const [lower, upper] = event.selection.map(x.invert).map(Math.round);
             d3.select(this).transition().call(brushSelection.move, [lower, upper].map(x));
-            lowerDiv.value = lower;
-            upperDiv.value = upper;
+            container.setAttribute('data-lower', lower)
+            container.setAttribute('data-upper', upper)
             handleOptimitzationInputs(); // Ensure this function is defined elsewhere
         }
 
         // Store references for updating later
-        sliderComponents[brush.id] = {
+        sliderComponents[container.id] = {
             x: x,
             barGroup: barGroup,
             barYPosition: barYPosition,
@@ -112,6 +110,7 @@ function initializeSliders() {
 
 export function updateBars(products) {
     Object.keys(sliderComponents).forEach((nutrientName) => {
+        // TODO: don't run this for hidden slider rows
         const components = sliderComponents[nutrientName];
         const x = components.x;
         const barGroup = components.barGroup;
@@ -207,7 +206,3 @@ export function updateBars(products) {
 
 // Call the initialize function once after DOM content is loaded
 document.addEventListener('DOMContentLoaded', initializeSliders);
-
-// Example: Call updateBars() when data changes
-// const newNutrientLevelsData = { ... }; // Your new data
-// updateBars(newNutrientLevelsData);

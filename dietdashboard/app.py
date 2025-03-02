@@ -179,10 +179,10 @@ def create_app(
             with (DEBUG_DIR / "input.json").open("w+") as f:
                 f.write(json.dumps(data, indent=2))
         chosen_bounds = {}
-        for nutrient_id in data["macro"] + data["micro"]:
-            if nutrient_id not in nutrient_ids or data.get(f"bounds_{nutrient_id}") is None:
+        for nutrient_id in nutrient_ids:
+            if nutrient_id not in data:
                 continue
-            chosen_bounds[nutrient_id] = data[f"bounds_{nutrient_id}"]
+            chosen_bounds[nutrient_id] = data[nutrient_id]
 
         start = perf_counter()
         products_and_prices = con.execute(generate_query(chosen_bounds)).fetchnumpy()
