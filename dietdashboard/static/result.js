@@ -36,8 +36,18 @@ export function updateResultTable(products) {
                                 ${product.location}
                             </a>
                         </td>
-                        <td>${product.quantity_g}</td>
-                        <td>${product.price}</td>
+                        <td>
+                            <a href="info/${product.id}"
+                               target="_blank" style="color: black;">
+                                ${product.quantity_g}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="https://prices.openfoodfacts.org/prices/${product.id}"
+                               target="_blank" style="color: black;">
+                                ${product.price}
+                            </a>
+                        </td>
                     </tr>
                 `)}
             </tbody>

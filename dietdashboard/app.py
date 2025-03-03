@@ -200,7 +200,7 @@ def create_app(
         result = solve_optimization(A_nutrients, lb, ub, c_costs)
         print(f"Optimization time: {perf_counter() - start:.2f}s")
         if result.status != 0:
-            return "<h1>No solution</h1>"
+            return ""
 
         # Calculate nutrient levels
         nutrients_levels = A_nutrients * result.x

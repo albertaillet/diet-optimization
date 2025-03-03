@@ -25,7 +25,7 @@ export * from "https://cdn.jsdelivr.net/npm/d3-dsv@3.0.1/+esm";
 export * from "https://cdn.jsdelivr.net/npm/d3-scale-chromatic@3.1.0/+esm";
 export * from "https://cdn.jsdelivr.net/npm/d3-scale@4.0.2/+esm";
 export * from "https://cdn.jsdelivr.net/npm/d3-selection@3.0.0/+esm";
-// export * from "https://cdn.jsdelivr.net/npm/d3-shape@3.2.0/+esm";
+export * from "https://cdn.jsdelivr.net/npm/d3-shape@3.2.0/+esm";
 // export * from "https://cdn.jsdelivr.net/npm/d3-time-format@4.1.0/+esm";
 // export * from "https://cdn.jsdelivr.net/npm/d3-time@3.1.0/+esm";
 // export * from "https://cdn.jsdelivr.net/npm/d3-timer@3.0.1/+esm";
