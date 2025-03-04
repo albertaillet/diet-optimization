@@ -10,6 +10,14 @@ From the root of the repository run
 pip install -e ".[dev]"
 ```
 
+Other command line requirements are:
+
+-   `make` for running the commands in the `Makefile`.
+-   `wget` for downloading the data.
+-   `unzip` for extracting the data.
+-   `esbuild` for building the frontend.
+-   `duckdb` for the duckdb CLI.
+
 ## Usage
 
 To run different parts of the project, check out the `Makefile` for the available commands.
@@ -184,6 +192,7 @@ Apps with API, database documentation, licensing or search tools:
 -   🎖️[Nutrition value](https://www.nutritionvalue.org/), is a php website using the USDA database, a user has created and API for it [here](https://github.com/ryojp/nutrition-api).
 -   [Samsung Food Recipe Nutrition Calculator](https://samsungfood.com/recipe-nutrition-calculator/), nutrition calculator for recipes.
 -   🎖️[TheMealDB](https://www.themealdb.com/), small meal and recipe database and API.
+-   [GroceryDB](https://github.com/Barabasi-Lab/GroceryDB)
 
 Apps with a bit of information about their databases:
 
@@ -208,6 +217,7 @@ Other apps:
 -   [SnackFolio](https://www.snackfolio.com/), offline friendly nutrition tracker.
 -   [Cali AI](https://www.calai.app), calorie tracking app with a focus on tracking food portions from images using multimodal AI.
 -   [Truefood.tech](https://truefood.tech/), from a team of researchers to find least processed food.
+-   [Foodop](https://foodop.dk), a Danish web app to optimize kitchen operations.
 
 Other tools:
 -   [Terra](https://tryterra.co/) is a Health API for Wearable and Sensor Data that integrates with nutrition trackers.
@@ -215,6 +225,7 @@ Other tools:
 -   [SnapCalorie](https://www.snapcalorie.com/), is an [API](https://snapcalorie.github.io/) for taking a picture of a food item and getting the nutritional information.
 -   [Foodvisor](https://www.foodvisor.io/en/), they have an API for their food recognition tool.
 -   NanEye, WIP project connecting biomarkers to nutrition data.
+-   [Completefoods](https://www.completefoods.co/), prev diy soylent, a database of recipes for diy meal replacement shakes.
 
 
 ### Food classification standards:
@@ -233,9 +244,12 @@ Random links:
 -   [Random kaggle dataset](https://www.kaggle.com/datasets/trolukovich/nutritional-values-for-common-foods-and-products), nutritional values for common foods and products, source unclear.
 -   [Nutrition5k](https://github.com/google-research-datasets/Nutrition5k), a dataset of 5k images of food items with nutritional information.
 -   [Documenu](https://github.com/documenu), Restaurant menu API.
+-   [Foodoptimizer](https://kkloste.github.io/projects/foodoptimizer/), a blogpost on food optimization.
+-   🎖️[knowledge-mining-nutrition](https://forgemia.inra.fr/stephane.dervaux/knowledge-mining-nutrition) Ongoing research project on knowledge mining in nutrition (02/2025).
 
 
 Outdated projects:
 -   [MyDietCoach](https://www.mydietcoachapp.com/) (deprecated, now redirects to [Bending Spoons](https://www.bendingspoons.com/))
 -   [EuroFIR](https://www.eurofir.org/), a European network that provides a comprehensive food composition database. The project has ended, so support and database updates is questionable (https://www.eurofir.org/foodexplorer). It also seems to use Wordpress.
--   🎖️[knowledge-mining-nutrition](https://forgemia.inra.fr/stephane.dervaux/knowledge-mining-nutrition) Ongoing research project on knowledge mining in nutrition (02/2025).
+-   [Optifood](https://www.sciencedirect.com/science/article/pii/S0002916523049262) A paper about the use of linear programming to determine if a food product can ensure adequate nutrients for Cambodian infants.
+-   [Nutrioptimizer](https://nutrioptimizer.com) indian website for diet optimization, by Sri Mookambika Infosystems, apparently only runs on Mozilla Firefox Browser.
