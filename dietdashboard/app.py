@@ -32,7 +32,7 @@ from utils.table import inner_merge
 
 DEBUG = os.getenv("DEBUG")
 DEBUG_DIR = Path(__file__).parent.parent / "tmp"
-DATA_DIR = Path(os.getenv("DATA_DIR", ""))
+DATA_DIR = Path(os.getenv("DATA_DIR", "data"))
 OFF_USERNAME = os.getenv("OFF_USERNAME")
 POSSIBLE_CURRENCIES = ["EUR", "CHF"]
 
@@ -64,7 +64,7 @@ def generate_query(chosen_bounds: dict[str, list[float]]) -> str:
     WHERE currency IN ('EUR', 'CHF')
     AND price_per_quantity IS NOT NULL
     AND {nutrient_filters}
-    -- AND price_owner = '{OFF_USERNAME}'
+    AND price_location LIKE '%Grenoble%'
     AND product_quantity > 0
     LIMIT 1000
     """
@@ -265,17 +265,18 @@ def create_app(
     return app
 
 
+con = duckdb.connect(DATA_DIR / "data.db", read_only=True)
+
+with (DATA_DIR / "nutrient_map.csv").open("r") as file:
+    nutrient_map = [row_dict for row_dict in csv.DictReader(file) if not row_dict["disabled"]]
+
+with (DATA_DIR / "recommendations_macro.csv").open("r") as file:
+    macro_recommendations = inner_merge(list(csv.DictReader(file)), nutrient_map, left_key="id", right_key="id")
+
+with (DATA_DIR / "recommendations_nnr2023.csv").open("r") as file:
+    micro_recommendations = inner_merge(list(csv.DictReader(file)), nutrient_map, left_key="nutrient", right_key="nnr2023_id")
+
+app = create_app(con, macro_recommendations, micro_recommendations, nutrient_map)
+
 if __name__ == "__main__":
-    con = duckdb.connect(DATA_DIR / "data.db", read_only=True)
-
-    with (DATA_DIR / "nutrient_map.csv").open("r") as file:
-        nutrient_map = [row_dict for row_dict in csv.DictReader(file) if not row_dict["disabled"]]
-
-    with (DATA_DIR / "recommendations_macro.csv").open("r") as file:
-        macro_recommendations = inner_merge(list(csv.DictReader(file)), nutrient_map, left_key="id", right_key="id")
-
-    with (DATA_DIR / "recommendations_nnr2023.csv").open("r") as file:
-        micro_recommendations = inner_merge(list(csv.DictReader(file)), nutrient_map, left_key="nutrient", right_key="nnr2023_id")
-
-    app = create_app(con, macro_recommendations, micro_recommendations, nutrient_map)
-    app.run(debug=True, host="localhost", port=5001)
+    app.run()

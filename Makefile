@@ -101,6 +101,9 @@ process:
 opt:
 	DATA_DIR=$(DATA_DIR) python dietdashboard/app.py
 
+gun-opt:
+	DATA_DIR=$(DATA_DIR) gunicorn -w 4 -b 0.0.0.0:8000 dietdashboard.app:app
+
 # ---------- Create the nutrient extraction template. ----------
 
 template:
