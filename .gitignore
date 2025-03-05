@@ -9,6 +9,7 @@
 venv/
 # temporary folder
 tmp/
+tmp*
 
 # Data to exclude
 # Fetched and extracted NNR2023 data
@@ -27,9 +28,9 @@ data/LivsmedelsDB_*.xlsx
 # Fetched nutrient_map
 data/nutrient_map_recipe_estimator.csv
 # Open food facts database dump
-openfoodfacts-products.jsonl.gz
+*.jsonl.gz
 # Open prices exports in parquet format
-data/prices.parquet
+*.parquet
 # Any database in the data folder
 data/*.db
 
