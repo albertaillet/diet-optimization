@@ -201,7 +201,7 @@ export function updateBars(products) {
             .duration(750)
             .attr('x', d => x(d.startValue))
             .attr('width', d => x(d.endValue) - x(d.startValue))
-            .attr('fill', (d, i) => d3.schemeCategory10[d.i % 10]);
+            .attr('fill', (d, i) => d3.schemeTableau10[d.i % 10]);
 
         // Update positions and text of labels
         segmentGroupsMerge.select('.segment-label')

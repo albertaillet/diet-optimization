@@ -1,14 +1,14 @@
 .brush .selection {
-    fill: #69a0e8;
+    fill: #7b904b;
     fill-opacity: 0.8;
     stroke: none;
 }
 
 .brush .handle--custom circle {
-    fill: #444;
+    fill: #7b904b;
     fill-opacity: 0.9;
     stroke: #000;
-    stroke-width: 1.5px;
+    stroke-width: 2px;
 }
 
 .axis text {

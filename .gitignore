@@ -40,3 +40,6 @@ data/*.db
 
 # Mac hidden files
 .DS_Store
+
+# Claude generated files
+CLAUDE.md
