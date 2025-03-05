@@ -4,8 +4,15 @@ export function updateResultTable(products) {
     const resultDiv = document.getElementById('result');
     const total_price = products.reduce((acc, p) => acc + Number(p.price), 0).toFixed(2);
     const resultTemplate = html`
-        <h5 class="px-2 pt-2">Total price per day: ${total_price} EUR</h5>
-        <table class="table table-striped table-bordered">
+        <h3>Total price per day: ${total_price} EUR</h3>
+        <table>
+            <colgroup>
+                <col style="width: 30%;">
+                <col style="width: 30%;">
+                <col style="width: 20%;">
+                <col style="width: 13%;">
+                <col style="width: 10%;">
+            </colgroup>
             <thead>
                 <tr>
                     <th>Product name</th>

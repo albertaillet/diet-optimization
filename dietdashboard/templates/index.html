@@ -5,97 +5,158 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nutrition Dashboard</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
-    <script data-goatcounter="https://sorbro.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 13px;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .selectors {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .dashboard-content {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        .dashboard-column {
+            width: 50%;
+            padding: 1rem;
+            overflow-y: auto;
+            border-right: 1px solid #eee;
+        }
+
+        .dashboard-column:last-child {
+            border-right: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table td {
+            padding: 0.75rem 0.5rem;
+        }
+
+        .slider-container {
+            width: 100%;
+        }
+
+        @media (max-width: 600px) {
+            .dashboard-content {
+                flex-direction: column;
+            }
+
+            .dashboard-column {
+                width: 100%;
+                height: 50%;
+                border-right: none;
+                border-bottom: 1px solid #eee;
+            }
+
+            .dashboard-column:last-child {
+                border-bottom: none;
+            }
+        }
+
+        /* Additional Padding */
+        .dashboard-column:first-child {
+            padding-right: 2rem;
+        }
+    </style>
     <script type="module" src="static/index.js"></script>
 </head>
 
-<body style="font-size: 0.9rem;">
-    <div class="container">
-        <div class="header py-3">
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
-                <h1 class="h3">Nutrition Dashboard</h1>
-                <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center mt-3 mt-md-0">
-                    {% for nutrient_group in nutrient_groups %}
-                    <!-- Dropdown Selector -->
-                    <div class="dropdown mb-3 mb-md-0 me-md-3">
-                        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdown-{{ nutrient_group.id }}"
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            Select {{ nutrient_group.name }}
-                        </button>
-                        <ul class="dropdown-menu" aria-labelledby="dropdown-{{ nutrient_group.id }}" style="font-size: 0.85rem;">
-                            {% for nutrient in nutrient_group.nutrients %}
-                            <li>
-                                <div class="form-check ms-3">
-                                    <input class="form-check-input nutrient-checkbox" type="checkbox" value="{{ nutrient.id }}"
-                                        id="nutrient-checkbox-{{ nutrient.id }}" checked>
-                                    <label class="form-check-label" for="nutrient-checkbox-{{ nutrient.id }}">
-                                        {{ nutrient.name }}
-                                    </label>
-                                </div>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
+<body>
+    <header>
+        <h1>Nutrition Dashboard</h1>
+        <div class="selectors">
+            {% for nutrient_group in nutrient_groups %}
+            <details>
+                <summary>Select {{ nutrient_group.name }}</summary>
+                <ul>
+                    {% for nutrient in nutrient_group.nutrients %}
+                    <li>
+                        <label>
+                            <input type="checkbox" class="nutrient-checkbox" value="{{ nutrient.id }}"
+                                id="nutrient-checkbox-{{ nutrient.id }}" checked>
+                            {{ nutrient.name }}
+                        </label>
+                    </li>
                     {% endfor %}
-                    <!-- Currency Selector -->
-                    <div class="mb-3 mb-md-0">
-                        <select id="currency" class="form-select" data-optimization="currency">
-                            {% for currency in currencies %}
-                            <option value="{{ currency }}">{{ currency }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-            </div>
+                </ul>
+            </details>
+            {% endfor %}
+
+            <select id="currency" data-optimization="currency">
+                {% for currency in currencies %}
+                <option value="{{ currency }}">{{ currency }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </header>
+
+    <div class="dashboard-content">
+        <div class="dashboard-column">
+            <h2>Nutrient Targets</h2>
+            <p>Adjust your nutrient targets to optimize your diet.</p>
+            <link rel="stylesheet" href="static/sliders.css">
+            <table>
+                <colgroup>
+                    <col style="width: 25%;">
+                    <col style="width: 75%;">
+                </colgroup>
+                <tbody>
+
+                    {% for slider in sliders %}
+                    <tr id="slider-row-{{ slider.id }}">
+                        <td>
+                            {{ slider.name }} ({{ slider.unit }})
+                        </td>
+                        <td>
+                            <div id="{{ slider.id }}" class="slider-container" data-min="{{ slider.min }}"
+                                data-lower="{{ slider.lower }}" data-max="{{ slider.max }}" data-upper="{{ slider.upper }}"
+                                data-optimization="slider">
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
 
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h4 class="h5">Nutrient Targets</h4>
-                        <p class="text-muted mb-0">Adjust your nutrient targets to optimize your diet.</p>
-                    </div>
-                    <div class="card-body p-0" style="overflow-y: auto; max-height: 77vh;">
-                        <link rel="stylesheet" href="static/sliders.css">
-                        <table class="table table-hover table-sm">
-                            <tbody>
-                                {% for slider in sliders %}
-                                <tr id="slider-row-{{ slider.id }}">
-                                    <td class="align-middle text-start" style="width: 110px; font-size: 12px">
-                                        {{ slider.name }} ({{ slider.unit }})
-                                    </td>
-                                    <td class="ps-3 pe-3">
-                                        <div id="{{ slider.id }}" class="slider-container p-0" style="height: 60px;"
-                                            data-min="{{ slider.min }}" data-lower="{{ slider.lower }}"
-                                            data-max="{{ slider.max }}" data-upper="{{ slider.upper }}"
-                                            data-optimization="slider">
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h4 class="h5">Optimized Meal</h4>
-                        <p class="text-muted mb-0">The recommended food items and quantities to meet your nutrient
-                            targets.</p>
-                    </div>
-                    <div class="card-body p-0" style="overflow-y: auto; max-height: 77vh;" id="result">
-                    </div>
-                </div>
-            </div>
+        <div class="dashboard-column">
+            <h2>Optimized Meal</h2>
+            <p>The recommended food items and quantities to meet your nutrient targets.</p>
+            <div id="result"></div>
         </div>
     </div>
-
 </body>
 
 </html>
