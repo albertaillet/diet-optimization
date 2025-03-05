@@ -279,4 +279,4 @@ with (DATA_DIR / "recommendations_nnr2023.csv").open("r") as file:
 app = create_app(con, macro_recommendations, micro_recommendations, nutrient_map)
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True, host="localhost", port=8000)
