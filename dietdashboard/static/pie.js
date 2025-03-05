@@ -6,31 +6,27 @@ export function makePie(container) {
   const fat = Number(container.dataset.fat);
   const data = [protein, carbohydrate, fat];
   const labels = ['Protein', 'Carbs', 'Fat'];
-  console.log(data);
-
+  const totalCalories = protein * 4 + carbohydrate * 4 + fat * 9;
   // Set dimensions
   const width = container.clientWidth;
   const height = 150;
-  const radius = Math.min(width, height) / 2.5;
+  const radius = Math.min(width, height) / 2.8;
 
-  // Create color scale
   const color = d3.scaleOrdinal()
     .domain(data)
-    .range(["#66c2a5", "#fc8d62", "#8da0cb"]);
+    .range([d3.schemeTableau10[2], d3.schemeTableau10[4], d3.schemeTableau10[8]]);
 
   // Create pie layout
   const pie = d3.pie()
-    .sort(null);
+    .padAngle(0.02);
 
   // Create arc generators
   const arc = d3.arc()
-    .innerRadius(0)
-    .outerRadius(radius);
+    .innerRadius(radius * 0.4) // Larger inner circle to fit text
+    .outerRadius(radius)
+    .cornerRadius(0); // No rounded corners
 
-  // Create a separate arc for label positioning
-  const labelArc = d3.arc()
-    .innerRadius(radius * 0.7)
-    .outerRadius(radius * 1.1);
+  d3.select(container).selectAll("*").remove();
 
   // Create SVG
   const svg = d3.select(container)
@@ -43,40 +39,49 @@ export function makePie(container) {
   // Create pie slices with data
   const arcs = pie(data);
 
-  // Add arcs
-  svg.selectAll('path')
+  // Add arcs with hover effects but no animation
+  const paths = svg.selectAll('path')
     .data(arcs)
     .enter()
     .append('path')
     .attr('d', arc)
-    .attr('fill', (d, i) => color(i));
+    .attr('fill', (d, i) => color(i))
+    .style('cursor', 'pointer')
+    .on('mouseover', function(event, d) {
+      d3.select(this)
+        .attr('opacity', 0.85);
+    })
+    .on('mouseout', function(event, d) {
+      d3.select(this)
+        .attr('opacity', 1);
+    });
 
-  // Add labels for each segment
-  svg.selectAll('text.label')
+  svg.selectAll('text.value-label')
     .data(arcs)
     .enter()
     .append('text')
-    .attr('class', 'label')
-    .attr('transform', d => {
-      // Position labels slightly outside the arc
-      const pos = labelArc.centroid(d);
-      // Move labels further out for better positioning
-      const x = pos[0] * 1.3;
-      const y = pos[1] * 1.3;
-      return `translate(${x}, ${y})`;
-    })
+    .attr('class', 'value-label')
+    .attr('transform', d => `translate(${arc.centroid(d)})`)
     .attr('dy', '.35em')
-    .attr('text-anchor', d => {
-      // Align text based on position around the circle
-      const midangle = d.startAngle + (d.endAngle - d.startAngle) / 2;
-      return (midangle < Math.PI ? 'start' : 'end');
-    })
-    .style('font-size', '10px')
-    .text((d, i) => labels[i]);
-}
+    .attr('text-anchor', 'middle')
+    .style('font-size', '11px')
+    .style('font-weight', '500')
+    .style('fill', 'white')
+    .style('pointer-events', 'none')
+    .text((d, i) => `${labels[i]}`);
 
-document.addEventListener('DOMContentLoaded', () => {
-  const container = document.getElementById('pie');
-  console.log(container);
-  makePie(container);
-});
+  svg.append('text')
+    .attr('text-anchor', 'middle')
+    .attr('dy', '0em')
+    .style('font-size', '12px')
+    .style('font-weight', 'bold')
+    .style('fill', '#333')
+    .text(`${Math.round(totalCalories)}`);
+
+  svg.append('text')
+    .attr('text-anchor', 'middle')
+    .attr('dy', '1.2em')
+    .style('font-size', '10px')
+    .style('fill', '#666')
+    .text('kcal');
+}

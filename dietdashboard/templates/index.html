@@ -15,15 +15,15 @@
         html,
         body {
             height: 100%;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            font-size: 13px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 14px;
         }
 
         body {
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            background-color: #cdc8a4;
+            background-color: #f8f7f2;
             color: #2e3d2d;
         }
 
@@ -31,13 +31,93 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1rem;
-            border-bottom: 1px solid #97a97c;
+            padding: 0.7rem;
+            background-color: #2c6e31;
+            box-shadow: none;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #2e3d2d;
+        }
+
+        h1 {
+            font-size: 1.3rem;
+            color: white;
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            color: #2c6e31;
+        }
+
+        h3 {
+            font-size: 1rem;
+            color: #3d5c37;
         }
 
         .selectors {
             display: flex;
-            gap: 1rem;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .selectors details {
+            position: relative;
+        }
+
+        .selectors details summary {
+            padding: 0.3rem 0.5rem;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            cursor: pointer;
+            color: #2c6e31;
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        .selectors details summary:hover {
+            background-color: #f7f7f7;
+        }
+
+        .selectors details ul {
+            position: absolute;
+            right: 0;
+            background-color: white;
+            list-style: none;
+            padding: 0.3rem;
+            border-radius: 3px;
+            border: 1px solid #ddd;
+            z-index: 100;
+            width: 200px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 0.85rem;
+        }
+
+        .selectors details ul li {
+            padding: 0.2rem 0;
+        }
+
+        #currency {
+            padding: 0.3rem 0.5rem;
+            border-radius: 3px;
+            border: 1px solid #ddd;
+            background-color: white;
+            color: #2c6e31;
+            font-weight: 500;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        #currency:hover,
+        #currency:focus {
+            background-color: #f7f7f7;
+            outline: none;
         }
 
         .dashboard-content {
@@ -48,10 +128,10 @@
 
         .dashboard-column {
             width: 50%;
-            padding: 1rem;
+            padding: 0.8rem;
             overflow-y: auto;
-            border-right: 1px solid #97a97c;
-            background-color: #d8d4b8;
+            border-right: 1px solid #e0e0e0;
+            background-color: white;
         }
 
         .dashboard-column:last-child {
@@ -61,30 +141,126 @@
         table {
             width: 100%;
             border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        thead {
+            background-color: #f5f5f5;
+        }
+
+        table th {
+            padding: 0.5rem;
+            text-align: left;
+            border-bottom: 1px solid #ccc;
+            color: #2c6e31;
+            font-weight: 600;
         }
 
         table td {
-            padding: 0.75rem 0.5rem;
+            padding: 0.5rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        table tr:hover {
+            background-color: #f2f7f2;
+            /* Slightly green tint for hover */
         }
 
         .slider-container {
             width: 100%;
+            margin-bottom: 0.5rem;
         }
 
-        @media (max-width: 600px) {
+        a {
+            color: #3d5c37 !important;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        a:hover {
+            color: #5b8c51 !important;
+            text-decoration: underline;
+        }
+
+        /* Price card and highlight - minimal */
+        .price-card {
+            margin-bottom: 0.5rem;
+        }
+
+        .price-card h3 {
+            margin: 0;
+        }
+
+        .price-highlight {
+            font-weight: 600;
+            color: #2c6e31;
+        }
+
+        .macro-distribution {
+            background-color: white;
+            margin-bottom: 1rem;
+            max-height: 160px;
+            overflow: hidden;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            margin-bottom: 1rem;
+            border: none;
+            box-shadow: none;
+        }
+
+        .table-responsive table {
+            margin-top: 0;
+        }
+
+        @media (max-width: 768px) {
             .dashboard-content {
                 flex-direction: column;
             }
 
             .dashboard-column {
                 width: 100%;
-                height: 50%;
+                height: auto;
+                min-height: 50vh;
                 border-right: none;
-                border-bottom: 1px solid #eee;
+                border-bottom: 1px solid #e0e0e0;
+                padding: 1rem;
             }
 
             .dashboard-column:last-child {
                 border-bottom: none;
+            }
+
+            .selectors {
+                flex-direction: column;
+                align-items: stretch;
+                margin-top: 1rem;
+            }
+
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 1rem;
+            }
+
+            .slider-container {
+                margin-bottom: 2rem;
+            }
+
+            .macro-distribution {
+                max-height: none;
+                height: auto;
+            }
+
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            h1 {
+                margin-bottom: 1rem;
             }
         }
 
@@ -93,6 +269,7 @@
             padding-right: 2rem;
         }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script type="module" src="static/index.js"></script>
 </head>
 
@@ -128,21 +305,20 @@
     <div class="dashboard-content">
         <div class="dashboard-column">
             <h2>Nutrient Targets</h2>
-            <p>Adjust your nutrient targets to optimize your diet.</p>
+            <p style="margin: 0 0 0.5rem; font-size: 0.85rem;">Adjust your nutrient targets to optimize your diet.</p>
             <link rel="stylesheet" href="static/sliders.css">
-            <table>
+            <table style="border-spacing: 0;">
                 <colgroup>
-                    <col style="width: 25%;">
-                    <col style="width: 75%;">
+                    <col style="width: 20%;">
+                    <col style="width: 80%;">
                 </colgroup>
                 <tbody>
-
                     {% for slider in sliders %}
-                    <tr id="slider-row-{{ slider.id }}">
-                        <td>
+                    <tr id="slider-row-{{ slider.id }}" style="vertical-align: middle; line-height: 1.2;">
+                        <td style="padding: 0.2rem 0.2rem 0.2rem 0; font-size: 0.85rem;">
                             {{ slider.name }} ({{ slider.unit }})
                         </td>
-                        <td>
+                        <td style="padding: 0.2rem 0;">
                             <div id="{{ slider.id }}" class="slider-container" data-min="{{ slider.min }}"
                                 data-lower="{{ slider.lower }}" data-max="{{ slider.max }}" data-upper="{{ slider.upper }}"
                                 data-optimization="slider">

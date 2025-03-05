@@ -1,32 +1,37 @@
 .brush .selection {
-    fill: #7b904b;
+    fill: #2c6e31;
     fill-opacity: 0.8;
     stroke: none;
 }
 
 .brush .handle--custom circle {
-    fill: #7b904b;
-    fill-opacity: 0.9;
-    stroke: #000;
-    stroke-width: 2px;
+    fill: #2c6e31;
+    fill-opacity: 1;
+    stroke: black;
+    stroke-width: 1px;
 }
 
-.axis text {
-    font-size: 10px;
+.axis line {
+    stroke: #e0e0e0;
 }
 
 /* Tooltip styling */
 .segment-label {
-    font: 12px sans-serif;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
     text-anchor: middle;
-    fill: #000;
+    fill: #333;
+    font-weight: 500;
     pointer-events: none;
     opacity: 0;
-    /* Hidden by default */
+    transition: opacity 0.2s ease;
 }
 
-.segment:hover+.segment-label,
+.segment:hover {
+    opacity: 0.8;
+}
+
+.segment:hover + .segment-label,
 .segment-label:hover {
     opacity: 1;
-    /* Show label on hover */
 }
