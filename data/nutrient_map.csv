@@ -1,8 +1,8 @@
 id,name,ciqual_const_code,ciqual_const_name_eng,ciqual_const_name_fr,ciqual_unit,calnut_const_code,calnut_const_name,calnut_unit,off_id,count,template,nnr2023_id,nutrient_type,disabled,comments
 energy_kj,Energy,327,"Energy, Regulation EU No 1169/2011 (kJ/100g)","Energie, Règlement UE N° 1169/2011 (kJ/100 g)",kj,,,,,,,,macro,TRUE,
 energy_kcal,Energy,328,"Energy, Regulation EU No 1169/2011 (kcal/100g)","Energie, Règlement UE N° 1169/2011 (kcal/100 g)",kcal,,,,,,,,macro,TRUE,
-energy_fibre_kj,"Energy",332,"Energy, N x Jones' factor, with fibres (kJ/100g)","Energie, N x facteur Jones, avec fibres  (kJ/100 g)",kj,332,nrj,kj,energy-kj,362551,TRUE,,macro,TRUE,
-energy_fibre_kcal,"Energy",333,"Energy, N x Jones' factor, with fibres (kcal/100g)","Energie, N x facteur Jones, avec fibres  (kcal/100 g)",kcal,333,nrj,kcal,energy-kcal,2670928,TRUE,,macro,,
+energy_fibre_kj,Energy,332,"Energy, N x Jones' factor, with fibres (kJ/100g)","Energie, N x facteur Jones, avec fibres  (kJ/100 g)",kj,332,nrj,kj,energy-kj,362551,TRUE,,macro,TRUE,
+energy_fibre_kcal,Energy,333,"Energy, N x Jones' factor, with fibres (kcal/100g)","Energie, N x facteur Jones, avec fibres  (kcal/100 g)",kcal,333,nrj,kcal,energy-kcal,2670928,TRUE,,macro,,
 water,Water,400,Water (g/100g),Eau (g/100 g),g,400,eau,g,,,,,macro,,
 protein,Protein,25000,Protein (g/100g),"Protéines, N x facteur de Jones (g/100 g)",g,25000,proteines,g,proteins,2692193,TRUE,,macro,,
 protein_crude,"Protein, crude, N x 6.25",25003,"Protein, crude, N x 6.25 (g/100g)","Protéines, N x 6.25 (g/100 g)",g,,,,,,,,macro,TRUE,
