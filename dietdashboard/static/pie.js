@@ -1,13 +1,6 @@
 import * as d3 from './d3.js';
 
-export function makePie(container) {
-  const protein = Number(container.dataset.protein);
-  const carbohydrate = Number(container.dataset.carbohydrate);
-  const fat = Number(container.dataset.fat);
-  const data = [protein, carbohydrate, fat];
-  const labels = ['Protein', 'Carbs', 'Fat'];
-  const totalCalories = protein * 4 + carbohydrate * 4 + fat * 9;
-  // Set dimensions
+export function makePie(container, data, labels, totalCalories) {
   const width = container.clientWidth;
   const height = 150;
   const radius = Math.min(width, height) / 2.8;
