@@ -1,7 +1,4 @@
-"""This script validates the csv files data, and is run using pre-commit before they are committed.
-
-Usage of script python validate_staged_csv_data.py <paths to csv files to check>
-"""
+"""This script validates the csv files data, and is run using pre-commit before they are committed."""
 
 import csv
 import sys

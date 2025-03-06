@@ -23,11 +23,13 @@ repos:
     hooks:
     - id: validate-staged-csv-data
       name: validate-staged-csv-data
-      entry: python scripts/validate_staged_csv_data.py
+      entry: uv run --no-project scripts/validate_staged_csv_data.py
       language: system
       types: [ csv ]
-  - repo: https://github.com/RobertCraigie/pyright-python
-    rev: v1.1.376
+  - repo: local
     hooks:
     - id: pyright
+      name: pyright
       language: system
+      entry: uv run pyright
+      types_or: [ python, pyi ]

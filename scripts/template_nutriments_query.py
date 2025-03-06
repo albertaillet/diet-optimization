@@ -1,7 +1,4 @@
-"""This script templates a query to get the nutrient values from the products table.
-
-Usage of script DATA_DIR=<path to data directory> python template_nutriments_query.py
-"""
+"""This script templates a query to get the nutrient values from the products table."""
 
 import csv
 import os

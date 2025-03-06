@@ -1,8 +1,5 @@
 """This script takes an XML file as input and converts it to a CSV file and saves it to the provided path
-NOTE: Currently this script just removes the < characters if they are part of the text due to (recover=True)
-
-Usage of script python xml_to_csv.py input.xml output.csv
-"""
+NOTE: Currently this script just removes the < characters if they are part of the text due to (recover=True)"""
 
 import csv
 import sys
@@ -24,7 +21,7 @@ def main(input_file: Path, output_file: Path):
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
-        exit("Usage: python xml_to_csv.py input.xml output.csv")
+        exit("Usage: xml_to_csv.py input.xml output.csv")
 
     input_file = Path(sys.argv[1])
     if not input_file.exists():

@@ -3,9 +3,9 @@ name = "diet-optimization"
 version = "0.0.0"
 readme = "README.md"
 requires-python = "~=3.11"
-dependencies = ["scipy", "flask", "certifi", "duckdb", "lxml"]
+dependencies = ["scipy", "flask", "certifi", "duckdb"]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = ["pre-commit", "pyright"]
 
 [build-system]

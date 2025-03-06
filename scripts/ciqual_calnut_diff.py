@@ -1,7 +1,4 @@
-"""This script compares the ALIM_CODE values between the ciqual and calnut CSV files.
-
-Usage of script DATA_DIR=<path to data directory> python ciqual_calnut_diff.py
-"""
+"""This script compares the ALIM_CODE values between the ciqual and calnut CSV files."""
 
 import csv
 import os

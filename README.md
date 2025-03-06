@@ -15,8 +15,16 @@ Other command line requirements are:
 -   `make` for running the commands in the `Makefile`.
 -   `wget` for downloading the data.
 -   `unzip` for extracting the data.
+-   `uv` for running python scripts.
 -   `esbuild` for building the frontend.
 -   `duckdb` for the duckdb CLI.
+
+On Ubuntu, you can install some of these with:
+
+```bash
+sudo apt install make wget unzip
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
 
 ## Usage
 
