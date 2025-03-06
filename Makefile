@@ -102,7 +102,7 @@ opt:
 	DATA_DIR=$(DATA_DIR) ./dietdashboard/app.py
 
 run-gunicorn:
-	DATA_DIR=$(DATA_DIR) nohup gunicorn -w 4 -b 0.0.0.0:8000 dietdashboard.app:app >> gunicorn.log 2>&1 &
+	DATA_DIR=$(DATA_DIR) nohup .venv/bin/gunicorn -w 4 -b 0.0.0.0:8000 dietdashboard.app:app >> gunicorn.log 2>&1 &
 
 list-gunicorn:
 	pgrep -af "dietdashboard.app:app"
