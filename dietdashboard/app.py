@@ -1,3 +1,4 @@
+#!/usr/bin/env -S uv run
 """This script combines the different summarized csv files and creates a dashboard to interact
 with linear optimization to get the optimal quantities of food products.
 

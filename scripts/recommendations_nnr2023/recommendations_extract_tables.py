@@ -1,3 +1,7 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# dependencies = [ "bs4" ]
+# ///
 """This script extracts the html tables in the fetched webpage with the Nordic Nutrition Recommendations 2023 to csv."""
 
 import csv

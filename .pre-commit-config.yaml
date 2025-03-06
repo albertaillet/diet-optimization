@@ -23,7 +23,7 @@ repos:
     hooks:
     - id: validate-staged-csv-data
       name: validate-staged-csv-data
-      entry: uv run --no-project scripts/validate_staged_csv_data.py
+      entry: ./scripts/validate_staged_csv_data.py
       language: system
       types: [ csv ]
   - repo: local

@@ -1,3 +1,4 @@
+#!/usr/bin/env -S uv run
 """This script add updated counts to the nutrient_map.csv."""
 
 import csv

@@ -1,3 +1,6 @@
+#!/usr/bin/env -S uv run
+"""This script creates a subset of the data and prints the intermediate tables for debugging."""
+
 import re
 from pathlib import Path
 

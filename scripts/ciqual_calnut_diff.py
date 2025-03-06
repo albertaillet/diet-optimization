@@ -1,3 +1,4 @@
+#!/usr/bin/env -S uv run --script
 """This script compares the ALIM_CODE values between the ciqual and calnut CSV files."""
 
 import csv

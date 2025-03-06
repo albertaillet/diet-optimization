@@ -1,3 +1,4 @@
+#!/usr/bin/env -S uv run --script
 """This script summarizes the extracted csv tables from the Nordic Nutrition Recommendations 2023.
 NOTE: This script is unfinished in its current form."""
 

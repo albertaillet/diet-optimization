@@ -1,3 +1,4 @@
+#!/usr/bin/env -S uv run --script
 """This script templates a query to get the nutrient values from the products table."""
 
 import csv

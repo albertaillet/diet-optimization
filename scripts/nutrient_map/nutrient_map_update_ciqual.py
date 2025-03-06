@@ -1,3 +1,4 @@
+#!/usr/bin/env -S uv run --script
 """This script adds all the ciqual const information to the nutrient_map.csv."""
 
 import csv

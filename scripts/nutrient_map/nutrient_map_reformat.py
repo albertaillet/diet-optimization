@@ -1,3 +1,4 @@
+#!/usr/bin/env -S uv run --script
 """This script reformats the fetched nutrient_map_recipe_estimator."""
 
 import csv

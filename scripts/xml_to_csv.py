@@ -1,3 +1,7 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# dependencies = [ "lxml" ]
+# ///
 """This script takes an XML file as input and converts it to a CSV file and saves it to the provided path
 NOTE: Currently this script just removes the < characters if they are part of the text due to (recover=True)"""
 

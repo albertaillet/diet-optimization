@@ -1,3 +1,4 @@
+#!/usr/bin/env -S uv run --script
 """This script validates the csv files data, and is run using pre-commit before they are committed."""
 
 import csv
