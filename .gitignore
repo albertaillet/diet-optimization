@@ -43,3 +43,7 @@ data/*.db
 
 # Claude generated files
 CLAUDE.md
+
+# Gunicorn logs
+gunicorn.log
+gunicorn.pid
