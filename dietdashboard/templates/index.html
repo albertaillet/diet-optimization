@@ -316,6 +316,125 @@
         .dashboard-column:first-child {
             padding-right: 2rem;
         }
+
+        .range-edit-btn {
+            padding: 3px 8px;
+            background-color: #f0f4f0;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            cursor: pointer;
+            color: #2c6e31;
+            font-size: 0.75rem;
+            display: block;
+            margin: 0.5rem auto 0;
+        }
+
+        .range-edit-btn:hover {
+            background-color: #e8f0e8;
+        }
+
+        .nutrient-name-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .nutrient-name-container span {
+            margin-bottom: 0.4rem;
+            font-weight: 500;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: #f8f7f2;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            border-radius: 5px;
+            width: 300px;
+            max-width: 80%;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+        }
+
+        .close-modal {
+            color: #aaa;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-modal:hover {
+            color: #333;
+        }
+
+        .modal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-weight: 500;
+            color: #2c6e31;
+        }
+
+        .form-group input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .modal-btn {
+            padding: 6px 12px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .cancel-btn {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        .save-btn {
+            background-color: #2c6e31;
+            color: white;
+        }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script type="module" src="static/index.js"></script>
@@ -368,16 +487,22 @@
             <link rel="stylesheet" href="static/sliders.css">
             <table style="border-spacing: 0;">
                 <colgroup>
-                    <col style="width: 20%;">
-                    <col style="width: 80%;">
+                    <col style="width: 15%;">
+                    <col style="width: 85%;">
                 </colgroup>
                 <tbody>
                     {% for slider in sliders %}
                     <tr id="slider-row-{{ slider.id }}" style="vertical-align: middle; line-height: 1.2;">
-                        <td style="padding: 0.2rem 0.2rem 0.2rem 0; font-size: 0.85rem;">
-                            {{ slider.name }} ({{ slider.unit }})
+                        <td style="padding: 0 0 0 0; font-size: 0.85rem; text-align: center;">
+                            <div class="nutrient-name-container">
+                                <span>{{ slider.name }} ({{ slider.unit }})</span>
+                                <button class="range-edit-btn" data-slider-id="{{ slider.id }}"
+                                    data-slider-name="{{ slider.name }}" data-slider-unit="{{ slider.unit }}">
+                                    Edit Range
+                                </button>
+                            </div>
                         </td>
-                        <td style="padding: 0.2rem 0;">
+                        <td style="padding: 0 0 0 0;">
                             <div id="{{ slider.id }}" class="slider-container" data-min="{{ slider.min }}"
                                 data-lower="{{ slider.lower }}" data-max="{{ slider.max }}" data-upper="{{ slider.upper }}"
                                 data-optimization="slider">
@@ -393,6 +518,31 @@
             <h2>Optimized Meal</h2>
             <p>The recommended food items and quantities to meet your nutrient targets.</p>
             <div id="result"></div>
+        </div>
+    </div>
+
+    <!-- Modal for editing slider ranges -->
+    <div id="rangeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Edit Range</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <form id="rangeForm" class="modal-form">
+                <input type="hidden" id="currentSliderId">
+                <div class="form-group">
+                    <label for="minValue">Minimum Value:</label>
+                    <input type="number" id="minValue" min="0" step="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="maxValue">Maximum Value:</label>
+                    <input type="number" id="maxValue" min="0" step="1" required>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="modal-btn cancel-btn" id="cancelBtn">Cancel</button>
+                    <button type="submit" class="modal-btn save-btn">Save Changes</button>
+                </div>
+            </form>
         </div>
     </div>
 </body>

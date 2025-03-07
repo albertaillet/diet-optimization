@@ -3,7 +3,6 @@
 
 TODO: Advanced filter: location, vegan, vegetarian, indiviudal off categories
 TODO: Include other objectives with tunable hyperparameters (t.ex. minimize environmental impact, added sugar, saturated fat).
-TODO: In frontend possibility to change max and min value of sliders.
 TODO: In frontend button to download the results as a CSV file.
 TODO: Log all requests and responses in a database.
 TODO: Benchmark different LP solvers performance.
