@@ -6,7 +6,6 @@ TODO: Include other objectives with tunable hyperparameters (t.ex. minimize envi
 TODO: In frontend possibility to change max and min value of sliders.
 TODO: In frontend button to download the results as a CSV file.
 TODO: Log all requests and responses in a database.
-TODO: Combine both macro and micro nutrient_groups in the same dropdown.
 TODO: Benchmark different LP solvers performance.
 """
 
@@ -103,14 +102,11 @@ def create_app(
 
     nutrient_ids = [nutrient["id"] for nutrient in nutrient_map]
 
-    macronutrients = [row["id"] for row in macro_recommendations]
-    micronutrients = [row["id"] for row in micro_recommendations]
-
     @app.route("/")
     def index():
         nutrient_groups = [
-            {"name": "Macronutrients", "id": "macro", "nutrients": macronutrients},
-            {"name": "Micronutrients", "id": "micro", "nutrients": micronutrients},
+            {"name": "Macronutrients", "id": "macro", "nutrients": macro_recommendations},
+            {"name": "Micronutrients", "id": "micro", "nutrients": micro_recommendations},
         ]
         sliders = [create_rangeslider(rec) for rec in [*macro_recommendations, *micro_recommendations]]
         return render_template(
@@ -133,6 +129,10 @@ def create_app(
                 continue
             chosen_bounds[nutrient_id] = data[nutrient_id]
 
+        # If no nutrients selected, return empty response
+        if not chosen_bounds:
+            return ""
+
         start = perf_counter()
         products_and_prices = query(con, location_like="Toulouse")  # TODO: this should be a parameter
         print(f"Query time: {perf_counter() - start:.2f}s")
@@ -140,6 +140,10 @@ def create_app(
         start = perf_counter()
         A_nutrients, lb, ub, c_costs = get_arrays(chosen_bounds, products_and_prices, currency)
         print(f"Array conversion time: {perf_counter() - start:.2f}s")
+
+        # Check if we have valid nutrient data
+        if A_nutrients.size == 0:
+            return ""
 
         print(f"Number of products: {A_nutrients.shape[1]}")
         print(f"Number of nutrients: {A_nutrients.shape[0]}")

@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     handleOptimitzationInputs();
 
+    // Handle individual nutrient checkboxes
     document.querySelectorAll('.nutrient-checkbox').forEach(checkbox => {
         const sliderRow = document.getElementById(`slider-row-${checkbox.value}`);
 
@@ -51,5 +52,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Initialize visibility based on initial checkbox state
         toggleSliderRowVisibility(sliderRow, checkbox.checked);
+    });
+
+    // Handle "Select All" buttons
+    document.querySelectorAll('.select-all-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const category = button.dataset.category;
+            document.querySelectorAll(`.nutrient-checkbox[data-category="${category}"]`).forEach(checkbox => {
+                checkbox.checked = true;
+                const sliderRow = document.getElementById(`slider-row-${checkbox.value}`);
+                toggleSliderRowVisibility(sliderRow, true);
+            });
+            handleOptimitzationInputs();
+        });
+    });
+
+    // Handle "Deselect All" buttons
+    document.querySelectorAll('.deselect-all-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const category = button.dataset.category;
+            document.querySelectorAll(`.nutrient-checkbox[data-category="${category}"]`).forEach(checkbox => {
+                checkbox.checked = false;
+                const sliderRow = document.getElementById(`slider-row-${checkbox.value}`);
+                toggleSliderRowVisibility(sliderRow, false);
+            });
+            handleOptimitzationInputs();
+        });
     });
 });

@@ -104,6 +104,56 @@
             padding: 0.2rem 0;
         }
 
+        .selectors details ul li.nutrient-group {
+            border-top: 1px solid #eee;
+            padding-top: 0.5rem;
+            margin-top: 0.3rem;
+        }
+
+        .selectors details ul li.nutrient-group:first-child {
+            border-top: none;
+            margin-top: 0;
+        }
+
+        .nutrient-group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.3rem;
+        }
+
+        .selectors details ul li.nutrient-group strong {
+            display: block;
+            color: #2c6e31;
+        }
+
+        .nutrient-group-actions {
+            display: flex;
+            gap: 0.3rem;
+        }
+
+        .nutrient-group-actions button {
+            font-size: 0.7rem;
+            padding: 0.1rem 0.3rem;
+            background-color: #f0f4f0;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            cursor: pointer;
+            color: #2c6e31;
+        }
+
+        .nutrient-group-actions button:hover {
+            background-color: #e8f0e8;
+        }
+
+        .selectors details ul li.nutrient-group ul.nutrient-list {
+            position: static;
+            border: none;
+            padding: 0 0 0 0.5rem;
+            max-height: none;
+            width: auto;
+        }
+
         #currency {
             padding: 0.3rem 0.5rem;
             border-radius: 3px;
@@ -275,22 +325,33 @@
     <header>
         <h1>Nutrition Dashboard</h1>
         <div class="selectors">
-            {% for nutrient_group in nutrient_groups %}
             <details>
-                <summary>Select {{ nutrient_group.name }}</summary>
+                <summary>Select Nutrients</summary>
                 <ul>
-                    {% for nutrient in nutrient_group.nutrients %}
-                    <li>
-                        <label>
-                            <input type="checkbox" class="nutrient-checkbox" value="{{ nutrient.id }}"
-                                id="nutrient-checkbox-{{ nutrient.id }}" checked>
-                            {{ nutrient.name }}
-                        </label>
+                    {% for nutrient_group in nutrient_groups %}
+                    <li class="nutrient-group">
+                        <div class="nutrient-group-header">
+                            <strong>{{ nutrient_group.name }}</strong>
+                            <div class="nutrient-group-actions">
+                                <button class="select-all-btn" data-category="{{ nutrient_group.id }}">Select All</button>
+                                <button class="deselect-all-btn" data-category="{{ nutrient_group.id }}">Deselect All</button>
+                            </div>
+                        </div>
+                        <ul class="nutrient-list" data-category="{{ nutrient_group.id }}">
+                            {% for nutrient in nutrient_group.nutrients %}
+                            <li>
+                                <label>
+                                    <input type="checkbox" class="nutrient-checkbox" value="{{ nutrient.id }}"
+                                        id="nutrient-checkbox-{{ nutrient.id }}" data-category="{{ nutrient_group.id }}" checked>
+                                    {{ nutrient.name }}
+                                </label>
+                            </li>
+                            {% endfor %}
+                        </ul>
                     </li>
                     {% endfor %}
                 </ul>
             </details>
-            {% endfor %}
 
             <select id="currency" data-optimization="currency">
                 {% for currency in currencies %}
