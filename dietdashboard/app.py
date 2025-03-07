@@ -1,15 +1,13 @@
 #!/usr/bin/env -S uv run
-"""This script combines the different summarized csv files and creates a dashboard to interact
-with linear optimization to get the optimal quantities of food products.
+"""This script creates a flask app for optimizing a diet with linear optimization to get the optimal quantities of food products.
 
-TODO: User authentication and save optimization input.
 TODO: Advanced filter: location, vegan, vegetarian, indiviudal off categories
-
-TODO: Able to save preferences in DB and User authenticaiton.
-
-TODO: Include other objectives than price minimization with tunable hyperparameters.
-For example being able to minimize enivronmental impact, added sugar, staruated fat.
-TODO: Choose to include maximum values even when they are not available in recommendations.
+TODO: Include other objectives with tunable hyperparameters (t.ex. minimize environmental impact, added sugar, saturated fat).
+TODO: In frontend possibility to change max and min value of sliders.
+TODO: In frontend button to download the results as a CSV file.
+TODO: Log all requests and responses in a database.
+TODO: Combine both macro and micro nutrient_groups in the same dropdown.
+TODO: Benchmark different LP solvers performance.
 """
 
 import csv
@@ -46,13 +44,6 @@ def query_list_of_dicts(con: duckdb.DuckDBPyConnection, query: str, **kwargs) ->
 def get_arrays(
     bounds: dict[str, list[float]], products_and_prices: dict[str, np.ndarray], currency: str
 ) -> tuple[np.ndarray, ...]:
-    # Check that the upper and lower bounds nutrients use the same units as the product nutrients.
-    # for nutrient in bounds:
-    #     product_unique_units = set(products_and_prices[nutrient + "_unit"])
-    #     recommendation_unit = bounds[nutrient]["unit"]
-    #     assert product_unique_units == {recommendation_unit}, (nutrient, product_unique_units, recommendation_unit)
-    # TODO: concatentation could be used for A and c is already a numpy array.
-
     # Nutrients of each product
     A_nutrients = np.array([products_and_prices[nutrient_id + "_value"] for nutrient_id in bounds], dtype=np.float32)
 
@@ -91,11 +82,10 @@ def create_rangeslider(data: dict[str, str]) -> dict[str, float | str]:
     min_value = 0
     max_value = 4 * lower if upper is None else math.ceil(upper + lower - min_value)
     max_value = min_value + 100 if max_value == min_value else max_value
-    unit = data["rec_unit"]
     return {
         "name": data["name"],
         "id": data["id"],
-        "unit": unit,
+        "unit": data["rec_unit"],
         "min": min_value,
         "max": max_value,
         "lower": lower,
