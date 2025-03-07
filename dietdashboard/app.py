@@ -34,39 +34,11 @@ DEBUG_DIR = Path(__file__).parent.parent / "tmp"
 DATA_DIR = Path(os.getenv("DATA_DIR", "data"))
 OFF_USERNAME = os.getenv("OFF_USERNAME")
 POSSIBLE_CURRENCIES = ["EUR", "CHF"]
+QUERY = (Path(__file__).parent / "queries/query.sql").read_text()
 
 
-def generate_query(chosen_bounds: dict[str, list[float]]) -> str:
-    # Create the part of the SELECT statement that lists each nutrient's value.
-    nutrient_select = ", ".join([f"{nutrient_id}_value" for nutrient_id in chosen_bounds])
-    # Create filter conditions to remove rows where any chosen nutrient value is NULL.
-    nutrient_filters = " AND ".join([f"{nutrient_id}_value IS NOT NULL" for nutrient_id in chosen_bounds])
-
-    # TODO: SQL injection security
-    # https://duckdb.org/docs/sql/query_syntax/prepared_statements.html
-    return f"""
-    SELECT
-    price_id,
-    product_code,
-    product_name,
-    ciqual_code,
-    ciqual_name,
-    price_per_quantity,
-    currency,
-    price_location,
-    price_location_osm_id,
-    -- Convert price to CHF using EUR_TO_CHF = 0.96:
-    CASE WHEN currency = 'EUR' THEN price_per_quantity * 0.96 ELSE price_per_quantity END AS price_chf,
-    CASE WHEN currency = 'CHF' THEN price_per_quantity / 0.96 ELSE price_per_quantity END AS price_eur,
-    {nutrient_select}
-    FROM final_table
-    WHERE currency IN ('EUR', 'CHF')
-    AND price_per_quantity IS NOT NULL
-    AND {nutrient_filters}
-    AND price_location LIKE '%Grenoble%'
-    AND product_quantity > 0
-    LIMIT 1000
-    """
+def query(con: duckdb.DuckDBPyConnection, location_like: str) -> dict[str, np.ndarray]:
+    return con.execute(QUERY, parameters={"location_like": location_like}).fetchnumpy()
 
 
 def get_arrays(
@@ -185,7 +157,7 @@ def create_app(
             chosen_bounds[nutrient_id] = data[nutrient_id]
 
         start = perf_counter()
-        products_and_prices = con.execute(generate_query(chosen_bounds)).fetchnumpy()
+        products_and_prices = query(con, location_like="Toulouse")  # TODO: this should be a parameter
         print(f"Query time: {perf_counter() - start:.2f}s")
 
         start = perf_counter()

@@ -175,7 +175,7 @@ CREATE OR REPLACE TABLE final_table AS (
     fnt.*,
     FROM prices pr
     JOIN final_nutrient_table fnt ON pr.product_code = fnt.code
-    JOIN products p ON pr.product_code = p.code
+    JOIN products_with_ciqual_and_price p ON pr.product_code = p.code
     -- TODO: may filter out a few codes available in calnut and not in ciqual
     JOIN ciqual_alim ciq ON fnt.ciqual_food_code = ciq.alim_code
     -- final table count: 36 904

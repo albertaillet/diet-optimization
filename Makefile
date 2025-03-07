@@ -112,5 +112,8 @@ kill-gunicorn:
 
 # ---------- Create the nutrient extraction template. ----------
 
-template:
+template-nutriments:
 	DATA_DIR=$(DATA_DIR) ./scripts/template_nutriments_query.py
+
+template-main:
+	duckdb data/data.db "SELECT id FROM nutrient_map WHERE calnut_const_code IS NOT NULL" -csv -noheader | sed "s/$$/_value,/"
