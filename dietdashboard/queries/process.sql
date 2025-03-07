@@ -191,5 +191,7 @@ CREATE OR REPLACE TABLE recommendations AS (
     FROM nutrient_map nm
     LEFT JOIN recommendations_macro rec_macro ON rec_macro.id = nm.id
     LEFT JOIN recommendations_nnr2023 rec_micro ON rec_micro.nutrient = nm.nnr2023_id
-    WHERE nm.disabled IS NULL AND (rec_macro.value_males IS NOT NULL OR rec_micro.value_males IS NOT NULL)
+    WHERE nm.disabled IS NULL
+    AND (rec_macro.value_males IS NOT NULL OR rec_micro.value_males IS NOT NULL)
+    AND rec_unit = ciqual_unit
 );
