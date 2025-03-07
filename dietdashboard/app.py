@@ -92,14 +92,12 @@ def create_rangeslider(data: dict[str, str]) -> dict[str, float | str]:
     }
 
 
-def create_app(
-    con: duckdb.DuckDBPyConnection,
-    macro_recommendations: list[dict[str, str]],
-    micro_recommendations: list[dict[str, str]],
-    nutrient_map: list[dict[str, str]],
-) -> Flask:
+def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
     app = Flask(__name__)
 
+    nutrient_map = query_list_of_dicts(con, """SELECT * FROM nutrient_map WHERE disabled IS NULL""")
+    macro_recommendations = query_list_of_dicts(con, """SELECT * FROM recommendations WHERE nutrient_type = 'macro'""")
+    micro_recommendations = query_list_of_dicts(con, """SELECT * FROM recommendations WHERE nutrient_type = 'micro'""")
     nutrient_ids = [nutrient["id"] for nutrient in nutrient_map]
 
     @app.route("/")
@@ -215,12 +213,7 @@ def create_app(
 
 
 con = duckdb.connect(DATA_DIR / "data.db", read_only=True)
-
-nutrient_map = query_list_of_dicts(con, """SELECT * FROM nutrient_map WHERE disabled IS NULL""")
-macro_recommendations = query_list_of_dicts(con, """SELECT * FROM recommendations WHERE nutrient_type = 'macro'""")
-micro_recommendations = query_list_of_dicts(con, """SELECT * FROM recommendations WHERE nutrient_type = 'micro'""")
-
-app = create_app(con, macro_recommendations, micro_recommendations, nutrient_map)
+app = create_app(con)
 
 if __name__ == "__main__":
     app.run(debug=True, host="localhost", port=8000)
