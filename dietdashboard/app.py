@@ -27,8 +27,6 @@ import numpy as np
 from flask import Flask, render_template, request
 from scipy.optimize import linprog
 
-from utils.table import inner_merge
-
 DEBUG = os.getenv("DEBUG")
 DEBUG_DIR = Path(__file__).parent.parent / "tmp"
 DATA_DIR = Path(os.getenv("DATA_DIR", "data"))
@@ -39,6 +37,12 @@ QUERY = (Path(__file__).parent / "queries/query.sql").read_text()
 
 def query(con: duckdb.DuckDBPyConnection, location_like: str) -> dict[str, np.ndarray]:
     return con.execute(QUERY, parameters={"location_like": location_like}).fetchnumpy()
+
+
+def query_list_of_dicts(con: duckdb.DuckDBPyConnection, query: str, **kwargs) -> list[dict[str, str]]:
+    ex = con.execute(query, parameters=kwargs)
+    cols = [d[0] for d in ex.description]  # type: ignore
+    return [{c: r for c, r in zip(cols, row, strict=True)} for row in ex.fetchall()]
 
 
 def get_arrays(
@@ -85,35 +89,20 @@ def create_rangeslider(data: dict[str, str]) -> dict[str, float | str]:
     """Create the rangeslider of the given nutrient with the given data."""
     value_key = "value_males"  # "value_females"  # NOTE: using male values
     lower = float(data[value_key])
-    upper = float(data["value_upper_intake"]) if data["value_upper_intake"] != "" else None
-    _min = 0
-    _max = 4 * lower if upper is None else math.ceil(upper + lower - _min)
-    _max = _min + 100 if _max == _min else _max
-    unit = data["unit"]
-    # marks = {
-    #     _min: {"label": f"{_min}{unit}"},
-    #     _max: {"label": f"{_max}{unit}"},
-    # }
-    # if micro:
-    #     marks[lower] = {"label": f"{lower}{unit}", "style": {"color": "#369c36"}}  # type: ignore
-    # if micro and upper is not None:
-    #     marks[upper] = {"label": f"{upper}{unit}", "style": {"color": "#f53d3d"}}  # type: ignore
+    upper = float(data["value_upper_intake"]) if data["value_upper_intake"] is not None else None
+    min_value = 0
+    max_value = 4 * lower if upper is None else math.ceil(upper + lower - min_value)
+    max_value = min_value + 100 if max_value == min_value else max_value
+    unit = data["rec_unit"]
     return {
         "name": data["name"],
         "id": data["id"],
         "unit": unit,
-        "min": _min,
-        "max": _max,
+        "min": min_value,
+        "max": max_value,
         "lower": lower,
-        "upper": upper if upper is not None else _max,
-        # "tooltip": {"placement": "bottom", "always_visible": False, "template": f"{{value}}{unit}"},
-        # "marks": marks,
+        "upper": upper if upper is not None else max_value,
     }
-
-
-def filter_nutrients(nutrient_map: list[dict[str, str]], recommendations: list[dict[str, str]]) -> list[dict[str, str]]:
-    available = {rec["id"] for rec in recommendations}
-    return [{"name": row["name"], "id": row["id"]} for row in nutrient_map if row["id"] in available]
 
 
 def create_app(
@@ -126,8 +115,8 @@ def create_app(
 
     nutrient_ids = [nutrient["id"] for nutrient in nutrient_map]
 
-    macronutrients = filter_nutrients(nutrient_map, macro_recommendations)
-    micronutrients = filter_nutrients(nutrient_map, micro_recommendations)
+    macronutrients = [row["id"] for row in macro_recommendations]
+    micronutrients = [row["id"] for row in micro_recommendations]
 
     @app.route("/")
     def index():
@@ -220,13 +209,10 @@ def create_app(
 
     @app.route("/info/<price_id>", methods=["GET"])
     def info(price_id: str) -> str:
-        ex = con.execute("SELECT * FROM final_table WHERE price_id = ?", parameters=[price_id])
-        row = ex.fetchone()
-        cols = ex.description
-        if row is None or cols is None:
+        row_dicts = query_list_of_dicts(con, "SELECT * FROM final_table WHERE price_id = $price_id", price_id=price_id)
+        if len(row_dicts) == 0:
             return "<h1>Not found</h1>"
-        row_dict = {c[0]: r for c, r in zip(cols, row, strict=True)}
-        return render_template("info.html", item=row_dict)
+        return render_template("info.html", item=row_dicts[0])
 
     # serve all static files TODO: do this in a better way
     @app.route("/static/<path:path>")
@@ -238,14 +224,9 @@ def create_app(
 
 con = duckdb.connect(DATA_DIR / "data.db", read_only=True)
 
-with (DATA_DIR / "nutrient_map.csv").open("r") as file:
-    nutrient_map = [row_dict for row_dict in csv.DictReader(file) if not row_dict["disabled"]]
-
-with (DATA_DIR / "recommendations_macro.csv").open("r") as file:
-    macro_recommendations = inner_merge(list(csv.DictReader(file)), nutrient_map, left_key="id", right_key="id")
-
-with (DATA_DIR / "recommendations_nnr2023.csv").open("r") as file:
-    micro_recommendations = inner_merge(list(csv.DictReader(file)), nutrient_map, left_key="nutrient", right_key="nnr2023_id")
+nutrient_map = query_list_of_dicts(con, """SELECT * FROM nutrient_map WHERE disabled IS NULL""")
+macro_recommendations = query_list_of_dicts(con, """SELECT * FROM recommendations WHERE nutrient_type = 'macro'""")
+micro_recommendations = query_list_of_dicts(con, """SELECT * FROM recommendations WHERE nutrient_type = 'micro'""")
 
 app = create_app(con, macro_recommendations, micro_recommendations, nutrient_map)
 
