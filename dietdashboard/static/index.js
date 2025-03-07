@@ -9,7 +9,6 @@ export function isVisible(element) {return element.offsetParent !== null}
 export function handleOptimitzationInputs() {
     const data = {};
     optimizationInput().forEach(element => {
-        // TODO: Fix this, the checkbox unchecking is not working
         if (element.tagName.toLowerCase() === 'select') {
             data[element.dataset.optimization] = element.value;  // Currency
         } else if (element.dataset.optimization == 'slider') {

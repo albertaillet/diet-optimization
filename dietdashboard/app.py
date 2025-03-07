@@ -2,7 +2,6 @@
 """This script combines the different summarized csv files and creates a dashboard to interact
 with linear optimization to get the optimal quantities of food products.
 
-TODO: have link to load info card for each of the chosen products.
 TODO: User authentication and save optimization input.
 TODO: Advanced filter: location, vegan, vegetarian, indiviudal off categories
 
@@ -11,7 +10,6 @@ TODO: Able to save preferences in DB and User authenticaiton.
 TODO: Include other objectives than price minimization with tunable hyperparameters.
 For example being able to minimize enivronmental impact, added sugar, staruated fat.
 TODO: Choose to include maximum values even when they are not available in recommendations.
-TODO: Include breakdown source of each nutrient (either in popup, other page or in generated pdf).
 """
 
 import csv
