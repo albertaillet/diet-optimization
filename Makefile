@@ -114,10 +114,3 @@ kill-gunicorn:
 
 template:
 	DATA_DIR=$(DATA_DIR) ./scripts/template_nutriments_query.py
-
-# ---------- Run food comparison. ----------
-
-# Create a symbolic link to the calnut.1.csv file for it to be served by the python http server.
-food-comparison: $(CALNUT_1_CSV)
-	ln -sf ../data/calnut.1.csv ./foodcomparison/calnut.csv
-	(cd foodcomparison && python -m http.server)
