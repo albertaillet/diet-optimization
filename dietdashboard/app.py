@@ -19,6 +19,7 @@ from time import perf_counter
 import duckdb
 import numpy as np
 from flask import Flask, render_template, request
+from flask_compress import Compress
 from scipy.optimize import linprog
 
 DEBUG = os.getenv("DEBUG")
@@ -93,6 +94,7 @@ def create_rangeslider(data: dict[str, str]) -> dict[str, float | str]:
 
 def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
     app = Flask(__name__)
+    Compress(app)
 
     nutrient_map = query_list_of_dicts(con, """SELECT * FROM nutrient_map WHERE disabled IS NULL""")
     macro_recommendations = query_list_of_dicts(con, """SELECT * FROM recommendations WHERE nutrient_type = 'macro'""")
