@@ -51,5 +51,6 @@ gunicorn.pid
 # Bundled javascript files
 bundle.js
 bundle.js.map
+bundle.css
 # Javascript modules
 node_modules/

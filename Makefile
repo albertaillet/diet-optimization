@@ -105,12 +105,17 @@ install-frontend:
 	cd dietdashboard/frontend && pnpm install
 
 bundle-frontend:
-	cd dietdashboard/frontend && \
+	cd dietdashboard/frontend \
+	&& \
 	esbuild index.js \
 	--outfile=../static/bundle.js \
 	--bundle \
 	--minify \
-	--platform=browser
+	--platform=browser \
+	&& \
+	esbuild styles.css \
+	--outfile=../static/bundle.css \
+	--minify
 
 run-gunicorn:
 	DATA_DIR=$(DATA_DIR) nohup .venv/bin/gunicorn -w 4 -b 0.0.0.0:8000 dietdashboard.app:app >> gunicorn.log 2>&1 &
