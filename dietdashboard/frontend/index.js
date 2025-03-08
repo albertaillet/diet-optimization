@@ -1,6 +1,6 @@
-import { csvParse } from './d3.js';
-import { updateResultTable } from './result.js';
-import { updateBars } from './sliders.js';
+import { csvParse } from './d3';
+import { updateResultTable } from './result';
+import { updateBars } from './sliders';
 
 function optimizationInput() { return document.querySelectorAll('[data-optimization]'); };
 

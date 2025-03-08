@@ -47,3 +47,9 @@ CLAUDE.md
 # Gunicorn logs
 gunicorn.log
 gunicorn.pid
+
+# Bundled javascript files
+bundle.js
+bundle.js.map
+# Javascript modules
+node_modules/

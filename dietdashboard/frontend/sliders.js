@@ -1,5 +1,5 @@
-import * as d3 from './d3.js';
-import { handleOptimitzationInputs, isVisible } from './index.js';
+import * as d3 from './d3';
+import { handleOptimitzationInputs, isVisible } from './index';
 // Inspired by https://observablehq.com/@sarah37/snapping-range-slider-with-d3-brush
 
 // Common configuration values
@@ -176,11 +176,6 @@ function setupSlider(container, isUpdate = false) {
 
     // Add brush interaction
     createSliderBrush(g, x, axisYPosition, width, container, lower, upper);
-
-    // If updating, trigger optimization
-    if (isUpdate) {
-        handleOptimitzationInputs();
-    }
 }
 
 /**
