@@ -108,12 +108,7 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
             {"name": "Micronutrients", "id": "micro", "nutrients": micro_recommendations},
         ]
         sliders = [create_rangeslider(rec) for rec in [*macro_recommendations, *micro_recommendations]]
-        return render_template(
-            "index.html",
-            currencies=POSSIBLE_CURRENCIES,
-            sliders=sliders,
-            nutrient_groups=nutrient_groups,
-        )
+        return render_template("index.html", currencies=POSSIBLE_CURRENCIES, sliders=sliders, nutrient_groups=nutrient_groups)
 
     @app.route("/optimize.csv", methods=["POST"])
     def optimize():
@@ -122,13 +117,8 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
         if DEBUG:
             with (DEBUG_DIR / "input.json").open("w+") as f:
                 f.write(json.dumps(data, indent=2))
-        chosen_bounds = {}
-        for nutrient_id in nutrient_ids:
-            if nutrient_id not in data:
-                continue
-            chosen_bounds[nutrient_id] = data[nutrient_id]
+        chosen_bounds = {nid: data[nid] for nid in nutrient_ids if nid in data}
 
-        # If no nutrients selected, return empty response
         if not chosen_bounds:
             return ""
 
@@ -140,7 +130,6 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
         A_nutrients, lb, ub, c_costs = get_arrays(chosen_bounds, products_and_prices, currency)
         print(f"Array conversion time: {perf_counter() - start:.2f}s")
 
-        # Check if we have valid nutrient data
         if A_nutrients.size == 0:
             return ""
 
@@ -200,7 +189,7 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
 
     @app.route("/info/<price_id>", methods=["GET"])
     def info(price_id: str) -> str:
-        row_dicts = query_list_of_dicts(con, "SELECT * FROM final_table WHERE price_id = $price_id", price_id=price_id)
+        row_dicts = query_list_of_dicts(con, """SELECT * FROM final_table WHERE price_id = $price_id""", price_id=price_id)
         if len(row_dicts) == 0:
             return "<h1>Not found</h1>"
         return render_template("info.html", item=row_dicts[0])
