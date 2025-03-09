@@ -108,15 +108,6 @@
                     <td>{{ item.energy_fibre_kcal_value }} {{ item.energy_fibre_kcal_unit }}</td>
                     <td>{{ item.energy_fibre_kcal_origin }}</td>
                 </tr>
-                <!-- Water -->
-                <tr>
-                    <td colspan="3" class="section-header">Water</td>
-                </tr>
-                <tr>
-                    <td>Water</td>
-                    <td>{{ item.water_value|round(3) }} {{ item.water_unit }}</td>
-                    <td>{{ item.water_origin }}</td>
-                </tr>
                 <!-- Macronutrients -->
                 <tr>
                     <td colspan="3" class="section-header">Macronutrients</td>
@@ -135,6 +126,60 @@
                     <td>Sugars</td>
                     <td>{{ item.sugars_value|round(3) }} {{ item.sugars_unit }}</td>
                     <td>{{ item.sugars_origin }}</td>
+                </tr>
+                <tr>
+                    <td>Fiber</td>
+                    <td>{{ item.fiber_value|round(3) }} {{ item.fiber_unit }}</td>
+                    <td>{{ item.fiber_origin }}</td>
+                </tr>
+                <tr>
+                    <td>Total Fat</td>
+                    <td>{{ item.fat_value|round(3) }} {{ item.fat_unit }}</td>
+                    <td>{{ item.fat_origin }}</td>
+                </tr>
+                <tr>
+                    <td>Saturated Fat</td>
+                    <td>{{ item.saturated_fat_value|round(3) }} {{ item.saturated_fat_unit }}</td>
+                    <td>{{ item.saturated_fat_origin }}</td>
+                </tr>
+                <tr>
+                    <td>Monounsaturated Fat</td>
+                    <td>{{ item.monounsaturated_fat_value|round(3) }} {{ item.monounsaturated_fat_unit }}</td>
+                    <td>{{ item.monounsaturated_fat_origin }}</td>
+                </tr>
+                <tr>
+                    <td>Polyunsaturated Fat</td>
+                    <td>{{ item.polyunsaturated_fat_value|round(3) }} {{ item.polyunsaturated_fat_unit }}</td>
+                    <td>{{ item.polyunsaturated_fat_origin }}</td>
+                </tr>
+                <tr>
+                    <td>Cholesterol</td>
+                    <td>{{ item.cholesterol_value|round(3) }} {{ item.cholesterol_unit }}</td>
+                    <td>{{ item.cholesterol_origin }}</td>
+                </tr>
+                <tr>
+                    <td>Salt</td>
+                    <td>{{ item.salt_value|round(3) }} {{ item.salt_unit }}</td>
+                    <td>{{ item.salt_origin }}</td>
+                </tr>
+                <tr>
+                    <td>Polyols</td>
+                    <td>{{ item.polyols_value|round(3) }} {{ item.polyols_unit }}</td>
+                    <td>{{ item.polyols_origin }}</td>
+                </tr>
+                <tr>
+                    <td>Alcohol</td>
+                    <td>{{ item.alcohol_value|round(3) }} {{ item.alcohol_unit }}</td>
+                    <td>{{ item.alcohol_origin }}</td>
+                </tr>
+                <tr>
+                    <td>Organic Acids</td>
+                    <td>{{ item.organic_acids_value|round(3) }} {{ item.organic_acids_unit }}</td>
+                    <td>{{ item.organic_acids_origin }}</td>
+                </tr>
+                <!-- Sugares -->
+                <tr>
+                    <td colspan="3" class="section-header">Sugars</td>
                 </tr>
                 <tr>
                     <td>Fructose</td>
@@ -171,55 +216,14 @@
                     <td>{{ item.starch_value|round(3) }} {{ item.starch_unit }}</td>
                     <td>{{ item.starch_origin }}</td>
                 </tr>
+                <!-- Water -->
                 <tr>
-                    <td>Fiber</td>
-                    <td>{{ item.fiber_value|round(3) }} {{ item.fiber_unit }}</td>
-                    <td>{{ item.fiber_origin }}</td>
+                    <td colspan="3" class="section-header">Water</td>
                 </tr>
                 <tr>
-                    <td>Polyols</td>
-                    <td>{{ item.polyols_value|round(3) }} {{ item.polyols_unit }}</td>
-                    <td>{{ item.polyols_origin }}</td>
-                </tr>
-                <tr>
-                    <td>Alcohol</td>
-                    <td>{{ item.alcohol_value|round(3) }} {{ item.alcohol_unit }}</td>
-                    <td>{{ item.alcohol_origin }}</td>
-                </tr>
-                <tr>
-                    <td>Organic Acids</td>
-                    <td>{{ item.organic_acids_value|round(3) }} {{ item.organic_acids_unit }}</td>
-                    <td>{{ item.organic_acids_origin }}</td>
-                </tr>
-                <tr>
-                    <td>Total Fat</td>
-                    <td>{{ item.fat_value|round(3) }} {{ item.fat_unit }}</td>
-                    <td>{{ item.fat_origin }}</td>
-                </tr>
-                <tr>
-                    <td>Saturated Fat</td>
-                    <td>{{ item.saturated_fat_value|round(3) }} {{ item.saturated_fat_unit }}</td>
-                    <td>{{ item.saturated_fat_origin }}</td>
-                </tr>
-                <tr>
-                    <td>Monounsaturated Fat</td>
-                    <td>{{ item.monounsaturated_fat_value|round(3) }} {{ item.monounsaturated_fat_unit }}</td>
-                    <td>{{ item.monounsaturated_fat_origin }}</td>
-                </tr>
-                <tr>
-                    <td>Polyunsaturated Fat</td>
-                    <td>{{ item.polyunsaturated_fat_value|round(3) }} {{ item.polyunsaturated_fat_unit }}</td>
-                    <td>{{ item.polyunsaturated_fat_origin }}</td>
-                </tr>
-                <tr>
-                    <td>Cholesterol</td>
-                    <td>{{ item.cholesterol_value|round(3) }} {{ item.cholesterol_unit }}</td>
-                    <td>{{ item.cholesterol_origin }}</td>
-                </tr>
-                <tr>
-                    <td>Salt</td>
-                    <td>{{ item.salt_value|round(3) }} {{ item.salt_unit }}</td>
-                    <td>{{ item.salt_origin }}</td>
+                    <td>Water</td>
+                    <td>{{ item.water_value|round(3) }} {{ item.water_unit }}</td>
+                    <td>{{ item.water_origin }}</td>
                 </tr>
                 <!-- Fatty Acid Breakdown -->
                 <tr>
