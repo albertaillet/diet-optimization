@@ -119,7 +119,7 @@ CREATE OR REPLACE TABLE products_nutriments_selected AS (
     CASE
         WHEN p.product_nutrient_is_valid AND p.nutrient_unit == nm.calnut_unit THEN 'product'
         WHEN ciq.mean IS NOT NULL THEN CONCAT('ciqual_', ciq.code_confiance, '_', ciq.source_code)
-        WHEN ciq.mean IS NOT NULL THEN CONCAT('calnut_', CASE WHEN cal.combl THEN '_combl' ELSE '' END)
+        WHEN cal.mean IS NOT NULL THEN CONCAT('calnut', CASE WHEN cal.combl THEN '_combl' ELSE '' END)
         ELSE 'assumed 0'
     END AS final_nutrient_origin,
     FROM products_nutriments p
