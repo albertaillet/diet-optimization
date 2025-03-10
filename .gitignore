@@ -33,6 +33,8 @@ data/nutrient_map_recipe_estimator.csv
 *.parquet
 # Any database in the data folder
 data/*.db
+# Numpy zipped data
+*.npz
 
 # All python cache files
 *.pyc
