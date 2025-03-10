@@ -96,6 +96,9 @@ load: $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(PRICES_PARQUET) $(PRODUCT_JSONL_GZ)
 process:
 	duckdb data/data.db < ./dietdashboard/queries/process.sql
 
+drop:
+	duckdb data/data.db < ./dietdashboard/queries/drop.sql
+
 # ---------- Run the optmization dashboard. ----------
 
 opt:
