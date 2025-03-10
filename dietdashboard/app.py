@@ -13,8 +13,8 @@ import io
 import json
 import math
 import os
+import time
 from pathlib import Path
-from time import perf_counter
 
 import duckdb
 import numpy as np
@@ -22,7 +22,6 @@ from flask import Flask, render_template, request
 from flask_compress import Compress
 from scipy.optimize import linprog
 
-DEBUG = os.getenv("DEBUG")
 DEBUG_DIR = Path(__file__).parent.parent / "tmp"
 DATA_DIR = Path(os.getenv("DATA_DIR", "data"))
 OFF_USERNAME = os.getenv("OFF_USERNAME")
@@ -41,7 +40,7 @@ def query_list_of_dicts(con: duckdb.DuckDBPyConnection, query: str, **kwargs) ->
 
 
 def get_arrays(
-    bounds: dict[str, list[float]], products_and_prices: dict[str, np.ndarray], currency: str
+    bounds: dict[str, tuple[float, float]], products_and_prices: dict[str, np.ndarray], currency: str
 ) -> tuple[np.ndarray, ...]:
     # Nutrients of each product
     A_nutrients = np.array([products_and_prices[nutrient_id + "_value"] for nutrient_id in bounds], dtype=np.float32)
@@ -92,13 +91,58 @@ def create_rangeslider(data: dict[str, str]) -> dict[str, float | str]:
     }
 
 
+def create_csv(
+    x: np.ndarray,
+    chosen_bounds: dict[str, tuple[float, float]],
+    products_and_prices: dict[str, np.ndarray],
+    c_costs: np.ndarray,
+    nutrients_levels: np.ndarray,
+) -> str:
+    # Sort by quantity and remove those with zero quantity
+    indices = np.argsort(x)[::-1]
+    indices = indices[x[indices] > 0]
+
+    # Prepare data for rendering in the HTML table
+    output = io.StringIO()
+    fieldnames = [
+        "id",
+        "product_code",
+        "product_name",
+        "ciqual_name",
+        "ciqual_code",
+        "location",
+        "location_osm_id",
+        "quantity_g",
+        "price",
+    ]
+    writer = csv.DictWriter(output, fieldnames=fieldnames + list(chosen_bounds))
+    writer.writeheader()
+    for i in indices:
+        location = ", ".join(str(products_and_prices["price_location"][i]).split(", ")[:3])
+        product = {
+            "id": int(products_and_prices["price_id"][i]),
+            "product_code": products_and_prices["product_code"][i],
+            "product_name": products_and_prices["product_name"][i],
+            "ciqual_name": products_and_prices["ciqual_name"][i],
+            "ciqual_code": products_and_prices["ciqual_code"][i],
+            "location": location,
+            "location_osm_id": products_and_prices["price_location_osm_id"][i],
+            "quantity_g": round(100 * x[i], 1),  # type: ignore
+            "price": round(c_costs[i] * x[i], 2),  # type: ignore
+            **{nutrient_id: nutrients_levels[j, i].round(4) for j, nutrient_id in enumerate(chosen_bounds)},
+        }
+        writer.writerow(product)
+    output.seek(0)
+    return output.read()
+
+
 def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
     app = Flask(__name__)
     Compress(app)
 
-    nutrient_map = query_list_of_dicts(con, """SELECT * FROM nutrient_map WHERE disabled IS NULL""")
-    macro_recommendations = query_list_of_dicts(con, """SELECT * FROM recommendations WHERE nutrient_type = 'macro'""")
-    micro_recommendations = query_list_of_dicts(con, """SELECT * FROM recommendations WHERE nutrient_type = 'micro'""")
+    nutrient_map = query_list_of_dicts(con, """SELECT * FROM data.nutrient_map WHERE disabled IS NULL""")
+    macro_recommendations = query_list_of_dicts(con, """SELECT * FROM data.recommendations WHERE nutrient_type = 'macro'""")
+    micro_recommendations = query_list_of_dicts(con, """SELECT * FROM data.recommendations WHERE nutrient_type = 'micro'""")
     nutrient_ids = [nutrient["id"] for nutrient in nutrient_map]
 
     @app.route("/")
@@ -114,31 +158,40 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
     def optimize():
         data = request.get_json()
         currency = data["currency"]
-        if DEBUG:
-            with (DEBUG_DIR / "input.json").open("w+") as f:
-                f.write(json.dumps(data, indent=2))
-        chosen_bounds = {nid: data[nid] for nid in nutrient_ids if nid in data}
-
+        debug_folder = DEBUG_DIR / f"optimize/{time.strftime('%Y-%m-%d-%H-%M-%S')}-{time.perf_counter_ns()}"
+        debug_folder.mkdir(parents=True)
+        with (debug_folder / "input.json").open("w+") as f:
+            f.write(json.dumps(data, indent=2))
+        chosen_bounds = {nid: tuple(data[nid]) for nid in nutrient_ids if nid in data}
         if not chosen_bounds:
             return ""
 
-        start = perf_counter()
+        start = time.perf_counter()
         products_and_prices = query(con, location_like="Toulouse")  # TODO: this should be a parameter
-        print(f"Query time: {perf_counter() - start:.2f}s")
+        query_time = time.perf_counter() - start
 
-        start = perf_counter()
+        start = time.perf_counter()
         A_nutrients, lb, ub, c_costs = get_arrays(chosen_bounds, products_and_prices, currency)
-        print(f"Array conversion time: {perf_counter() - start:.2f}s")
+        array_time = time.perf_counter() - start
 
         if A_nutrients.size == 0:
             return ""
 
-        print(f"Number of products: {A_nutrients.shape[1]}")
-        print(f"Number of nutrients: {A_nutrients.shape[0]}")
-
-        start = perf_counter()
+        start = time.perf_counter()
         result = solve_optimization(A_nutrients, lb, ub, c_costs)
-        print(f"Optimization time: {perf_counter() - start:.2f}s")
+        optimization_time = time.perf_counter() - start
+        (debug_folder / "times.json").write_text(
+            json.dumps(
+                {
+                    "query_time": query_time,
+                    "array_time": array_time,
+                    "optimization_time": optimization_time,
+                    "num_products": A_nutrients.shape[1],
+                    "num_nutrients": A_nutrients.shape[0],
+                },
+                indent=2,
+            )
+        )
         if result.status != 0:
             return ""
 
@@ -146,50 +199,13 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
         nutrients_levels = A_nutrients * result.x
         assert (nutrients_levels < 0).sum() == 0, "Negative values in nutrients_levels."
 
-        # Sort by quantity and remove those with zero quantity
-        indices = np.argsort(result.x)[::-1]
-        indices = indices[result.x[indices] > 0]
-
-        # Prepare data for rendering in the HTML table
-        output = io.StringIO()
-        fieldnames = [
-            "id",
-            "product_code",
-            "product_name",
-            "ciqual_name",
-            "ciqual_code",
-            "location",
-            "location_osm_id",
-            "quantity_g",
-            "price",
-        ]
-        writer = csv.DictWriter(output, fieldnames=fieldnames + list(chosen_bounds))
-        writer.writeheader()
-        for i in indices:
-            location = ", ".join(str(products_and_prices["price_location"][i]).split(", ")[:3])
-            product = {
-                "id": int(products_and_prices["price_id"][i]),
-                "product_code": products_and_prices["product_code"][i],
-                "product_name": products_and_prices["product_name"][i],
-                "ciqual_name": products_and_prices["ciqual_name"][i],
-                "ciqual_code": products_and_prices["ciqual_code"][i],
-                "location": location,
-                "location_osm_id": products_and_prices["price_location_osm_id"][i],
-                "quantity_g": round(100 * result.x[i], 1),
-                "price": round(c_costs[i] * result.x[i], 2),
-                **{nutrient_id: nutrients_levels[j, i].round(4) for j, nutrient_id in enumerate(chosen_bounds)},
-            }
-            writer.writerow(product)
-        output.seek(0)
-        if DEBUG:
-            with (DEBUG_DIR / "output.csv").open("w+") as f:
-                f.write(output.read())
-            output.seek(0)
-        return output.read()
+        reslut_csv_string = create_csv(result.x, chosen_bounds, products_and_prices, c_costs, nutrients_levels)
+        (debug_folder / "output.csv").write_text(reslut_csv_string)
+        return reslut_csv_string
 
     @app.route("/info/<price_id>", methods=["GET"])
     def info(price_id: str) -> str:
-        row_dicts = query_list_of_dicts(con, """SELECT * FROM final_table WHERE price_id = $price_id""", price_id=price_id)
+        row_dicts = query_list_of_dicts(con, """SELECT * FROM data.final_table WHERE price_id = $price_id""", price_id=price_id)
         if len(row_dicts) == 0:
             return "<h1>Not found</h1>"
         return render_template("info.html", item=row_dicts[0])
