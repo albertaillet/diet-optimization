@@ -3,14 +3,18 @@
 
 import json
 import time
+import warnings
 from pathlib import Path
 
+import cvxpy as cp
 import numpy as np
 from scipy.optimize import linprog
 
 DATA_DIR = Path("data")
 BENCHMARK_DATA = DATA_DIR / "benchmark.npz"
+BENCHMARK_RESULTS = DATA_DIR / "benchmark_results.json"
 
+warnings.filterwarnings("ignore", category=DeprecationWarning)  # filter scipy DeprecationWarning
 
 # def save_benchmark_data():
 #     import duckdb
@@ -52,42 +56,85 @@ def solve_optimization_scipy(A, lb, ub, c, method):
     b_ub = np.concatenate([b_ub_lb, b_ub_ub])
 
     # Solve the problem and result the result.
-    # callbacks = {"callback": linprog_terse_callback} if "high" not in method else {}
-    return linprog(
-        c,
-        A_ub=A_ub,
-        b_ub=b_ub,
-        bounds=(0, None),
-        method=method,
-        options={"disp": False, "presolve": False, "maxiter": 10_000},
-        integrality=0,
-    )
+    options = {"disp": False, "presolve": False, "maxiter": 10_000, "autoscale": False}
+    if "highs" in method:
+        options.pop("autoscale")
+    return linprog(c, A_ub=A_ub, b_ub=b_ub, bounds=(0, None), method=method, options=options, integrality=0)
+
+
+def solve_optimization_cvxpy(A, lb, ub, c, solver_path):
+    x = cp.Variable(c.shape[0])
+    objective = cp.Minimize(c @ x)
+    constraints = [x >= 0, A[~np.isnan(lb)] @ x >= lb[~np.isnan(lb)], A[~np.isnan(ub)] @ x <= ub[~np.isnan(ub)]]
+    prob = cp.Problem(objective, constraints)
+    return prob.solve(solver_path=solver_path, verbose=False)
 
 
 if __name__ == "__main__":
     # save_benchmark_data()
     bounds = json.load((DATA_DIR / "input.json").open())
+    # bounds = {k: bounds[k] for k in ["energy_fibre_kcal", "protein", "carbohydrate", "fat"]}
     products_and_prices = np.load(BENCHMARK_DATA)
-
     A_nutrients, lb, ub, c_costs = get_arrays(bounds, products_and_prices)  # type: ignore
-
-    print(A_nutrients.shape, lb.shape, ub.shape, c_costs.shape)
+    solvers = {
+        "cvxpy": [
+            # ("CBC"),
+            ("CLARABEL"),
+            # ("COPT"),
+            # ("DAQP"),
+            # ("GLOP"),
+            ("GLPK"),
+            ("GLPK_MI"),
+            # ("OSQP"),
+            # ("PIQP"),
+            # ("PROXQP"),
+            # ("PDLP"),
+            # ("CPLEX"),
+            # ("NAG"),
+            # ("ECOS"),
+            # ("GUROBI"),
+            # ("MOSEK"),
+            ("CVXOPT"),
+            # ("SDPA"),
+            ("SCS"),
+            # ("SCIP"),
+            # ("XPRESS"),
+            ("SCIPY", {"scipy_options": {"method": "highs"}}),
+            ("SCIPY", {"scipy_options": {"method": "highs-ds"}}),
+            ("SCIPY", {"scipy_options": {"method": "highs-ipm"}}),
+            # ("SCIPY", {"scipy_options": {"method": "interior-point"}}),  # not working, since matrices are sparse in cvxpy
+            # ("SCIPY", {"scipy_options": {"method": "revised simplex"}}),
+            # ("SCIPY", {"scipy_options": {"method": "simplex"}}),
+            # ("HiGHS"),
+        ],
+        "scipy": ["highs", "highs-ds", "highs-ipm", "interior-point", "revised simplex", "simplex"],
+    }
 
     results = {}
-    for limit in [100, 1000, 2000]:
+    limits = [60, 100, 1000, 2000]
+    for limit in limits:  # , 1000, 2000]:  # , 10000]:
         results[limit] = {}
-        fun = -1
-        for method in ["highs", "highs-ds", "highs-ipm", "interior-point", "revised simplex", "simplex"]:
-            A = A_nutrients[:, :limit]
-            c = c_costs[:limit]
-            start = time.perf_counter()
-            out = solve_optimization_scipy(A, lb, ub, c, method)
-            optimization_time = time.perf_counter() - start
-            results[limit][method] = optimization_time
-            assert out.success, (method, limit, out)
-            if fun == -1:
-                fun = out.fun
-            elif fun is not None and abs(fun - out.fun) > 1e-3:
-                print("different result", method, fun, limit, out.fun)
-
-    print(json.dumps(results, indent=2))
+        saved_objective = -1
+        A = A_nutrients[:, :limit]
+        c = c_costs[:limit]
+        for library in solvers:
+            for method in solvers[library]:
+                start = time.perf_counter()
+                if library == "scipy":
+                    out = solve_optimization_scipy(A, lb, ub, c, method)
+                    # assert out == "optimal", (method, limit, out)
+                    # assert out.success, (method, limit, out)
+                    objective = float(out.fun)
+                elif library == "cvxpy":
+                    out = solve_optimization_cvxpy(A, lb, ub, c, solver_path=[method])
+                    objective = float(out)  # type: ignore
+                else:
+                    raise ValueError(f"Unknown library: {library}")
+                optimization_time = time.perf_counter() - start
+                results[limit][str(method)] = (optimization_time, objective)
+                if saved_objective == -1:
+                    saved_objective = objective
+                elif saved_objective is None or abs(saved_objective - objective) > 1e-3:
+                    print("different result", method, limit, saved_objective, objective)
+    with BENCHMARK_RESULTS.open("w") as f:
+        json.dump(results, f, indent=4)
