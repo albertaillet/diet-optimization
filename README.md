@@ -133,45 +133,25 @@ Here is the combined table listing the availability of different nutrients in th
 
 For optimizing the diet, a linear programming python library is used, here are the considered choices:
 
--   **SciPy (`scipy.optimize.linprog`)**
+-   **SciPy (`scipy.optimize.linprog`)**: [Repository](https://github.com/scipy/scipy), [Documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linprog.html)
 
-    -   [Repository](https://github.com/scipy/scipy)
-    -   [Documentation](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.linprog.html)
+-   **highspy** (python wrapper for the HiGHS solver): [Repository](https://github.com/ERGO-Code/HiGHS) [Pipy](https://pypi.org/project/highspy/)
 
--   **OR-Tools (`ortools.linear_solver`)**
+-   **OR-Tools (`ortools.linear_solver`)**: [Repository](https://github.com/google/or-tools), [Documentation](https://or-tools.github.io/docs/pdoc/ortools/linear_solver.html), [Example](https://github.com/google/or-tools/blob/stable/examples/python/linear_programming.py), [Usage in OFF](https://github.com/openfoodfacts/recipe-estimator/blob/main/recipe_estimator.py)
 
-    -   [Repository](https://github.com/google/or-tools)
-    -   [Documentation](https://or-tools.github.io/docs/pdoc/ortools/linear_solver.html)
-    -   [Example](https://github.com/google/or-tools/blob/stable/examples/python/linear_programming.py)
-    -   [Usage in OFF](https://github.com/openfoodfacts/recipe-estimator/blob/main/recipe_estimator.py)
+-   **CVXPY** (python modeling language for multiple sovlers): [Repository](https://github.com/cvxpy/cvxpy)
 
--   **CVXPY**
+-   **PuLP**: [Repository](https://github.com/coin-or/pulp)
 
-    -   [Repository](https://github.com/cvxpy/cvxpy)
+-   **Pyomo**: [Repository](https://github.com/Pyomo/pyomo), [Diet optimization example](https://github.com/Pyomo/PyomoGallery/tree/0b809937cfb9c53a78bc108328a88401685d22bd/diet)
 
--   **PuLP**
+-   **Cvxopt**: [Repository](https://github.com/cvxopt/cvxopt)
 
-    -   [Repository](https://github.com/coin-or/pulp)
+-   **GLPK (GNU Linear Programming Kit)**: [Repository](https://www.gnu.org/software/glpk/)
 
--   **Pyomo**
+-   **Cbc**: [Repository](https://github.com/coin-or/Cbc)
 
-    -   [Repository](https://github.com/Pyomo/pyomo)
-
--   **Cvxopt**
-
-    -   [Repository](https://github.com/cvxopt/cvxopt)
-
--   **GLPK (GNU Linear Programming Kit)**
-
-    -   [Repository](https://www.gnu.org/software/glpk/)
-
--   **Cbc**
-
-    -   [Repository](https://github.com/coin-or/Cbc)
-
--   **Gurobi**
-    -   [Gurobi Website](https://www.gurobi.com/)
-    -   Note: Gurobi is commercial software
+-   **Gurobi**: [Gurobi Website](https://www.gurobi.com/), Note: Gurobi is commercial software
 
 A table with different solvers is available here:
 [cvxpy.org](https://www.cvxpy.org/tutorial/solvers/index.html#choosing-a-solver)
@@ -262,6 +242,7 @@ Random links:
 -   [Documenu](https://github.com/documenu), Restaurant menu API.
 -   [Foodoptimizer](https://kkloste.github.io/projects/foodoptimizer/), a blogpost on food optimization.
 -   🎖️[knowledge-mining-nutrition](https://forgemia.inra.fr/stephane.dervaux/knowledge-mining-nutrition) Ongoing research project on knowledge mining in nutrition (02/2025).
+-   [PyomoDietProblem](https://github.com/Pyomo/PyomoGallery/blob/main/diet/DietProblem.ipynb), a Pyomo example for the diet problem.
 
 
 Outdated projects:
