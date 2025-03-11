@@ -82,7 +82,7 @@ if __name__ == "__main__":
         "cvxpy": [
             # ("CBC"),
             ("CLARABEL"),  # clarabel settings: clarabel.DefaultSettings
-            ("CLARABEL", {"max_iter": 1000}),
+            # ("CLARABEL", {"max_iter": 1000}),
             # ("COPT"),  # not sure how to install COPT
             # ("DAQP"),
             # ("GLOP"),
@@ -135,11 +135,10 @@ if __name__ == "__main__":
                 elif library == "cvxpy":
                     out = solve_optimization_cvxpy(A, lb, ub, c, solver_path=[method])
                     objective = float(out)  # type: ignore
-                    method = f"scipy-{method}"
                 else:
                     raise ValueError(f"Unknown library: {library}")
                 optimization_time = time.perf_counter() - start
-                results[limit][str(method)] = (optimization_time, objective)
+                results[limit][f"{library}-{method}"] = (optimization_time, objective)
                 if saved_objective == -1:
                     saved_objective = objective
                 elif saved_objective is None or abs(saved_objective - objective) > 1e-3:
