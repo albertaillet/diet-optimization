@@ -78,6 +78,7 @@ if __name__ == "__main__":
     products_and_prices = np.load(BENCHMARK_DATA)
     A_nutrients, lb, ub, c_costs = get_arrays(bounds, products_and_prices)  # type: ignore
     solvers = {
+        # Documentation: https://www.cvxpy.org/tutorial/solvers/index.html#choosing-a-solver
         "cvxpy": [
             # ("CBC"),
             ("CLARABEL"),  # clarabel settings: clarabel.DefaultSettings
@@ -99,7 +100,7 @@ if __name__ == "__main__":
             ("CVXOPT"),  # no MIP
             # ("SDPA"),
             ("SCS"),
-            # ("SCIP"),
+            ("SCIP"),
             # ("XPRESS"),
             ("SCIPY", {"scipy_options": {"method": "highs"}}),
             ("SCIPY", {"scipy_options": {"method": "highs-ds"}}),
