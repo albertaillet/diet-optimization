@@ -1,9 +1,10 @@
-#!/usr/bin/env -S uv run
+#!/usr/bin/env -S uv run --extra benchmark
 """This script benchmarks differency methods for running linear programming"""
 
 import json
 import time
 import warnings
+from datetime import datetime
 from pathlib import Path
 
 import cvxpy as cp
@@ -79,8 +80,9 @@ if __name__ == "__main__":
     solvers = {
         "cvxpy": [
             # ("CBC"),
-            ("CLARABEL"),
-            # ("COPT"),
+            ("CLARABEL"),  # clarabel settings: clarabel.DefaultSettings
+            ("CLARABEL", {"max_iter": 1000}),
+            # ("COPT"),  # not sure how to install COPT
             # ("DAQP"),
             # ("GLOP"),
             ("GLPK"),
@@ -92,9 +94,9 @@ if __name__ == "__main__":
             # ("CPLEX"),
             # ("NAG"),
             # ("ECOS"),
-            # ("GUROBI"),
-            # ("MOSEK"),
-            ("CVXOPT"),
+            # ("GUROBI"),  # requires license
+            ("MOSEK"),  # requires license
+            ("CVXOPT"),  # no MIP
             # ("SDPA"),
             ("SCS"),
             # ("SCIP"),
@@ -109,6 +111,9 @@ if __name__ == "__main__":
         ],
         "scipy": ["highs", "highs-ds", "highs-ipm", "interior-point", "revised simplex", "simplex"],
     }
+    # Currently best:
+    # GLPK_MI for MIP and speed
+    # scipy interior-point for LP and speed
 
     results = {}
     limits = [60, 100, 1000, 2000]
@@ -124,10 +129,12 @@ if __name__ == "__main__":
                     out = solve_optimization_scipy(A, lb, ub, c, method)
                     # assert out == "optimal", (method, limit, out)
                     # assert out.success, (method, limit, out)
+                    print(f"(scipy) {datetime.now().strftime('%b %d %I:%M:%S %p')}: Solver {method} succeeds")
                     objective = float(out.fun)
                 elif library == "cvxpy":
                     out = solve_optimization_cvxpy(A, lb, ub, c, solver_path=[method])
                     objective = float(out)  # type: ignore
+                    method = f"scipy-{method}"
                 else:
                     raise ValueError(f"Unknown library: {library}")
                 optimization_time = time.perf_counter() - start
