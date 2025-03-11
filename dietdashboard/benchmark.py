@@ -108,7 +108,7 @@ if __name__ == "__main__":
             # ("SCIPY", {"scipy_options": {"method": "interior-point"}}),  # not working, since matrices are sparse in cvxpy
             # ("SCIPY", {"scipy_options": {"method": "revised simplex"}}),
             # ("SCIPY", {"scipy_options": {"method": "simplex"}}),
-            # ("HiGHS"),
+            ("HIGHS"),
         ],
         "scipy": ["highs", "highs-ds", "highs-ipm", "interior-point", "revised simplex", "simplex"],
     }
