@@ -1,19 +1,25 @@
 #!/usr/bin/env -S uv run --extra benchmark
 """This script benchmarks differency methods for running linear programming"""
 
+import cProfile
+import csv
 import json
 import time
 import warnings
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import cvxpy as cp
 import numpy as np
 from scipy.optimize import linprog
 
-DATA_DIR = Path("data")
+DATA_DIR = Path(__file__).parent.parent / "data"
 BENCHMARK_DATA = DATA_DIR / "benchmark.npz"
-BENCHMARK_RESULTS = DATA_DIR / "benchmark_results.json"
+BENCHMARK_DIR = Path(__file__).parent.parent / f"tmp/benchmark/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+BENCHMARK_DIR.mkdir(parents=True, exist_ok=True)
+BENCHMARK_RESULT_SUMMARY = BENCHMARK_DIR / "benchmark_results.csv"
+
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)  # filter scipy DeprecationWarning
 
@@ -43,7 +49,7 @@ def get_arrays(
     return A_nutrients, lb, ub, c_costs
 
 
-def solve_optimization_scipy(A, lb, ub, c, method):
+def solve_optimization_scipy(A, lb, ub, c, solver, solver_options):
     # Constraints for lower bounds
     A_ub_lb = -A[~np.isnan(lb)]
     b_ub_lb = -lb[~np.isnan(lb)]
@@ -57,18 +63,44 @@ def solve_optimization_scipy(A, lb, ub, c, method):
     b_ub = np.concatenate([b_ub_lb, b_ub_ub])
 
     # Solve the problem and result the result.
-    options = {"disp": False, "presolve": False, "maxiter": 10_000, "autoscale": False}
-    if "highs" in method:
-        options.pop("autoscale")
-    return linprog(c, A_ub=A_ub, b_ub=b_ub, bounds=(0, None), method=method, options=options, integrality=0)
+    return linprog(c, A_ub=A_ub, b_ub=b_ub, bounds=(0, None), method=solver, options=solver_options, integrality=0)
 
 
-def solve_optimization_cvxpy(A, lb, ub, c, solver_path):
+def solve_optimization_cvxpy(A, lb, ub, c, solver, solver_options):
     x = cp.Variable(c.shape[0])
     objective = cp.Minimize(c @ x)
     constraints = [x >= 0, A[~np.isnan(lb)] @ x >= lb[~np.isnan(lb)], A[~np.isnan(ub)] @ x <= ub[~np.isnan(ub)]]
     prob = cp.Problem(objective, constraints)
-    return prob.solve(solver_path=solver_path, verbose=False)
+    return prob.solve(solver=solver, **solver_options)
+
+
+def main(library: str, solver: str, solver_options: dict[str, Any], size: int, iterations: int):
+    n = A_nutrients.shape[1]
+    objectives = []
+    for i in range(iterations):
+        # different slice each time to avoid any possible caching
+        s = slice((i * size) % n, ((i + 1) * size) % n, 1 if (i * size) % n < ((i + 1) * size) % n else -1)
+        A = A_nutrients[:, s]
+        c = c_costs[s]
+
+        if library == "scipy":
+            out = solve_optimization_scipy(A, lb, ub, c, solver, solver_options)
+            objective = float(out.fun)
+        elif library == "cvxpy":
+            out = solve_optimization_cvxpy(A, lb, ub, c, solver, solver_options)
+            objective = float(out)  # type: ignore
+        else:
+            raise ValueError(f"Unknown library: {library}")
+        objectives.append(objective)
+    return objectives
+
+
+def save_results_as_csv(resluts: dict[tuple[str, str, str], tuple[float, int]]):
+    with BENCHMARK_RESULT_SUMMARY.open("w") as f:
+        writer = csv.writer(f)
+        writer.writerow(["size", "solver", "solver_options", "time", "iterations"])
+        for (size, solver, solver_options), (t, iterations) in resluts.items():
+            writer.writerow([size, solver, solver_options, t, iterations])
 
 
 if __name__ == "__main__":
@@ -77,71 +109,93 @@ if __name__ == "__main__":
     # bounds = {k: bounds[k] for k in ["energy_fibre_kcal", "protein", "carbohydrate", "fat"]}
     products_and_prices = np.load(BENCHMARK_DATA)
     A_nutrients, lb, ub, c_costs = get_arrays(bounds, products_and_prices)  # type: ignore
-    solvers = {
+    solvers = [
+        # library cvxpy:
         # Documentation: https://www.cvxpy.org/tutorial/solvers/index.html#choosing-a-solver
-        "cvxpy": [
-            # ("CBC"),
-            ("CLARABEL"),  # clarabel settings: clarabel.DefaultSettings
-            # ("CLARABEL", {"max_iter": 1000}),
-            # ("COPT"),  # not sure how to install COPT
-            # ("DAQP"),
-            # ("GLOP"),
-            ("GLPK"),
-            ("GLPK_MI"),
-            # ("OSQP"),
-            # ("PIQP"),
-            # ("PROXQP"),
-            # ("PDLP"),
-            # ("CPLEX"),
-            # ("NAG"),
-            # ("ECOS"),
-            # ("GUROBI"),  # requires license
-            ("MOSEK"),  # requires license
-            ("CVXOPT"),  # no MIP
-            # ("SDPA"),
-            ("SCS"),
-            ("SCIP"),
-            # ("XPRESS"),
-            ("SCIPY", {"scipy_options": {"method": "highs"}}),
-            ("SCIPY", {"scipy_options": {"method": "highs-ds"}}),
-            ("SCIPY", {"scipy_options": {"method": "highs-ipm"}}),
-            # ("SCIPY", {"scipy_options": {"method": "interior-point"}}),  # not working, since matrices are sparse in cvxpy
-            # ("SCIPY", {"scipy_options": {"method": "revised simplex"}}),
-            # ("SCIPY", {"scipy_options": {"method": "simplex"}}),
-            ("HIGHS"),
-        ],
-        "scipy": ["highs", "highs-ds", "highs-ipm", "interior-point", "revised simplex", "simplex"],
-    }
+        # See https://github.com/cvxpy/cvxpy/blob/master/pyproject.toml for the dependencies for each solver
+        # ("cvxpy", "CBC", {}),
+        ("cvxpy", "CLARABEL", {}),  # clarabel settings: clarabel.DefaultSettings
+        # ("cvxpy", "CLARABEL", {"max_iter": 1000}),
+        # ("cvxpy", "COPT", {}),  # not sure how to install COPT
+        # ("cvxpy", "DAQP", {}),
+        # ("cvxpy", "GLOP", {}),
+        ("cvxpy", "GLPK", {}),
+        ("cvxpy", "GLPK_MI", {}),
+        # ("cvxpy", "OSQP", {}),
+        # ("cvxpy", "PIQP", {}),
+        # ("cvxpy", "PROXQP", {}),
+        # ("cvxpy", "PDLP", {}),
+        # ("cvxpy", "CPLEX", {}),
+        # ("cvxpy", "NAG", {}),
+        # ("cvxpy", "ECOS", {}),
+        # ("cvxpy", "GUROBI", {}),  # requires license
+        ("cvxpy", "MOSEK", {}),  # requires license
+        ("cvxpy", "CVXOPT", {}),  # no MIP
+        # ("cvxpy", "SDPA", {}),
+        ("cvxpy", "SCS", {}),
+        ("cvxpy", "SCIP", {}),
+        # ("cvxpy", "XPRESS", {}),
+        ("cvxpy", "SCIPY", {"scipy_options": {"method": "highs"}}),
+        ("cvxpy", "SCIPY", {"scipy_options": {"method": "highs-ds"}}),
+        ("cvxpy", "SCIPY", {"scipy_options": {"method": "highs-ipm"}}),
+        # ("cvxpy", "SCIPY", {"scipy_options": {"method": "interior-point"}}),  # not working, since matrices are sparse in cvxpy
+        # ("cvxpy", "SCIPY", {"scipy_options": {"method": "revised simplex"}}),
+        # ("cvxpy", "SCIPY", {"scipy_options": {"method": "simplex"}}),
+        ("cvxpy", "HIGHS", {}),
+        # library scipy:
+        ("scipy", "highs", {}),
+        ("scipy", "highs-ds", {}),
+        ("scipy", "highs-ipm", {}),
+        ("scipy", "interior-point", {}),
+        ("scipy", "revised simplex", {}),
+        ("scipy", "simplex", {}),
+    ]
     # Currently best:
     # GLPK_MI for MIP and speed
     # scipy interior-point for LP and speed
 
-    results = {}
-    limits = [60, 100, 1000, 2000]
-    for limit in limits:  # , 1000, 2000]:  # , 10000]:
-        results[limit] = {}
-        saved_objective = -1
-        A = A_nutrients[:, :limit]
-        c = c_costs[:limit]
-        for library in solvers:
-            for method in solvers[library]:
-                start = time.perf_counter()
-                if library == "scipy":
-                    out = solve_optimization_scipy(A, lb, ub, c, method)
-                    # assert out == "optimal", (method, limit, out)
-                    # assert out.success, (method, limit, out)
-                    print(f"(scipy) {datetime.now().strftime('%b %d %I:%M:%S %p')}: Solver {method} succeeds")
-                    objective = float(out.fun)
-                elif library == "cvxpy":
-                    out = solve_optimization_cvxpy(A, lb, ub, c, solver_path=[method])
-                    objective = float(out)  # type: ignore
-                else:
-                    raise ValueError(f"Unknown library: {library}")
-                optimization_time = time.perf_counter() - start
-                results[limit][f"{library}-{method}"] = (optimization_time, objective)
-                if saved_objective == -1:
-                    saved_objective = objective
-                elif saved_objective is None or abs(saved_objective - objective) > 1e-3:
-                    print("different result", method, limit, saved_objective, objective)
-    with BENCHMARK_RESULTS.open("w") as f:
-        json.dump(results, f, indent=4)
+    sizes = [100, 200, 500, 1000, 2000, 5000, 10000]
+    num_iterations = 10
+    very_slow_solvers = {
+        ("cvxpy", "CVXOPT"),
+        ("cvxpy", "SCIPY"),
+        ("cvxpy", "SCS"),
+        ("scipy", "highs"),
+        ("scipy", "highs-ds"),
+        ("scipy", "highs-ipm"),
+    }
+
+    csv_file = BENCHMARK_RESULT_SUMMARY.open("w")
+    writer = csv.writer(csv_file)
+    writer.writerow(["library", "solver", "solver_options", "size", "time", "iterations"])
+
+    for size in sizes:
+        # calculate the baseline output
+        excpected_out = main("cvxpy", "GLPK_MI", {}, size, num_iterations)
+        print(f"Baseline output for size {size}: {excpected_out}")
+
+        for library, solver, solver_options in solvers:
+            if size > 500 and (library, solver) in very_slow_solvers:
+                print(f"Skipping {solver} for size {size}")
+                continue
+            # warm up the solver
+            main(library, solver, solver_options, size, 1)
+            filename = f"benchmark_{library}_{solver}_{num_iterations}.out"
+
+            start = time.perf_counter()
+            profiler = cProfile.Profile()
+            profiler.enable()
+            out = main(library, solver, solver_options, size, num_iterations)
+            profiler.disable()
+            profiler.dump_stats(BENCHMARK_DIR / filename)
+            profiler.clear()
+
+            print(f"Results saved to {filename}")
+            optimization_time = (time.perf_counter() - start) / num_iterations
+            writer.writerow([library, solver, json.dumps(solver_options), size, optimization_time, num_iterations])
+            csv_file.flush()
+
+            for e, g in zip(excpected_out, out, strict=True):
+                assert np.isclose(e, g, rtol=1e-2), f"Expected {e} but got {g}"
+
+    csv_file.close()
