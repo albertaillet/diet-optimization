@@ -25,7 +25,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)  # filter scipy D
 
 # def save_benchmark_data():
 #     import duckdb
-#     QUERY = (Path(__file__).parent / "queries/query.sql").read_text()
+#     QUERY = (Path(__file__).parent.parent / "dietdashboard/queries/query.sql").read_text()
 #     con = duckdb.connect(DATA_DIR / "data.db", read_only=True)
 #     out = con.execute(QUERY, parameters={"location_like": "Grenoble"}).fetchnumpy()
 #     np.savez_compressed(BENCHMARK_DATA, **out)
