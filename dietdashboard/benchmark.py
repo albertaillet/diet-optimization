@@ -74,15 +74,15 @@ def solve_optimization_cvxpy(A, lb, ub, c, solver, solver_options):
     return prob.solve(solver=solver, **solver_options)
 
 
-def main(library: str, solver: str, solver_options: dict[str, Any], size: int, iterations: int):
-    n = A_nutrients.shape[1]
+def main(library: str, solver: str, solver_options: dict[str, Any], size: int, iterations: int) -> list[float]:
     objectives = []
-    for i in range(iterations):
-        # different slice each time to avoid any possible caching
-        s = slice((i * size) % n, ((i + 1) * size) % n, 1 if (i * size) % n < ((i + 1) * size) % n else -1)
+    # n = A_nutrients.shape[1]
+    # different slice each time to avoid any possible caching
+    # s = slice((i * size) % n, ((i + 1) * size) % n, 1 if (i * size) % n < ((i + 1) * size) % n else -1)
+    for _ in range(iterations):
+        s = slice(0, size)
         A = A_nutrients[:, s]
         c = c_costs[s]
-
         if library == "scipy":
             out = solve_optimization_scipy(A, lb, ub, c, solver, solver_options)
             objective = float(out.fun)
@@ -115,12 +115,11 @@ if __name__ == "__main__":
         # See https://github.com/cvxpy/cvxpy/blob/master/pyproject.toml for the dependencies for each solver
         # ("cvxpy", "CBC", {}),
         ("cvxpy", "CLARABEL", {}),  # clarabel settings: clarabel.DefaultSettings
-        # ("cvxpy", "CLARABEL", {"max_iter": 1000}),
         # ("cvxpy", "COPT", {}),  # not sure how to install COPT
         # ("cvxpy", "DAQP", {}),
         # ("cvxpy", "GLOP", {}),
         ("cvxpy", "GLPK", {}),
-        ("cvxpy", "GLPK_MI", {}),
+        # ("cvxpy", "GLPK_MI", {}),  # uses MIP
         # ("cvxpy", "OSQP", {}),
         # ("cvxpy", "PIQP", {}),
         # ("cvxpy", "PROXQP", {}),
@@ -148,7 +147,7 @@ if __name__ == "__main__":
         ("scipy", "highs-ipm", {}),
         ("scipy", "interior-point", {}),
         ("scipy", "revised simplex", {}),
-        ("scipy", "simplex", {}),
+        ("scipy", "simplex", {"maxiter": 10_000}),
     ]
     # Currently best:
     # GLPK_MI for MIP and speed
@@ -171,7 +170,7 @@ if __name__ == "__main__":
 
     for size in sizes:
         # calculate the baseline output
-        excpected_out = main("cvxpy", "GLPK_MI", {}, size, num_iterations)
+        excpected_out = main("cvxpy", "GLPK", {}, size, num_iterations)
         print(f"Baseline output for size {size}: {excpected_out}")
 
         for library, solver, solver_options in solvers:
@@ -180,18 +179,21 @@ if __name__ == "__main__":
                 continue
             # warm up the solver
             main(library, solver, solver_options, size, 1)
-            filename = f"benchmark_{library}_{solver}_{num_iterations}.out"
+            filename = f"benchmark_{library}_{solver}_{size}.out"
 
             start = time.perf_counter()
             profiler = cProfile.Profile()
             profiler.enable()
             out = main(library, solver, solver_options, size, num_iterations)
             profiler.disable()
-            profiler.dump_stats(BENCHMARK_DIR / filename)
+            optimization_time = (time.perf_counter() - start) / num_iterations
+            if size == max(sizes):
+                profiler.dump_stats(BENCHMARK_DIR / filename)
+                print(f"Results saved to {filename}")
+            else:
+                print(f"Ran {library} {solver} {size}")
             profiler.clear()
 
-            print(f"Results saved to {filename}")
-            optimization_time = (time.perf_counter() - start) / num_iterations
             writer.writerow([library, solver, json.dumps(solver_options), size, optimization_time, num_iterations])
             csv_file.flush()
 
