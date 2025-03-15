@@ -8,14 +8,16 @@ CREATE OR REPLACE TABLE nutrient_map AS (
     WHERE calnut_const_code IS NOT NULL
 );
 -- Hardcoded macronutrient recommendations
-CREATE TABLE recommendations_macro AS (
+CREATE OR REPLACE TABLE recommendations_macro AS (
     SELECT id, unit,
-    value_males, value_females, value_upper_intake FROM read_csv('data/recommendations_macro.csv')
+    value_males, value_females, value_upper_intake
+    FROM read_csv('data/recommendations_macro.csv')
 );
 -- Hardcoded micronutrient recommendations
-CREATE TABLE recommendations_nnr2023 AS (
+CREATE OR REPLACE TABLE recommendations_nnr2023 AS (
     SELECT nutrient, unit, RI_or_AI,
-    value_males, value_females, value_upper_intake  FROM read_csv('data/recommendations_nnr2023.csv')
+    value_males, value_females, value_upper_intake
+    FROM read_csv('data/recommendations_nnr2023.csv')
 );
 /* Documentation: https://ciqual.anses.fr/cms/sites/default/files/inline-files/Table%20Ciqual%202020_doc_XML_ENG_2020%2007%2007.pdf
 Downloaded from: https://ciqual.anses.fr/#/cms/telechargement/node/20 (XML format)
