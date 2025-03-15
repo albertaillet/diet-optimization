@@ -27,6 +27,7 @@ DATA_DIR = Path(os.getenv("DATA_DIR", "data"))
 OFF_USERNAME = os.getenv("OFF_USERNAME")
 POSSIBLE_CURRENCIES = ["EUR", "CHF"]
 QUERY = (Path(__file__).parent / "queries/query.sql").read_text()
+LP_METHOD = "revised simplex"
 
 
 def query(con: duckdb.DuckDBPyConnection, location_like: str) -> dict[str, np.ndarray]:
@@ -69,7 +70,7 @@ def solve_optimization(A, lb, ub, c):
     b_ub = np.concatenate([b_ub_lb, b_ub_ub])
 
     # Solve the problem and result the result.
-    return linprog(c, A_ub=A_ub, b_ub=b_ub, bounds=(0, None))
+    return linprog(c, A_ub=A_ub, b_ub=b_ub, bounds=(0, None), method=LP_METHOD)
 
 
 def create_rangeslider(data: dict[str, str]) -> dict[str, float | str]:
@@ -197,7 +198,7 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
 
         # Calculate nutrient levels
         nutrients_levels = A_nutrients * result.x
-        assert (nutrients_levels < 0).sum() == 0, "Negative values in nutrients_levels."
+        assert (nutrients_levels < -1e-7).sum() == 0, "Negative values in nutrients_levels."
 
         reslut_csv_string = create_csv(result.x, chosen_bounds, products_and_prices, c_costs, nutrients_levels)
         (debug_folder / "output.csv").write_text(reslut_csv_string)

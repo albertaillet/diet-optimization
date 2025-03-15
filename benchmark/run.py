@@ -151,7 +151,7 @@ if __name__ == "__main__":
     ]
     # Currently best:
     # GLPK_MI for MIP and speed
-    # scipy interior-point for LP and speed
+    # scipy interior-point or revised simplex for LP and speed
 
     sizes = [100, 200, 500, 1000, 2000, 5000, 10000]
     num_iterations = 10
