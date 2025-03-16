@@ -25,7 +25,7 @@ repos:
         name: prettier
         entry: pnpx prettier --write
         language: system
-        files: \.(js|jsx|ts|tsx|css|json|md)$
+        files: \.(js|jsx|ts|tsx|css|json|md|html)$
   - repo: local
     hooks:
       - id: validate-staged-csv-data
