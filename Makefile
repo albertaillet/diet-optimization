@@ -104,10 +104,21 @@ drop:
 opt:
 	DATA_DIR=$(DATA_DIR) ./dietdashboard/app.py
 
-install-frontend:
+run-gunicorn:
+	DATA_DIR=$(DATA_DIR) nohup uv run gunicorn -w 4 -b 0.0.0.0:8000 dietdashboard.app:app >> gunicorn.log 2>&1 &
+
+list-gunicorn:
+	pgrep -af "dietdashboard.app:app"
+
+kill-gunicorn:
+	pkill -f "dietdashboard.app:app"
+
+# ---------- Frontend utilities. ----------
+
+frontend-install:
 	cd dietdashboard/frontend && pnpm install
 
-bundle-frontend:
+frontend-bundle:
 	cd dietdashboard/frontend \
 	&& \
 	esbuild index.js \
@@ -120,14 +131,8 @@ bundle-frontend:
 	--outfile=../static/bundle.css \
 	--minify
 
-run-gunicorn:
-	DATA_DIR=$(DATA_DIR) nohup uv run gunicorn -w 4 -b 0.0.0.0:8000 dietdashboard.app:app >> gunicorn.log 2>&1 &
-
-list-gunicorn:
-	pgrep -af "dietdashboard.app:app"
-
-kill-gunicorn:
-	pkill -f "dietdashboard.app:app"
+frontend-copy:
+	uvx files-to-prompt dietdashboard/frontend/*.js dietdashboard/templates/index.html
 
 # ---------- Create the nutrient extraction template. ----------
 

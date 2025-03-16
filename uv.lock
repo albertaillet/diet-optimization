@@ -270,6 +270,7 @@ benchmark = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "files-to-prompt" },
     { name = "pre-commit" },
     { name = "pyright" },
 ]
@@ -292,6 +293,7 @@ provides-extras = ["benchmark"]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "files-to-prompt" },
     { name = "pre-commit" },
     { name = "pyright" },
 ]
@@ -344,6 +346,18 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/dc/9c/0b15fb47b464e1b663b1acd1253a062aa5feecb07d4e597daea542ebd2b5/filelock-3.17.0.tar.gz", hash = "sha256:ee4e77401ef576ebb38cd7f13b9b28893194acc20a8e68e18730ba9c0e54660e", size = 18027 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/89/ec/00d68c4ddfedfe64159999e5f8a98fb8442729a63e2077eb9dcd89623d27/filelock-3.17.0-py3-none-any.whl", hash = "sha256:533dc2f7ba78dc2f0f531fc6c4940addf7b70a481e269a5a3b93be94ffbe8338", size = 16164 },
+]
+
+[[package]]
+name = "files-to-prompt"
+version = "0.6"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b9/4f/81fc86a88dc9e0cf6ea1ac2c561c0ac48b46d314cbbc2db5c8844b4b448b/files_to_prompt-0.6.tar.gz", hash = "sha256:9af57eecbdb29d3cce034c186493ffc6c1205ea4f5abde6fb32ccb1d96eae40c", size = 12236 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a0/99/0efff50ce810119d99eaa2fc0c7bbf66e4197e2defb89242f6e848004902/files_to_prompt-0.6-py3-none-any.whl", hash = "sha256:83d9a8b33246a10233218716a5c78034da4f5614748eda2f0ab94f1117801337", size = 10873 },
 ]
 
 [[package]]
