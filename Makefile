@@ -119,14 +119,14 @@ frontend-install:
 	cd dietdashboard/frontend && pnpm install
 
 frontend-bundle:
-	cd dietdashboard/frontend \
+	cd dietdashboard/frontend/js \
 	&& \
 	esbuild index.js \
-	--outfile=../static/bundle.js \
+	--outfile=../../static/bundle.js \
 	--bundle \
 	--minify \
-	--platform=browser \
-	&& \
+	--platform=browser
+	cd dietdashboard/frontend/ \
 	esbuild styles.css \
 	--outfile=../static/bundle.css \
 	--minify
