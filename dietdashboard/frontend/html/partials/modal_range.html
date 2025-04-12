@@ -1,16 +1,11 @@
 <!-- Modal for editing slider ranges -->
 <div id="rangeModal" class="modal-background">
   <div class="modal-content">
-    <div
-      style="display: flex; justify-content: space-between; align-items: center"
-    >
+    <div style="display: flex; justify-content: space-between; align-items: center">
       <h3 id="modalTitle" style="margin: 0">Edit Range</h3>
       <span class="close-modal">&times;</span>
     </div>
-    <form
-      id="rangeForm"
-      style="display: flex; flex-direction: column; gap: 10px"
-    >
+    <form id="rangeForm" style="display: flex; flex-direction: column; gap: 10px">
       <input type="hidden" id="currentSliderId" />
       <label for="minValue">Minimum Value:</label>
       <input type="number" id="minValue" min="0" step="1" required />
