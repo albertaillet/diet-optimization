@@ -313,7 +313,7 @@ a:hover {
 }
 
 /* Modal styles */
-.modal {
+.modal-background {
   display: none;
   position: fixed;
   z-index: 1000;
@@ -332,17 +332,6 @@ a:hover {
   border-radius: 5px;
   width: 300px;
   max-width: 80%;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-.modal-header h3 {
-  margin: 0;
 }
 
 .close-modal {
