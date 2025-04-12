@@ -1,3 +1,13 @@
+:root {
+  --primary-green: #2c6e31; /* Green for primary elements */
+  --light-green: #5b8c51; /* Lighter green for secondary elements */
+  --dark-green: #3d5c37; /* Darker green for highlights */
+  --background-light-color: #f8f7f2;
+  --text-color: #2e3d2d;
+  --grey: #ccc;
+  --light-grey: #f0f0f0;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -7,25 +17,16 @@
 html,
 body {
   height: 100%;
-  font-family:
-    "Inter",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    Helvetica,
-    Arial,
-    sans-serif;
+  font-family: system-ui, sans-serif;
   font-size: 14px;
-  background-color: #cdc8a4;
 }
 
 body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-color: #f8f7f2;
-  color: #2e3d2d;
+  background-color: var(--background-light-color);
+  color: var(--text-color);
 }
 
 header {
@@ -33,7 +34,7 @@ header {
   justify-content: space-between;
   align-items: center;
   padding: 0.7rem;
-  background-color: #2c6e31;
+  background-color: var(--primary-green);
   box-shadow: none;
 }
 
@@ -42,7 +43,7 @@ h2,
 h3 {
   font-weight: 600;
   margin-bottom: 0.5rem;
-  color: #2e3d2d;
+  color: var(--text-color);
 }
 
 h1 {
@@ -52,12 +53,12 @@ h1 {
 
 h2 {
   font-size: 1.1rem;
-  color: #2c6e31;
+  color: var(--primary-green);
 }
 
 h3 {
   font-size: 1rem;
-  color: #3d5c37;
+  color: var(--dark-green);
 }
 
 .selectors {
@@ -72,27 +73,27 @@ h3 {
 
 .selectors details summary {
   padding: 0.3rem 0.5rem;
-  background-color: #fff;
-  border: 1px solid #ddd;
+  background-color: var(--background-light-color);
+  border: 1px solid var(--grey);
   border-radius: 3px;
   cursor: pointer;
-  color: #2c6e31;
+  color: var(--primary-green);
   font-weight: 500;
   font-size: 0.85rem;
 }
 
 .selectors details summary:hover {
-  background-color: #f7f7f7;
+  background-color: var(--grey);
 }
 
 .selectors details ul {
   position: absolute;
   right: 0;
-  background-color: #fff;
+  background-color: var(--background-light-color);
   list-style: none;
   padding: 0.3rem;
   border-radius: 3px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--grey);
   z-index: 100;
   width: 200px;
   max-height: 300px;
@@ -105,7 +106,7 @@ h3 {
 }
 
 .selectors details ul li.nutrient-group {
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--grey);
   padding-top: 0.5rem;
   margin-top: 0.3rem;
 }
@@ -124,7 +125,7 @@ h3 {
 
 .selectors details ul li.nutrient-group strong {
   display: block;
-  color: #2c6e31;
+  color: var(--primary-green);
 }
 
 .nutrient-group-actions {
@@ -135,15 +136,15 @@ h3 {
 .nutrient-group-actions button {
   font-size: 0.7rem;
   padding: 0.1rem 0.3rem;
-  background-color: #f0f4f0;
-  border: 1px solid #ccc;
+  background-color: var(--background-light-color);
+  border: 1px solid var(--grey);
   border-radius: 3px;
   cursor: pointer;
-  color: #2c6e31;
+  color: var(--primary-green);
 }
 
 .nutrient-group-actions button:hover {
-  background-color: #e8f0e8;
+  background-color: var(--light-grey);
 }
 
 .selectors details ul li.nutrient-group ul.nutrient-list {
@@ -155,18 +156,14 @@ h3 {
 }
 
 #currency {
-  padding: 0.3rem 0.5rem;
   border-radius: 3px;
-  border: 1px solid #ddd;
-  color: #2c6e31;
-  font-weight: 500;
-  font-size: 0.85rem;
+  color: var(--primary-green);
   cursor: pointer;
 }
 
 #currency:hover,
 #currency:focus {
-  background-color: #f7f7f7;
+  background-color: var(--light-grey);
   outline: none;
 }
 
@@ -180,7 +177,7 @@ h3 {
   width: 50%;
   padding: 0.8rem;
   overflow-y: auto;
-  border-right: 1px solid #e0e0e0;
+  border-right: 1px solid var(--grey);
 }
 
 .dashboard-column:last-child {
@@ -194,25 +191,25 @@ table {
 }
 
 thead {
-  background-color: #f5f5f5;
+  background-color: var(--background-light-color);
 }
 
 table th {
   padding: 0.5rem;
   text-align: left;
-  border-bottom: 1px solid #ccc;
-  color: #2c6e31;
+  border-bottom: 1px solid var(--grey);
+  color: var(--primary-green);
   font-weight: 600;
 }
 
 table td {
   padding: 0.5rem;
   text-align: left;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--grey);
 }
 
 table tr:hover {
-  background-color: #f2f7f2;
+  background-color: var(--background-light-color);
   /* Slightly green tint for hover */
 }
 
@@ -222,13 +219,13 @@ table tr:hover {
 }
 
 a {
-  color: #3d5c37 !important;
+  color: var(--dark-green) !important;
   text-decoration: none;
   transition: color 0.2s;
 }
 
 a:hover {
-  color: #5b8c51 !important;
+  color: var(--light-green) !important;
   text-decoration: underline;
 }
 
@@ -243,7 +240,7 @@ a:hover {
 
 .price-highlight {
   font-weight: 600;
-  color: #2c6e31;
+  color: var(--primary-green);
 }
 
 .macro-distribution {
@@ -273,7 +270,7 @@ a:hover {
     height: auto;
     min-height: 50vh;
     border-right: none;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--grey);
     padding: 1rem;
   }
 
@@ -319,18 +316,18 @@ a:hover {
 
 .range-edit-btn {
   padding: 3px 8px;
-  background-color: #f0f4f0;
-  border: 1px solid #ccc;
+  background-color: var(--background-light-color);
+  border: 1px solid var(--grey);
   border-radius: 3px;
   cursor: pointer;
-  color: #2c6e31;
+  color: var(--primary-green);
   font-size: 0.75rem;
   display: block;
   margin: 0.5rem auto 0;
 }
 
 .range-edit-btn:hover {
-  background-color: #e8f0e8;
+  background-color: var(--light-grey);
 }
 
 .nutrient-name-container {
@@ -354,14 +351,14 @@ a:hover {
   top: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.5); /* Black with opacity 0.5 */
 }
 
 .modal-content {
-  background-color: #f8f7f2;
+  background-color: var(--background-light-color);
   margin: 15% auto;
   padding: 20px;
-  border: 1px solid #888;
+  border: 1px solid var(--grey);
   border-radius: 5px;
   width: 300px;
   max-width: 80%;
@@ -379,14 +376,14 @@ a:hover {
 }
 
 .close-modal {
-  color: #aaa;
+  color: var(--primary-green);
   font-size: 24px;
   font-weight: bold;
   cursor: pointer;
 }
 
 .close-modal:hover {
-  color: #333;
+  color: var(--dark-green);
 }
 
 .modal-form {
@@ -403,12 +400,12 @@ a:hover {
 
 .form-group label {
   font-weight: 500;
-  color: #2c6e31;
+  color: var(--primary-green);
 }
 
 .form-group input {
   padding: 8px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--grey);
   border-radius: 3px;
 }
 
@@ -421,23 +418,23 @@ a:hover {
 
 .modal-btn {
   padding: 6px 12px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--grey);
   border-radius: 3px;
   cursor: pointer;
 }
 
 .cancel-btn {
-  background-color: #f0f0f0;
-  color: #333;
+  background-color: var(--light-grey);
+  color: var(--text-color);
 }
 
 .save-btn {
-  background-color: #2c6e31;
-  color: white;
+  background-color: var(--primary-green);
+  color: var(--background-light-color);
 }
 
 .brush .selection {
-  fill: #2c6e31;
+  fill: var(--primary-green);
   fill-opacity: 0.8;
   stroke: none;
 }
@@ -445,22 +442,17 @@ a:hover {
 /* Sliders styling */
 
 .brush .handle--custom circle {
-  fill: #2c6e31;
+  fill: var(--primary-green);
   fill-opacity: 1;
-  stroke: black;
+  stroke: var(--text-color);
   stroke-width: 1px;
-}
-
-.axis line {
-  stroke: #e0e0e0;
 }
 
 /* Tooltip styling */
 .segment-label {
-  font-family: "Inter", sans-serif;
   font-size: 12px;
   text-anchor: middle;
-  fill: #333;
+  fill: var(--text-color);
   font-weight: 500;
   pointer-events: none;
   opacity: 0;
