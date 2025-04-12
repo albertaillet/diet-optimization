@@ -133,20 +133,6 @@ h3 {
   gap: 0.3rem;
 }
 
-.nutrient-group-actions button {
-  font-size: 0.7rem;
-  padding: 0.1rem 0.3rem;
-  background-color: var(--background-light-color);
-  border: 1px solid var(--grey);
-  border-radius: 3px;
-  cursor: pointer;
-  color: var(--primary-green);
-}
-
-.nutrient-group-actions button:hover {
-  background-color: var(--light-grey);
-}
-
 .selectors details ul li.nutrient-group ul.nutrient-list {
   position: static;
   border: none;
@@ -314,22 +300,6 @@ a:hover {
   padding-right: 2rem;
 }
 
-.range-edit-btn {
-  padding: 3px 8px;
-  background-color: var(--background-light-color);
-  border: 1px solid var(--grey);
-  border-radius: 3px;
-  cursor: pointer;
-  color: var(--primary-green);
-  font-size: 0.75rem;
-  display: block;
-  margin: 0.5rem auto 0;
-}
-
-.range-edit-btn:hover {
-  background-color: var(--light-grey);
-}
-
 .nutrient-name-container {
   display: flex;
   flex-direction: column;
@@ -392,47 +362,6 @@ a:hover {
   gap: 15px;
 }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.form-group label {
-  font-weight: 500;
-  color: var(--primary-green);
-}
-
-.form-group input {
-  padding: 8px;
-  border: 1px solid var(--grey);
-  border-radius: 3px;
-}
-
-.modal-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 15px;
-}
-
-.modal-btn {
-  padding: 6px 12px;
-  border: 1px solid var(--grey);
-  border-radius: 3px;
-  cursor: pointer;
-}
-
-.cancel-btn {
-  background-color: var(--light-grey);
-  color: var(--text-color);
-}
-
-.save-btn {
-  background-color: var(--primary-green);
-  color: var(--background-light-color);
-}
-
 .brush .selection {
   fill: var(--primary-green);
   fill-opacity: 0.8;
@@ -466,4 +395,29 @@ a:hover {
 .segment:hover + .segment-label,
 .segment-label:hover {
   opacity: 1;
+}
+
+/* Base Button Styles - shared by all button elements */
+button {
+  background-color: var(--background-light-color);
+  border: 1px solid var(--grey);
+  border-radius: 3px;
+  color: var(--text-color);
+  cursor: pointer;
+  padding: 3px 8px;
+}
+
+/* Hover/Focus State for all buttons */
+button:hover,
+button:focus {
+  background-color: var(--light-grey);
+}
+
+/* Input Elements - shared by all input elements */
+input {
+  background-color: white;
+  border: 1px solid var(--grey);
+  border-radius: 3px;
+  color: var(--text-color);
+  padding: 8px 8px;
 }
