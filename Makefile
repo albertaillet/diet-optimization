@@ -127,6 +127,7 @@ frontend-bundle:
 	--minify \
 	--platform=browser
 	cd dietdashboard/frontend/ \
+	&& \
 	esbuild styles.css \
 	--outfile=../static/bundle.css \
 	--minify
