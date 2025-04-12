@@ -1,0 +1,39 @@
+<table style="border-spacing: 0">
+  <colgroup>
+    <col style="width: 15%" />
+    <col style="width: 85%" />
+  </colgroup>
+  <tbody>
+    {% for slider in sliders %}
+    <tr
+      id="slider-row-{{ slider.id }}"
+      style="vertical-align: middle; line-height: 1.2"
+    >
+      <td style="padding: 0; font-size: 0.85rem">
+        <div class="nutrient-name-container">
+          <span>{{ slider.name }} ({{ slider.unit }})</span>
+          <button
+            class="range-edit-btn"
+            data-slider-id="{{ slider.id }}"
+            data-slider-name="{{ slider.name }}"
+            data-slider-unit="{{ slider.unit }}"
+          >
+            Edit Range
+          </button>
+        </div>
+      </td>
+      <td style="padding: 0">
+        <div
+          id="{{ slider.id }}"
+          class="slider-container"
+          data-min="{{ slider.min }}"
+          data-lower="{{ slider.lower }}"
+          data-max="{{ slider.max }}"
+          data-upper="{{ slider.upper }}"
+          data-optimization="slider"
+        ></div>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

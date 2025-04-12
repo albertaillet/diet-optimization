@@ -26,6 +26,7 @@ DEBUG_DIR = Path(__file__).parent.parent / "tmp"
 DATA_DIR = Path(os.getenv("DATA_DIR", "data"))
 OFF_USERNAME = os.getenv("OFF_USERNAME")
 POSSIBLE_CURRENCIES = ["EUR", "CHF"]
+TEMPLATE_FOLDER = Path(__file__).parent / "frontend/html"
 QUERY = (Path(__file__).parent / "queries/query.sql").read_text()
 LP_METHOD = "revised simplex"
 
@@ -140,6 +141,7 @@ def create_csv(
 def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
     app = Flask(__name__)
     Compress(app)
+    app.template_folder = TEMPLATE_FOLDER
 
     nutrient_map = query_list_of_dicts(con, """SELECT * FROM data.nutrient_map WHERE disabled IS NULL""")
     macro_recommendations = query_list_of_dicts(con, """SELECT * FROM data.recommendations WHERE nutrient_type = 'macro'""")
@@ -153,7 +155,7 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
             {"name": "Micronutrients", "id": "micro", "nutrients": micro_recommendations},
         ]
         sliders = [create_rangeslider(rec) for rec in [*macro_recommendations, *micro_recommendations]]
-        return render_template("index.html", currencies=POSSIBLE_CURRENCIES, sliders=sliders, nutrient_groups=nutrient_groups)
+        return render_template("dashboard.html", currencies=POSSIBLE_CURRENCIES, sliders=sliders, nutrient_groups=nutrient_groups)
 
     @app.route("/optimize.csv", methods=["POST"])
     def optimize():

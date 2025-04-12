@@ -1,0 +1,43 @@
+<details>
+  <summary>Select Nutrients</summary>
+  <ul>
+    {% for nutrient_group in nutrient_groups %}
+    <li class="nutrient-group">
+      <div class="nutrient-group-header">
+        <strong>{{ nutrient_group.name }}</strong>
+        <div class="nutrient-group-actions">
+          <button
+            class="select-all-btn"
+            data-category="{{ nutrient_group.id }}"
+          >
+            Select All
+          </button>
+          <button
+            class="deselect-all-btn"
+            data-category="{{ nutrient_group.id }}"
+          >
+            Deselect All
+          </button>
+        </div>
+      </div>
+      <ul class="nutrient-list" data-category="{{ nutrient_group.id }}">
+        {% for nutrient in nutrient_group.nutrients %}
+        <li>
+          <label>
+            <input
+              type="checkbox"
+              class="nutrient-checkbox"
+              value="{{ nutrient.id }}"
+              id="nutrient-checkbox-{{ nutrient.id }}"
+              data-category="{{ nutrient_group.id }}"
+              checked
+            />
+            {{ nutrient.name }}
+          </label>
+        </li>
+        {% endfor %}
+      </ul>
+    </li>
+    {% endfor %}
+  </ul>
+</details>
