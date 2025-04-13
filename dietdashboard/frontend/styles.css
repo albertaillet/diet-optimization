@@ -140,37 +140,6 @@ a:hover {
   text-decoration: underline;
 }
 
-/* Price card and highlight - minimal */
-.price-card {
-  margin-bottom: 0.5rem;
-}
-
-.price-card h3 {
-  margin: 0;
-}
-
-.price-highlight {
-  font-weight: 600;
-  color: var(--primary-green);
-}
-
-.macro-distribution {
-  margin-bottom: 1rem;
-  max-height: 160px;
-  overflow: hidden;
-}
-
-.table-responsive {
-  overflow-x: auto;
-  margin-bottom: 1rem;
-  border: none;
-  box-shadow: none;
-}
-
-.table-responsive table {
-  margin-top: 0;
-}
-
 @media (max-width: 768px) {
   .dashboard-content {
     flex-direction: column;

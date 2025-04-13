@@ -78,17 +78,17 @@ export function ResultTable(data, result, currency) {
   // Build the complete table.
   const table = (
     <div>
-      <div className="price-card">
+      <div>
         <h3>
           Total price per day:{" "}
-          <span className="price-highlight">
+          <span>
             {result} {currency}
           </span>
         </h3>
       </div>
       {macroInfo}
       <h3>Optimized Food Items</h3>
-      <div className="table-responsive">
+      <div>
         <table>
           <colgroup>
             <col style={{ width: "25%" }} />
