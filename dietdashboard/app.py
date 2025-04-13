@@ -204,7 +204,7 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
 
         reslut_csv_string = create_csv(result.x, chosen_bounds, products_and_prices, c_costs, nutrients_levels)
         (debug_folder / "output.csv").write_text(reslut_csv_string)
-        return reslut_csv_string
+        return app.response_class(reslut_csv_string, mimetype="text/csv")
 
     @app.route("/info/<price_id>", methods=["GET"])
     def info(price_id: str) -> str:
@@ -217,6 +217,35 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
     @app.route("/static/<path:path>")
     def send_static(path):
         return app.send_static_file(path)
+
+    def get_locations_within_bounds(lat_min, lat_max, lon_min, lon_max):
+        # TODO: Fix this function to use the actual database query
+        center_lat, center_lon = (lat_min + lat_max) / 2, (lon_min + lon_max) / 2
+        return [{"lat": center_lat, "lon": center_lon, "name": "Center Point"}]
+
+    @app.route("/<int:z>/<int:x>/<int:y>/locations.csv", methods=["GET"])
+    def location(z: int, x: int, y: int):
+        """Return a CSV of the locations within the given tile.
+        This function calculates the geographic boundaries for a tile using the same formulas as OpenStreetMap's tiles.
+        Like: https://tile.openstreetmap.org/{z}/{x}/{y}.png."""
+
+        n = 2**z  # Number of tiles along one edge at the current zoom level.
+        lon_min = (x / n) * 360.0 - 180.0
+        lon_max = ((x + 1) / n) * 360.0 - 180.0
+        lat_max = math.degrees(math.atan(math.sinh(math.pi * (1 - 2 * y / n))))
+        lat_min = math.degrees(math.atan(math.sinh(math.pi * (1 - 2 * (y + 1) / n))))
+
+        locations = get_locations_within_bounds(lat_min, lat_max, lon_min, lon_max)
+
+        output = io.StringIO()  # Create a CSV output from the retrieved locations.  TODO: create a function, this is done twice
+        writer = csv.DictWriter(output, fieldnames=["lat", "lon", "name"])
+        writer.writeheader()
+        for loc in locations:
+            writer.writerow(loc)
+
+        # Return the CSV response with appropriate MIME type.
+        output.seek(0)
+        return app.response_class(output.getvalue(), mimetype="text/csv")
 
     return app
 
