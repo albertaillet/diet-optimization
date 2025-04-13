@@ -94,35 +94,6 @@ h3 {
   border-right: none;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
-}
-
-thead {
-  background-color: var(--background-light-color);
-}
-
-table th {
-  padding: 0.5rem;
-  text-align: left;
-  border-bottom: 1px solid var(--grey);
-  color: var(--primary-green);
-  font-weight: 600;
-}
-
-table td {
-  padding: 0.5rem;
-  text-align: left;
-  border-bottom: 1px solid var(--grey);
-}
-
-table tr:hover {
-  background-color: var(--background-light-color);
-  /* Slightly green tint for hover */
-}
-
 .slider-container {
   width: 100%;
   margin-bottom: 0.5rem;
@@ -279,5 +250,26 @@ select {
 }
 select:hover,
 select:focus {
+  background-color: var(--light-grey);
+}
+
+/* Table - shared by all <table> elements */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+table th {
+  padding: 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--grey);
+  color: var(--primary-green);
+}
+table td {
+  padding: 0.3rem;
+  text-align: left;
+  border-bottom: 1px solid var(--grey);
+}
+
+table tr:hover {
   background-color: var(--light-grey);
 }
