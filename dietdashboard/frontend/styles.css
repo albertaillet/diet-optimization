@@ -64,8 +64,7 @@ h3 {
 
 .selectors {
   display: flex;
-  gap: 0.5rem;
-  font-size: 0.85rem;
+  gap: 10px;
 }
 
 .selectors details {
@@ -83,10 +82,6 @@ h3 {
   font-size: 0.85rem;
 }
 
-.selectors details summary:hover {
-  background-color: var(--grey);
-}
-
 .selectors details ul {
   position: absolute;
   right: 0;
@@ -96,50 +91,14 @@ h3 {
   border-radius: 3px;
   border: 1px solid var(--grey);
   z-index: 100;
-  width: 200px;
-  max-height: 300px;
+  max-height: 80vh;
   overflow-y: auto;
   font-size: 0.85rem;
-}
-
-.selectors details ul li {
-  padding: 0.2rem 0;
-}
-
-.selectors details ul li.nutrient-group {
-  border-top: 1px solid var(--grey);
-  padding-top: 0.5rem;
-  margin-top: 0.3rem;
-}
-
-.selectors details ul li.nutrient-group:first-child {
-  border-top: none;
-  margin-top: 0;
-}
-
-.nutrient-group-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.3rem;
-}
-
-.selectors details ul li.nutrient-group strong {
-  display: block;
-  color: var(--primary-green);
-}
-
-.nutrient-group-actions {
-  display: flex;
-  gap: 0.3rem;
 }
 
 .selectors details ul li.nutrient-group ul.nutrient-list {
   position: static;
   border: none;
-  padding: 0 0 0 0.5rem;
-  max-height: none;
-  width: auto;
 }
 
 #currency {
@@ -320,7 +279,6 @@ a:hover {
 }
 
 /* Sliders styling */
-
 .brush .handle--custom circle {
   fill: var(--primary-green);
   fill-opacity: 1;
@@ -348,7 +306,7 @@ a:hover {
   opacity: 1;
 }
 
-/* Base Button Styles - shared by all button elements */
+/* Button Styles - shared by all <button> elements */
 button {
   background-color: var(--white);
   border: 1px solid var(--grey);
@@ -358,7 +316,6 @@ button {
   padding: 3px 8px;
 }
 
-/* Hover/Focus State for all <button> elements */
 button:hover,
 button:focus {
   background-color: var(--light-grey);
