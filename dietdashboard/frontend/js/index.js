@@ -1,4 +1,5 @@
 import { csvParse } from "./d3";
+import { initMap } from "./map";
 import { updateResultTable } from "./result";
 import { updateBars } from "./sliders";
 
@@ -46,7 +47,6 @@ document.addEventListener("DOMContentLoaded", () => {
   optimizationInputs().forEach(element => {
     element.addEventListener("change", handleOptimitzationInputs); // Set up optimization input change listeners
   });
-  handleOptimitzationInputs(); // Initialize optimization
 
   // Set up nutrient checkbox listeners
   document.querySelectorAll(".nutrient-checkbox").forEach(checkbox => {
@@ -63,4 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".deselect-all-btn").forEach(button => {
     button.addEventListener("click", e => handleAllButton(e, false));
   });
+
+  initMap(); // Initialize the map
+  handleOptimitzationInputs(); // Initialize optimization
 });
