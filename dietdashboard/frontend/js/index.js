@@ -2,17 +2,12 @@ import { csvParse } from "./d3";
 import { updateResultTable } from "./result";
 import { updateBars } from "./sliders";
 
-function optimizationInput() {
-  return document.querySelectorAll("[data-optimization]");
-}
-
-export function isVisible(element) {
-  return element.offsetParent !== null;
-}
+const optimizationInputs = () => document.querySelectorAll("[data-optimization]");
+export const isVisible = element => element.offsetParent !== null;
 
 export function handleOptimitzationInputs() {
   const data = {};
-  optimizationInput().forEach(element => {
+  optimizationInputs().forEach(element => {
     if (element.tagName.toLowerCase() === "select") {
       data[element.dataset.optimization] = element.value;
     } else if (element.dataset.optimization === "slider" && isVisible(element)) {
@@ -48,7 +43,7 @@ function handleAllButton(e, select) {
   handleOptimitzationInputs();
 }
 document.addEventListener("DOMContentLoaded", () => {
-  optimizationInput().forEach(element => {
+  optimizationInputs().forEach(element => {
     element.addEventListener("change", handleOptimitzationInputs); // Set up optimization input change listeners
   });
   handleOptimitzationInputs(); // Initialize optimization
