@@ -1,15 +1,15 @@
 <details>
   <summary>Select Nutrients</summary>
-  <form method="dialog">
+  <form method="dialog" class="nutrient-selector-form">
     <ul>
       {% for nutrient_group in nutrient_groups %}
-      <li class="nutrient-group">
+      <li>
         <div style="display: flex; justify-content: space-between; align-items: center">
           <h3>{{ nutrient_group.name }}</h3>
           <button class="select-all-btn" data-category="{{ nutrient_group.id }}">Select All</button>
           <button class="deselect-all-btn" data-category="{{ nutrient_group.id }}">Deselect All</button>
         </div>
-        <ul class="nutrient-list" data-category="{{ nutrient_group.id }}">
+        <ul data-category="{{ nutrient_group.id }}">
           {% for nutrient in nutrient_group.nutrients %}
           <li>
             <label>

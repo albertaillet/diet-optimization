@@ -19,7 +19,7 @@ html,
 body {
   height: 100%;
   font-family: system-ui, sans-serif;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 body {
@@ -67,38 +67,15 @@ h3 {
   gap: 10px;
 }
 
-.selectors details {
-  position: relative;
-}
-
-.selectors details summary {
-  padding: 0.3rem 0.5rem;
-  background-color: var(--background-light-color);
-  border: 1px solid var(--grey);
-  border-radius: 3px;
-  cursor: pointer;
-  color: var(--primary-green);
-  font-weight: 500;
-  font-size: 0.85rem;
-}
-
-.selectors details ul {
+.nutrient-selector-form {
   position: absolute;
   right: 0;
   background-color: var(--background-light-color);
-  list-style: none;
-  padding: 0.3rem;
+  padding: 0.5rem;
   border-radius: 3px;
   border: 1px solid var(--grey);
-  z-index: 100;
   max-height: 80vh;
   overflow-y: auto;
-  font-size: 0.85rem;
-}
-
-.selectors details ul li.nutrient-group ul.nutrient-list {
-  position: static;
-  border: none;
 }
 
 #currency {
@@ -343,4 +320,14 @@ dialog {
   border-radius: 5px;
   width: 300px;
   max-width: 80%;
+}
+
+/* Details summary - shared by all <details> elements */
+details summary {
+  background-color: var(--background-light-color);
+  border: 1px solid var(--grey);
+  border-radius: 3px;
+  color: var(--primary-green);
+  cursor: pointer;
+  padding: 3px 8px;
 }
