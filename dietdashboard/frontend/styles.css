@@ -78,6 +78,7 @@ h3 {
   overflow-y: auto;
 }
 
+/* Dashboard layout */
 .dashboard-content {
   display: flex;
   overflow: hidden; /* Be able to scroll the content */
@@ -87,18 +88,10 @@ h3 {
   width: 50%;
   padding: 1rem;
   overflow-y: auto;
-  border-right: 1px solid var(--grey);
+  border: 1px solid var(--grey);
 }
 
-.dashboard-column:last-child {
-  border-right: none;
-}
-
-.slider-container {
-  width: 100%;
-  margin-bottom: 0.5rem;
-}
-
+/* Content and column adjustments for smaller screens */
 @media (max-width: 768px) {
   .dashboard-content {
     flex-direction: column;
@@ -108,43 +101,6 @@ h3 {
     width: 100%;
     height: auto;
     min-height: 50vh;
-    border-right: none;
-    border-bottom: 1px solid var(--grey);
-    padding: 1rem;
-  }
-
-  .dashboard-column:last-child {
-    border-bottom: none;
-  }
-
-  .selectors {
-    flex-direction: column;
-    align-items: stretch;
-    margin-top: 1rem;
-  }
-
-  header {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 1rem;
-  }
-
-  .slider-container {
-    margin-bottom: 2rem;
-  }
-
-  .macro-distribution {
-    max-height: none;
-    height: auto;
-  }
-
-  .table-responsive {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  h1 {
-    margin-bottom: 1rem;
   }
 }
 
