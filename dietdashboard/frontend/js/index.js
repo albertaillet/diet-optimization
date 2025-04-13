@@ -33,15 +33,20 @@ function handleCheckboxChange(checkbox) {
   handleOptimitzationInputs();
 }
 
-function handleAllButton(e, select) {
-  e.preventDefault();
-  const category = e.target.dataset.category;
-  const checkboxes = document.querySelectorAll(`.nutrient-checkbox[data-category="${category}"]`);
-  checkboxes.forEach(checkbox => {
-    checkbox.checked = select;
-    toggleSliderRowVisibility(checkbox.value, select);
-  });
-  handleOptimitzationInputs();
+// Function that sets up the event listeners for the select all and deselect all buttons
+// It takes a selector for the buttons and a boolean indicating whether to check or uncheck the boxes
+function handleAllButton(selector, checked) {
+  function handleAllButton(e, c) {
+    e.preventDefault();
+    const category = e.target.dataset.category;
+    const checkboxes = document.querySelectorAll(`.nutrient-checkbox[data-category="${category}"]`);
+    checkboxes.forEach(checkbox => {
+      checkbox.checked = c;
+      toggleSliderRowVisibility(checkbox.value, c);
+    });
+    handleOptimitzationInputs();
+  }
+  document.querySelectorAll(selector).forEach(btn => btn.addEventListener("click", e => handleAllButton(e, checked)));
 }
 document.addEventListener("DOMContentLoaded", () => {
   optimizationInputs().forEach(element => {
@@ -54,16 +59,8 @@ document.addEventListener("DOMContentLoaded", () => {
     toggleSliderRowVisibility(checkbox.value, checkbox.checked);
   });
 
-  // Set up Select All buttons
-  document.querySelectorAll(".select-all-btn").forEach(button => {
-    button.addEventListener("click", e => handleAllButton(e, true));
-  });
-
-  // Set up Deselect All buttons
-  document.querySelectorAll(".deselect-all-btn").forEach(button => {
-    button.addEventListener("click", e => handleAllButton(e, false));
-  });
-
+  handleAllButton(".select-all-btn", true); // Set up select all button
+  handleAllButton(".deselect-all-btn", false); // Set up deselect all button
   initMap(); // Initialize the map
   handleOptimitzationInputs(); // Initialize optimization
 });
