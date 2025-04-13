@@ -29,18 +29,20 @@
     cursor: pointer;
     margin-right: 2rem;
   }
-
-  /* Hide all tab-content by default */
+  /* Hide all tab-content by default: zero width/height, and no overflow */
   .tab-content {
-    display: none;
-    margin-top: 1rem;
+    width: 0;
+    height: 0;
+    overflow: hidden;
   }
-  /* Display the correct content when a radio is checked */
+  /* Expand the checked tab’s content by adjusting width and height */
   #sliders-tab:checked ~ #sliders-content {
-    display: block;
+    width: 100%;
+    height: auto;
   }
   #map-tab:checked ~ #map-content {
-    display: block;
+    width: 100%;
+    height: auto;
   }
 </style>
 {% endblock %}
