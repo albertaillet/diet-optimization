@@ -1,9 +1,21 @@
 {% extends "base.html" %} {% block content %}
 <div class="dashboard-content">
   <div class="dashboard-column">
-    <h2>Nutrient Targets</h2>
-    <p style="margin: 0 0 0.5rem; font-size: 0.85rem">Adjust your nutrient targets to optimize your diet.</p>
-    {% include 'partials/slider_table.html' %}
+    <div class="tabs">
+      <input type="radio" name="tabset" id="sliders-tab" checked />
+      <label for="sliders-tab" class="tab-label">Nutrient Targets</label>
+      <input type="radio" name="tabset" id="map-tab" />
+      <label for="map-tab" class="tab-label">Location Selection</label>
+
+      <div id="sliders-content" class="tab-content">
+        <p style="margin: 0 0 0.5rem; font-size: 0.85rem">Adjust your nutrient targets to optimize your diet.</p>
+        {% include 'partials/slider_table.html' %}
+      </div>
+      <div id="map-content" class="tab-content">
+        <p style="margin: 0 0 0.5rem; font-size: 0.85rem">A map-based approach to selecting items or regions.</p>
+        {% include 'partials/map.html' %}
+      </div>
+    </div>
   </div>
   <div class="dashboard-column">
     <h2>Optimized Meal</h2>
@@ -11,4 +23,24 @@
     <div id="result"></div>
   </div>
 </div>
+<style>
+  /* Basic tab label styling */
+  .tab-label {
+    cursor: pointer;
+    margin-right: 2rem;
+  }
+
+  /* Hide all tab-content by default */
+  .tab-content {
+    display: none;
+    margin-top: 1rem;
+  }
+  /* Display the correct content when a radio is checked */
+  #sliders-tab:checked ~ #sliders-content {
+    display: block;
+  }
+  #map-tab:checked ~ #map-content {
+    display: block;
+  }
+</style>
 {% endblock %}
