@@ -8,27 +8,23 @@ const LocationGridLayer = L.GridLayer.extend({
     this._url = url; // URL template for fetching CSV data.
   },
 
-  // Define how to create each tile.
-  _addTile: function (coords, container) {
+  _addTile: function (coords) {
     const url = L.Util.template(this._url, coords); // Create the URL, replacing placeholders with tile coordinates.
     fetch(url, { method: "GET" }) // Make sure that this URL has cache-control headers set to allow caching.
       .then(response => response.text())
       .then(text => csvParse(text))
-      .then(data => this._addMarkers(data))
+      .then(data => data.forEach(point => this._addMarker(point)))
       .catch(error => console.error("Error loading tile:", error));
   },
 
-  // Add markers from CSV data to the marker layer.
-  _addMarkers: function (data) {
-    data.forEach(function (point) {
-      const lat = parseFloat(point.lat);
-      const lon = parseFloat(point.lon);
-      if (!isNaN(lat) && !isNaN(lon)) {
-        const marker = L.marker([lat, lon]);
-        marker.bindPopup("Marker at: " + lat + ", " + lon); // Add popups or additional styling here.
-        this._markerLayer.addLayer(marker); // Add the marker to the marker layer.
-      }
-    }, this);
+  _addMarker: function (point) {
+    const lat = parseFloat(point.lat),
+      lon = parseFloat(point.lon);
+    if (!isNaN(lat) && !isNaN(lon)) {
+      const marker = L.marker([lat, lon]);
+      marker.bindPopup("Marker at: " + lat + ", " + lon); // Add popups or additional styling here.
+      this._markerLayer.addLayer(marker); // Add the marker to the marker layer.
+    }
   }
 });
 
