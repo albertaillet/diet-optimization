@@ -80,13 +80,12 @@ h3 {
 
 .dashboard-content {
   display: flex;
-  flex-grow: 1;
-  overflow: hidden;
+  overflow: hidden; /* Be able to scroll the content */
 }
 
 .dashboard-column {
   width: 50%;
-  padding: 0.8rem;
+  padding: 1rem;
   overflow-y: auto;
   border-right: 1px solid var(--grey);
 }
