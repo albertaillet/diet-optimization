@@ -4,6 +4,7 @@
   --dark-green: #3d5c37; /* Darker green for highlights */
   --background-light-color: #f8f7f2;
   --text-color: #2e3d2d;
+  --white: #fff;
   --grey: #ccc;
   --light-grey: #f0f0f0;
 }
@@ -312,45 +313,6 @@ a:hover {
   font-weight: 500;
 }
 
-/* Modal styles */
-.modal-background {
-  display: none;
-  position: fixed;
-  z-index: 1000;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5); /* Black with opacity 0.5 */
-}
-
-.modal-content {
-  background-color: var(--background-light-color);
-  margin: 15% auto;
-  padding: 20px;
-  border: 1px solid var(--grey);
-  border-radius: 5px;
-  width: 300px;
-  max-width: 80%;
-}
-
-.close-modal {
-  color: var(--primary-green);
-  font-size: 24px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.close-modal:hover {
-  color: var(--dark-green);
-}
-
-.modal-form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
 .brush .selection {
   fill: var(--primary-green);
   fill-opacity: 0.8;
@@ -388,7 +350,7 @@ a:hover {
 
 /* Base Button Styles - shared by all button elements */
 button {
-  background-color: var(--background-light-color);
+  background-color: var(--white);
   border: 1px solid var(--grey);
   border-radius: 3px;
   color: var(--text-color);
@@ -396,17 +358,32 @@ button {
   padding: 3px 8px;
 }
 
-/* Hover/Focus State for all buttons */
+/* Hover/Focus State for all <button> elements */
 button:hover,
 button:focus {
   background-color: var(--light-grey);
 }
 
-/* Input Elements - shared by all input elements */
+/* Input Elements - shared by all <input> elements */
 input {
-  background-color: white;
+  background-color: var(--white);
   border: 1px solid var(--grey);
   border-radius: 3px;
   color: var(--text-color);
   padding: 8px 8px;
+}
+
+/* Modal/Dialog - shared by all <dialog> elements */
+dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.5); /* semi-transparent black */
+}
+
+dialog {
+  background-color: var(--background-light-color);
+  margin: auto;
+  padding: 20px;
+  border: 1px solid var(--grey);
+  border-radius: 5px;
+  width: 300px;
+  max-width: 80%;
 }

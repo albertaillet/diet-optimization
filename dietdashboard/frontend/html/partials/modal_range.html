@@ -1,20 +1,17 @@
-<!-- Modal for editing slider ranges -->
-<div id="rangeModal" class="modal-background">
-  <div class="modal-content">
-    <div style="display: flex; justify-content: space-between; align-items: center">
-      <h3 id="modalTitle" style="margin: 0">Edit Range</h3>
-      <span class="close-modal">&times;</span>
+<dialog id="rangeModal" class="modal-content">
+  <form method="dialog" id="rangeForm" style="display: flex; flex-direction: column; gap: 10px">
+    <label style="display: flex; justify-content: space-between; align-items: center">
+      <h3 id="modalTitle" style="margin: 0"></h3>
+      <button>&times;</button>
+    </label>
+    <input type="hidden" id="currentSliderId" />
+    <label for="minVal">Minimum Value:</label>
+    <input type="number" id="minVal" name="minVal" min="0" step="1" required />
+    <label for="maxVal">Maximum Value:</label>
+    <input type="number" id="maxVal" name="maxVal" min="0" step="1" required />
+    <div style="display: flex; justify-content: left; gap: 10px">
+      <button>Cancel</button>
+      <button name="save">Save Changes</button>
     </div>
-    <form id="rangeForm" style="display: flex; flex-direction: column; gap: 10px">
-      <input type="hidden" id="currentSliderId" />
-      <label for="minValue">Minimum Value:</label>
-      <input type="number" id="minValue" min="0" step="1" required />
-      <label for="maxValue">Maximum Value:</label>
-      <input type="number" id="maxValue" min="0" step="1" required />
-      <div style="display: flex; justify-content: left; gap: 10px">
-        <button type="button" id="cancelBtn">Cancel</button>
-        <button type="submit">Save Changes</button>
-      </div>
-    </form>
-  </div>
-</div>
+  </form>
+</dialog>

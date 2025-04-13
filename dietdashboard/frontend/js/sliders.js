@@ -325,111 +325,55 @@ function updateSegments(barGroup, segments, x, barYPosition, barHeight) {
  */
 function setupRangeEditModal() {
   const modal = document.getElementById("rangeModal");
-  const closeBtn = document.querySelector(".close-modal");
-  const cancelBtn = document.getElementById("cancelBtn");
   const form = document.getElementById("rangeForm");
-  const minInput = document.getElementById("minValue");
-  const maxInput = document.getElementById("maxValue");
   const currentSliderId = document.getElementById("currentSliderId");
   const modalTitle = document.getElementById("modalTitle");
-
-  // Setup modal close actions
-  setupModalCloseActions(modal, closeBtn, cancelBtn);
-
-  // Handle form submission
-  setupModalFormSubmission(form, currentSliderId, minInput, maxInput, modal);
-
-  // Setup edit buttons
-  setupEditButtons(modalTitle, currentSliderId, minInput, maxInput, modal);
-}
-
-/**
- * Setup modal close actions
- * @param {HTMLElement} modal - The modal element
- * @param {HTMLElement} closeBtn - The close button
- * @param {HTMLElement} cancelBtn - The cancel button
- */
-function setupModalCloseActions(modal, closeBtn, cancelBtn) {
-  // Close modal when clicking the X button or cancel button
-  [closeBtn, cancelBtn].forEach(btn => {
-    if (btn) {
-      btn.addEventListener("click", () => {
-        modal.style.display = "none";
-      });
-    }
-  });
-
-  // Close modal when clicking outside the modal content
-  window.addEventListener("click", event => {
-    if (event.target === modal) {
-      modal.style.display = "none";
-    }
-  });
+  setupModalFormSubmission(form, currentSliderId);
+  setupEditButtons(form, modalTitle, currentSliderId, modal);
 }
 
 /**
  * Setup modal form submission
- * @param {HTMLElement} form - The form element
+ * @param {HTMLFormElement} form - The form element
  * @param {HTMLElement} currentSliderId - The input for current slider ID
- * @param {HTMLElement} minInput - The input for minimum value
- * @param {HTMLElement} maxInput - The input for maximum value
- * @param {HTMLElement} modal - The modal element
  */
-function setupModalFormSubmission(form, currentSliderId, minInput, maxInput, modal) {
-  if (form) {
-    form.addEventListener("submit", event => {
-      event.preventDefault();
-
-      const sliderId = currentSliderId.value;
-      const newMin = parseInt(minInput.value, 10);
-      const newMax = parseInt(maxInput.value, 10);
-
-      // Validate input
-      if (newMin >= newMax) {
-        alert("Minimum value must be less than maximum value");
-        return;
-      }
-
-      // Update the slider
-      updateSliderRange(sliderId, newMin, newMax);
-
-      // Close the modal
-      modal.style.display = "none";
-    });
-  }
+function setupModalFormSubmission(form, currentSliderId) {
+  form?.addEventListener("submit", event => {
+    if (event.submitter.name != "save") return; // Only make changes if "save" button is clicked
+    const formData = new FormData(form);
+    const newMin = Number(formData.get("minVal"));
+    const newMax = Number(formData.get("maxVal"));
+    // Validate input
+    if (newMin >= newMax) {
+      alert("Minimum value must be less than maximum value");
+      return;
+    }
+    const sliderId = currentSliderId.value;
+    updateSliderRange(sliderId, newMin, newMax); // Update the slider with new values
+  });
 }
 
 /**
- * Setup edit buttons
+ * Setup click handlers for all "Edit Range" buttons
+ * @param {HTMLFormElement} form - The form element
  * @param {HTMLElement} modalTitle - The modal title element
  * @param {HTMLElement} currentSliderId - The input for current slider ID
- * @param {HTMLElement} minInput - The input for minimum value
- * @param {HTMLElement} maxInput - The input for maximum value
  * @param {HTMLElement} modal - The modal element
  */
-function setupEditButtons(modalTitle, currentSliderId, minInput, maxInput, modal) {
-  // Set up click handlers for all "Edit Range" buttons
+function setupEditButtons(form, modalTitle, currentSliderId, modal) {
   document.querySelectorAll(".range-edit-btn").forEach(button => {
     button.addEventListener("click", () => {
       const sliderId = button.dataset.sliderId;
       const sliderName = button.dataset.sliderName;
       const sliderUnit = button.dataset.sliderUnit;
       const sliderContainer = document.getElementById(sliderId);
-
-      if (sliderContainer) {
-        // Set modal title
-        modalTitle.textContent = `Edit Range: ${sliderName} (${sliderUnit})`;
-
-        // Set current slider ID
-        currentSliderId.value = sliderId;
-
-        // Set current min/max values
-        minInput.value = sliderContainer.dataset.min;
-        maxInput.value = sliderContainer.dataset.max;
-
-        // Show the modal
-        modal.style.display = "block";
-      }
+      if (!sliderContainer) return;
+      modalTitle.textContent = `Edit Range: ${sliderName} (${sliderUnit})`; // Set modal title
+      currentSliderId.value = sliderId; // Set current slider ID
+      // Set current min/max values
+      form.elements.minVal.value = sliderContainer.dataset.min;
+      form.elements.maxVal.value = sliderContainer.dataset.max;
+      modal.showModal(); // Show the modal
     });
   });
 }
