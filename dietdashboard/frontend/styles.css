@@ -78,18 +78,6 @@ h3 {
   overflow-y: auto;
 }
 
-#currency {
-  border-radius: 3px;
-  color: var(--primary-green);
-  cursor: pointer;
-}
-
-#currency:hover,
-#currency:focus {
-  background-color: var(--light-grey);
-  outline: none;
-}
-
 .dashboard-content {
   display: flex;
   flex-grow: 1;
@@ -239,7 +227,6 @@ a:hover {
   fill-opacity: 0.8;
   stroke: none;
 }
-
 .brush .handle--custom circle {
   fill: var(--primary-green);
   fill-opacity: 1;
@@ -257,11 +244,9 @@ a:hover {
   opacity: 0;
   transition: opacity 0.2s ease;
 }
-
 .segment:hover {
   opacity: 0.8;
 }
-
 .segment:hover + .segment-label,
 .segment-label:hover {
   opacity: 1;
@@ -276,7 +261,6 @@ button {
   cursor: pointer;
   padding: 3px 8px;
 }
-
 button:hover,
 button:focus {
   background-color: var(--light-grey);
@@ -295,7 +279,6 @@ input {
 dialog::backdrop {
   background-color: rgba(0, 0, 0, 0.5); /* semi-transparent black */
 }
-
 dialog {
   background-color: var(--background-light-color);
   margin: auto;
@@ -314,4 +297,19 @@ details summary {
   color: var(--primary-green);
   cursor: pointer;
   padding: 3px 8px;
+}
+details summary:hover,
+details summary:focus {
+  background-color: var(--light-grey);
+}
+
+/* Select - shared by all <select> elements */
+select {
+  border-radius: 3px;
+  color: var(--primary-green);
+  cursor: pointer;
+}
+select:hover,
+select:focus {
+  background-color: var(--light-grey);
 }
