@@ -121,7 +121,7 @@ def create_csv(
     writer = csv.DictWriter(output, fieldnames=fieldnames + list(chosen_bounds))
     writer.writeheader()
     for i in indices:
-        location = ", ".join(str(products_and_prices["price_location"][i]).split(", ")[:3])
+        location = ", ".join(str(products_and_prices["location_osm_display_name"][i]).split(", ")[:3])
         product = {
             "id": int(products_and_prices["price_id"][i]),
             "product_code": products_and_prices["product_code"][i],
@@ -129,7 +129,7 @@ def create_csv(
             "ciqual_name": products_and_prices["ciqual_name"][i],
             "ciqual_code": products_and_prices["ciqual_code"][i],
             "location": location,
-            "location_osm_id": products_and_prices["price_location_osm_id"][i],
+            "location_osm_id": products_and_prices["location_osm_id"][i],
             "quantity_g": round(100 * x[i], 1),  # type: ignore
             "price": round(c_costs[i] * x[i], 2),  # type: ignore
             **{nutrient_id: nutrients_levels[j, i].round(4) for j, nutrient_id in enumerate(chosen_bounds)},
