@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      chroma-js:
+        specifier: ^3.1.2
+        version: 3.1.2
       d3-axis:
         specifier: ^3.0.0
         version: 3.0.0
@@ -40,6 +43,9 @@ importers:
         version: 1.5.3(leaflet@1.9.4)
 
 packages:
+
+  chroma-js@3.1.2:
+    resolution: {integrity: sha512-IJnETTalXbsLx1eKEgx19d5L6SRM7cH4vINw/99p/M11HCuXGRWL+6YmCm7FWFGIo6dtWuQoQi1dc5yQ7ESIHg==}
 
   commander@7.2.0:
     resolution: {integrity: sha512-QrWXB+ZQSVPmIWIhtEO9H+gwHaMGYiF5ChvoJ+K9ZGHG/sVsa6yiesAD1GC/x46sET00Xlwo1u49RVVVzvcSkw==}
@@ -150,6 +156,8 @@ packages:
     resolution: {integrity: sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==}
 
 snapshots:
+
+  chroma-js@3.1.2: {}
 
   commander@7.2.0: {}
 

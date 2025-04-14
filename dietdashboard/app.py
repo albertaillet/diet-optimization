@@ -223,9 +223,11 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
     def get_locations_within_bounds(lat_min, lat_max, lon_min, lon_max):
         """Get locations within the given bounds."""
         t_con = duckdb.connect(DATA_DIR / "data.db", read_only=True)
-        q = """SELECT DISTINCT location_id, location_osm_lat, location_osm_lon, location_osm_display_name FROM data.final_table
-        WHERE location_osm_lat >= $lat_min AND location_osm_lat <= $lat_max
-          AND location_osm_lon >= $lon_min AND location_osm_lon <= $lon_max"""
+        q = """SELECT DISTINCT location_id, location_osm_lat, location_osm_lon, location_osm_display_name, COUNT(*) AS count
+            FROM data.final_table
+            WHERE location_osm_lat >= $lat_min AND location_osm_lat <= $lat_max
+              AND location_osm_lon >= $lon_min AND location_osm_lon <= $lon_max
+            GROUP BY location_id, location_osm_lat, location_osm_lon, location_osm_display_name"""
         return query_list_of_dicts(con=t_con, query=q, lat_min=lat_min, lat_max=lat_max, lon_min=lon_min, lon_max=lon_max)
 
     @app.route("/<lat_min>/<lat_max>/<lon_min>/<lon_max>/locations.csv", methods=["GET"])
@@ -235,11 +237,11 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
         locations = get_locations_within_bounds(lat_min, lat_max, lon_min, lon_max)
 
         output = io.StringIO()  # Create a CSV output from the retrieved locations.  TODO: create a function, this is done twice
-        fieldnames = ["id", "lat", "lon", "name"]
-        keys = ["location_id", "location_osm_lat", "location_osm_lon", "location_osm_display_name"]
+        fieldnames = ["id", "lat", "lon", "name", "count"]
+        keys = ["location_id", "location_osm_lat", "location_osm_lon", "location_osm_display_name", "count"]
         writer = csv.writer(output)
         writer.writerow(fieldnames)
-        writer.writerows([[loc[key] for key in keys] for loc in locations])
+        writer.writerows((loc[key] for key in keys) for loc in locations)
         output.seek(0)
         response = make_response(output.getvalue())
         response.mimetype = "text/csv"

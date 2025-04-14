@@ -1,3 +1,4 @@
+import chroma from "chroma-js";
 import L from "leaflet";
 import "leaflet.markercluster";
 import { csvParse } from "./d3";
@@ -27,21 +28,20 @@ function addTileMarkers(markersLayer, lat_max, lat_min, lon_max, lon_min) {
 
 function getMarkerColor(markerCount, priceCount) {
   const ratio = priceCount / markerCount;
-  return ratio > 0.5 ? "dark" : ratio > 0.25 ? "#FFFF00" : "#FF0000";
-  // const colorScale = chroma.scale("RdYlGn").padding(0.15).domain([0, 50]);
-  // return ratio > 0 ? colorScale(ratio).hex() : "#666666";
+  const colorScale = chroma.scale("RdYlGn").padding(0.15).domain([0, 50]);
+  return ratio > 0 ? colorScale(ratio).hex() : "#666666";
 }
 
 function iconCreateFunction(cluster) {
   const markers = cluster.getAllChildMarkers();
   const markerCount = markers.length;
-  const priceCount = markers.reduce((sum, marker) => sum + (1 || 0), 0);
+  const priceCount = markers.reduce((sum, marker) => sum + (marker.options.count || 0), 0);
   return makeIcon(markerCount, priceCount);
 }
 
 function makeIcon(markerCount, priceCount) {
   const html = `<div style="background-color:${getMarkerColor(markerCount, priceCount)};">
-    <span class="marker-count">${123}</span>
+    <span class="marker-count">${markerCount}</span>
     <span class="price-count">${priceCount}</span>
     </div>`;
   return L.divIcon({
@@ -74,9 +74,8 @@ function addMissingMarkers(markersLayer, bounds) {
   }
 }
 
-function addMarker(markersLayer, { lat, lon }) {
-  const marker = L.marker([lat, lon], { icon: makeIcon(1, 2), price_count: 12 });
-  markersLayer.addLayer(marker);
+function addMarker(markersLayer, { lat, lon, count }) {
+  markersLayer.addLayer(L.marker([lat, lon], { icon: makeIcon(1, count), count: Number(count) }));
 }
 
 // Set to record tiles that have already been loaded.
