@@ -25,20 +25,23 @@ function addTileMarkers(markersLayer, lat_max, lat_min, lon_max, lon_min) {
     .catch(error => console.error("Error loading tile:", error));
 }
 
-// Function that devides the current map bounding into tiles and fetches the data for each tile
-// Each tile has an integer lat and lon and size of tile defined by the size variable
-function refreshMarkers(markersLayer, bounds) {
-  markersLayer.clearLayers();
+// Computes the grid of tiles covering the current view and only
+// loads markers for tiles not in the loadedTiles Set.
+function addMissingMarkers(markersLayer, bounds) {
   const { lat: latSW, lng: lonSW } = bounds.getSouthWest(),
     { lat: latNE, lng: lonNE } = bounds.getNorthEast(),
     [latS, lonS] = size,
-    lanStart = Math.floor(lonSW / lonS) * lonS,
+    lonStart = Math.floor(lonSW / lonS) * lonS,
     latStart = Math.floor(latSW / latS) * latS,
     lonEnd = Math.ceil(lonNE / lonS) * lonS,
     latEnd = Math.ceil(latNE / latS) * latS;
-  for (let lon = lanStart; lon <= lonEnd; lon += lonS) {
+  for (let lon = lonStart; lon <= lonEnd; lon += lonS) {
     for (let lat = latStart; lat <= latEnd; lat += latS) {
-      addTileMarkers(markersLayer, lat + latS, lat, lon + lonS, lon);
+      const tileKey = `${lat}_${lon}`;
+      if (!loadedTiles.has(tileKey)) {
+        addTileMarkers(markersLayer, lat + latS, lat, lon + lonS, lon);
+        loadedTiles.add(tileKey);
+      }
     }
   }
 }
@@ -48,13 +51,14 @@ function addMarker(markersLayer, { lat, lon }) {
   markersLayer.addLayer(marker);
 }
 
+// Set to record tiles that have already been loaded.
+const loadedTiles = new Set();
+
 const map = L.map("map").setView(defaultMapState.center, defaultMapState.zoom);
 export function initMap() {
   L.tileLayer(osmUrl, osmTilesOptions).addTo(map); // Add OSM tiles
-  const markersLayer = L.markerClusterGroup(markerClusterGroupOptions).addTo(map);
-  map.on("moveend", () => refreshMarkers(markersLayer, map.getBounds()));
-
-  // Listen for the tab becoming active, and then re-check map size
+  const markersLayer = L.layerGroup(markerClusterGroupOptions).addTo(map);
+  map.on("moveend", () => addMissingMarkers(markersLayer, map.getBounds()));
   document.getElementById("map-tab").addEventListener("change", () => map.invalidateSize());
   map.on("resize", () => map.invalidateSize());
 }
