@@ -179,7 +179,6 @@ CREATE OR REPLACE TABLE final_table AS (
     pr.location_osm_type,
     pr.location_osm_id,
     pr.location_osm_display_name,
-    pr.location_osm_display_name,
     pr.location_osm_tag_key,
     pr.location_osm_tag_value,
     pr.location_osm_address_postcode,
