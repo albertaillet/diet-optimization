@@ -141,6 +141,7 @@ def create_csv(
 
 def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
     app = Flask(__name__)
+    app.config["COMPRESS_MIMETYPES"] = ["text/html", "text/css", "application/javascript", "text/csv", "text/plain"]
     Compress(app)
     app.template_folder = TEMPLATE_FOLDER
 
@@ -220,9 +221,12 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
         return app.send_static_file(path)
 
     def get_locations_within_bounds(lat_min, lat_max, lon_min, lon_max):
-        # TODO: Fix this function to use the actual database query
-        center_lat, center_lon = (lat_min + lat_max) / 2, (lon_min + lon_max) / 2
-        return [{"lat": center_lat, "lon": center_lon, "name": "Center Point"}]
+        """Get locations within the given bounds."""
+        t_con = duckdb.connect(DATA_DIR / "data.db", read_only=True)
+        q = """SELECT DISTINCT location_id, location_osm_lat, location_osm_lon, location_osm_display_name FROM data.final_table
+        WHERE location_osm_lat >= $lat_min AND location_osm_lat <= $lat_max
+          AND location_osm_lon >= $lon_min AND location_osm_lon <= $lon_max"""
+        return query_list_of_dicts(con=t_con, query=q, lat_min=lat_min, lat_max=lat_max, lon_min=lon_min, lon_max=lon_max)
 
     @app.route("/<lat_min>/<lat_max>/<lon_min>/<lon_max>/locations.csv", methods=["GET"])
     def location(lat_min, lat_max, lon_min, lon_max):
@@ -231,12 +235,11 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
         locations = get_locations_within_bounds(lat_min, lat_max, lon_min, lon_max)
 
         output = io.StringIO()  # Create a CSV output from the retrieved locations.  TODO: create a function, this is done twice
-        writer = csv.DictWriter(output, fieldnames=["lat", "lon", "name"])
-        writer.writeheader()
-        for loc in locations:
-            writer.writerow(loc)
-
-        # Return the CSV response with appropriate MIME type.
+        fieldnames = ["id", "lat", "lon", "name"]
+        keys = ["location_id", "location_osm_lat", "location_osm_lon", "location_osm_display_name"]
+        writer = csv.writer(output)
+        writer.writerow(fieldnames)
+        writer.writerows([[loc[key] for key in keys] for loc in locations])
         output.seek(0)
         response = make_response(output.getvalue())
         response.mimetype = "text/csv"

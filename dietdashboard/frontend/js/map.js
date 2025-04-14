@@ -11,7 +11,7 @@ const markerClusterGroupOptions = {
   showCoverageOnHover: false,
   spiderfyOnMaxZoom: false,
   removeOutsideVisibleBounds: true,
-  // iconCreateFunction: iconCreateFunction,
+  iconCreateFunction: iconCreateFunction,
   disableClusteringAtZoom: 15
 };
 const size = [10, 10]; // Size of individual fetches in degrees, lat and lon
@@ -23,6 +23,34 @@ function addTileMarkers(markersLayer, lat_max, lat_min, lon_max, lon_min) {
     .then(text => csvParse(text))
     .then(data => data.forEach(point => addMarker(markersLayer, point)))
     .catch(error => console.error("Error loading tile:", error));
+}
+
+function getMarkerColor(markerCount, priceCount) {
+  const ratio = priceCount / markerCount;
+  return ratio > 0.5 ? "dark" : ratio > 0.25 ? "#FFFF00" : "#FF0000";
+  // const colorScale = chroma.scale("RdYlGn").padding(0.15).domain([0, 50]);
+  // return ratio > 0 ? colorScale(ratio).hex() : "#666666";
+}
+
+function iconCreateFunction(cluster) {
+  const markers = cluster.getAllChildMarkers();
+  const markerCount = markers.length;
+  const priceCount = markers.reduce((sum, marker) => sum + (1 || 0), 0);
+  return makeIcon(markerCount, priceCount);
+}
+
+function makeIcon(markerCount, priceCount) {
+  const html = `<div style="background-color:${getMarkerColor(markerCount, priceCount)};">
+    <span class="marker-count">${123}</span>
+    <span class="price-count">${priceCount}</span>
+    </div>`;
+  return L.divIcon({
+    className: "custom-marker",
+    html: html,
+    iconSize: L.point(40, 40),
+    iconAnchor: L.point(20, 20),
+    popupAnchor: L.point(0, -20)
+  });
 }
 
 // Computes the grid of tiles covering the current view and only
@@ -47,7 +75,7 @@ function addMissingMarkers(markersLayer, bounds) {
 }
 
 function addMarker(markersLayer, { lat, lon }) {
-  const marker = L.marker([lat, lon]);
+  const marker = L.marker([lat, lon], { icon: makeIcon(1, 2), price_count: 12 });
   markersLayer.addLayer(marker);
 }
 
@@ -57,7 +85,7 @@ const loadedTiles = new Set();
 const map = L.map("map").setView(defaultMapState.center, defaultMapState.zoom);
 export function initMap() {
   L.tileLayer(osmUrl, osmTilesOptions).addTo(map); // Add OSM tiles
-  const markersLayer = L.layerGroup(markerClusterGroupOptions).addTo(map);
+  const markersLayer = L.markerClusterGroup(markerClusterGroupOptions).addTo(map);
   map.on("moveend", () => addMissingMarkers(markersLayer, map.getBounds()));
   document.getElementById("map-tab").addEventListener("change", () => map.invalidateSize());
   map.on("resize", () => map.invalidateSize());
