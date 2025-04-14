@@ -18,7 +18,7 @@ from pathlib import Path
 
 import duckdb
 import numpy as np
-from flask import Flask, render_template, request
+from flask import Flask, make_response, render_template, request
 from flask_compress import Compress
 from scipy.optimize import linprog
 
@@ -29,6 +29,7 @@ POSSIBLE_CURRENCIES = ["EUR", "CHF"]
 TEMPLATE_FOLDER = Path(__file__).parent / "frontend/html"
 QUERY = (Path(__file__).parent / "queries/query.sql").read_text()
 LP_METHOD = "revised simplex"
+CACHE_TIMEOUT = 60 * 10  # 10 minutes
 
 
 def query(con: duckdb.DuckDBPyConnection, location_like: str) -> dict[str, np.ndarray]:
@@ -237,7 +238,10 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
 
         # Return the CSV response with appropriate MIME type.
         output.seek(0)
-        return app.response_class(output.getvalue(), mimetype="text/csv")
+        response = make_response(output.getvalue())
+        response.mimetype = "text/csv"
+        response.headers["Cache-Control"] = f"public, max-age={CACHE_TIMEOUT}"
+        return response
 
     return app
 

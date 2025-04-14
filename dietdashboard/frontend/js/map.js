@@ -18,13 +18,7 @@ const size = [10, 10]; // Size of individual fetches in degrees, lat and lon
 
 function addTileMarkers(markersLayer, lat_max, lat_min, lon_max, lon_min) {
   const url = L.Util.template(locationUrl, { lat_min, lat_max, lon_min, lon_max });
-  caches
-    .open("locations")
-    .then(
-      // check if the tile is already in the cache
-      // prettier-ignore
-      cache => cache.match(url).then(resp => resp ? resp: fetch(url)) // cache.add(url))
-    )
+  fetch(url)
     .then(response => response.text())
     .then(text => csvParse(text))
     .then(data => data.forEach(point => addMarker(markersLayer, point)))
