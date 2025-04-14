@@ -223,18 +223,10 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
         center_lat, center_lon = (lat_min + lat_max) / 2, (lon_min + lon_max) / 2
         return [{"lat": center_lat, "lon": center_lon, "name": "Center Point"}]
 
-    @app.route("/<int:z>/<int:x>/<int:y>/locations.csv", methods=["GET"])
-    def location(z: int, x: int, y: int):
-        """Return a CSV of the locations within the given tile.
-        This function calculates the geographic boundaries for a tile using the same formulas as OpenStreetMap's tiles.
-        Like: https://tile.openstreetmap.org/{z}/{x}/{y}.png."""
-
-        n = 2**z  # Number of tiles along one edge at the current zoom level.
-        lon_min = (x / n) * 360.0 - 180.0
-        lon_max = ((x + 1) / n) * 360.0 - 180.0
-        lat_max = math.degrees(math.atan(math.sinh(math.pi * (1 - 2 * y / n))))
-        lat_min = math.degrees(math.atan(math.sinh(math.pi * (1 - 2 * (y + 1) / n))))
-
+    @app.route("/<lat_min>/<lat_max>/<lon_min>/<lon_max>/locations.csv", methods=["GET"])
+    def location(lat_min, lat_max, lon_min, lon_max):
+        """Return a CSV of the locations within the given tile."""
+        lat_min, lat_max, lon_min, lon_max = map(int, (lat_min, lat_max, lon_min, lon_max))
         locations = get_locations_within_bounds(lat_min, lat_max, lon_min, lon_max)
 
         output = io.StringIO()  # Create a CSV output from the retrieved locations.  TODO: create a function, this is done twice
