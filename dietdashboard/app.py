@@ -106,7 +106,7 @@ def create_csv(fieldnames: list[str], data: Iterable[dict[str, str]]) -> str:
 
 def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
     app = Flask(__name__)
-    app.config["COMPRESS_MIMETYPES"] = ["text/html", "text/css", "application/javascript", "text/csv", "text/plain"]
+    app.config["COMPRESS_MIMETYPES"] = ["text/html", "text/css", "text/javascript", "text/csv", "text/plain"]
     Compress(app)
     app.template_folder = TEMPLATE_FOLDER
 
