@@ -84,6 +84,9 @@ function initDrawTools() {
 
   map.addControl(drawControl);
 
+  // Clear all circles when the draw button is clicked
+  document.querySelector(".leaflet-draw-draw-circle").addEventListener("click", () => drawnItems.clearLayers());
+
   // Handle the created items
   map.on(L.Draw.Event.CREATED, function (event) {
     const layer = event.layer;
