@@ -33,14 +33,14 @@ LP_METHOD = "revised simplex"
 CACHE_TIMEOUT = 60 * 10  # 10 minutes
 
 
-def query(con: duckdb.DuckDBPyConnection, location_like: str) -> dict[str, np.ndarray]:
-    return con.execute(QUERY, parameters={"location_like": location_like}).fetchnumpy()
+def query_numpy(con: duckdb.DuckDBPyConnection, query: str, **kwargs) -> dict[str, np.ndarray]:
+    return con.execute(query, parameters=kwargs).fetchnumpy()
 
 
-def query_list_of_dicts(con: duckdb.DuckDBPyConnection, query: str, **kwargs) -> list[dict[str, str]]:
-    ex = con.execute(query, parameters=kwargs)
-    cols = [d[0] for d in ex.description]  # type: ignore
-    return [{c: r for c, r in zip(cols, row, strict=True)} for row in ex.fetchall()]
+def query_dicts(con: duckdb.DuckDBPyConnection, query: str, **kwargs) -> list[dict[str, str]]:
+    con.execute(query, parameters=kwargs)
+    cols = [d[0] for d in con.description or []]
+    return [{c: r for c, r in zip(cols, row, strict=True)} for row in con.fetchall()]
 
 
 def get_arrays(
@@ -110,10 +110,9 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
     Compress(app)
     app.template_folder = TEMPLATE_FOLDER
 
-    nutrient_map = query_list_of_dicts(con, """SELECT * FROM data.nutrient_map WHERE disabled IS NULL""")
-    macro_recommendations = query_list_of_dicts(con, """SELECT * FROM data.recommendations WHERE nutrient_type = 'macro'""")
-    micro_recommendations = query_list_of_dicts(con, """SELECT * FROM data.recommendations WHERE nutrient_type = 'micro'""")
-    nutrient_ids = [nutrient["id"] for nutrient in nutrient_map]
+    nutrient_ids = [row["id"] for row in query_dicts(con, """SELECT id FROM data.nutrient_map WHERE disabled IS NULL""")]
+    macro_recommendations = query_dicts(con, """SELECT * FROM data.recommendations WHERE nutrient_type = 'macro'""")
+    micro_recommendations = query_dicts(con, """SELECT * FROM data.recommendations WHERE nutrient_type = 'micro'""")
 
     @app.route("/")
     def index():
@@ -134,10 +133,11 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
             f.write(json.dumps(data, indent=2))
         chosen_bounds = {nid: tuple(data[nid]) for nid in nutrient_ids if nid in data}
         if not chosen_bounds:
+            print("No nutrients selected.")
             return ""
 
         start = time.perf_counter()
-        products_and_prices = query(con, location_like="Toulouse")  # TODO: this should be a parameter
+        products_and_prices = query_numpy(con, QUERY, location_like="Toulouse")  # TODO: this should be a parameter
         query_time = time.perf_counter() - start
 
         start = time.perf_counter()
@@ -145,6 +145,7 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
         array_time = time.perf_counter() - start
 
         if A_nutrients.size == 0:
+            print("No products found.")
             return ""
 
         start = time.perf_counter()
@@ -163,6 +164,7 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
             )
         )
         if result.status != 0:
+            print(f"Optimization failed: {result.message}")
             return ""
 
         # Calculate nutrient levels
@@ -210,7 +212,7 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
 
     @app.route("/info/<price_id>", methods=["GET"])
     def info(price_id: str) -> str:
-        row_dicts = query_list_of_dicts(con, """SELECT * FROM data.final_table WHERE price_id = $price_id""", price_id=price_id)
+        row_dicts = query_dicts(con, """SELECT * FROM data.final_table WHERE price_id = $price_id""", price_id=price_id)
         if len(row_dicts) == 0:
             return "<h1>Not found</h1>"
         return render_template("info.html", item=row_dicts[0])
@@ -228,7 +230,7 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
             WHERE location_osm_lat >= $lat_min AND location_osm_lat <= $lat_max
               AND location_osm_lon >= $lon_min AND location_osm_lon <= $lon_max
             GROUP BY location_id, location_osm_lat, location_osm_lon, location_osm_display_name"""
-        return query_list_of_dicts(con=t_con, query=q, lat_min=lat_min, lat_max=lat_max, lon_min=lon_min, lon_max=lon_max)
+        return query_dicts(con=t_con, query=q, lat_min=lat_min, lat_max=lat_max, lon_min=lon_min, lon_max=lon_max)
 
     @app.route("/<lat_min>/<lat_max>/<lon_min>/<lon_max>/locations.csv", methods=["GET"])
     def location(lat_min, lat_max, lon_min, lon_max):
