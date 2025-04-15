@@ -1,6 +1,6 @@
 import * as d3 from "./d3";
 
-export function makePie(container, data, labels, totalCalories) {
+export function makePie(container: HTMLElement, data: number[], labels: string[], totalCalories: number): void {
   const width = container.clientWidth;
   const height = 150;
   const radius = Math.min(width, height) / 2.8;

@@ -1,8 +1,9 @@
 import * as d3 from "./d3";
-import { handleOptimitzationInputs, isVisible } from "./index";
-// Inspired by https://observablehq.com/@sarah37/snapping-range-slider-with-d3-brush
+import { handleOptimizationInputs, isVisible } from "./index";
 
-// Common configuration values
+/**
+ * Common configuration values
+ */
 const CONFIG = {
   margin: { top: 5, right: 10, bottom: 20, left: 10 },
   svgHeight: 50,
@@ -14,15 +15,17 @@ const CONFIG = {
 
 /**
  * Creates an SVG element for a slider with D3
- * @param {HTMLElement} container - The container element
- * @param {number} min - Minimum value
- * @param {number} max - Maximum value
- * @param {number} lower - Lower bound
- * @param {number} upper - Upper bound
- * @returns {Object} Object containing the SVG and scale
  */
-function createSliderSVG(container, min, max, lower, upper) {
-  // Create SVG element
+function createSliderSVG(
+  container: HTMLElement,
+  min: number,
+  max: number
+): {
+  svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
+  x: d3.ScaleLinear<number, number>;
+  width: number;
+  height: number;
+} {
   const svg = d3
     .select(container)
     .append("svg")
@@ -46,17 +49,20 @@ function createSliderSVG(container, min, max, lower, upper) {
 
 /**
  * Adds axis to the slider
- * @param {d3.Selection} svg - The D3 selection of the SVG element
- * @param {d3.Scale} x - The D3 scale
- * @param {number} height - The height of the SVG
- * @returns {Object} Object containing the group element and y positions
  */
-function createSliderAxis(svg, x, height) {
+function createSliderAxis(
+  svg: d3.Selection<SVGSVGElement, unknown, null, undefined>,
+  x: d3.ScaleLinear<number, number>,
+  height: number
+): {
+  g: d3.Selection<SVGGElement, unknown, null, undefined>;
+  axisYPosition: number;
+  barYPosition: number;
+  barGroup: d3.Selection<SVGGElement, unknown, null, undefined>;
+} {
   const g = svg.append("g").attr("transform", `translate(${CONFIG.margin.left},${CONFIG.margin.top})`);
 
   const axisYPosition = height;
-
-  // Create X-axis
   const xAxis = d3.axisBottom(x).ticks(CONFIG.nTicks).tickSize(6).tickPadding(3);
 
   g.append("g")
@@ -69,10 +75,8 @@ function createSliderAxis(svg, x, height) {
   // Calculate bar position
   const barYPosition = axisYPosition - CONFIG.barHeight - 2;
 
-  // Store bar configuration
   svg.attr("data-bar-height", CONFIG.barHeight).attr("data-bar-y-position", barYPosition);
 
-  // Create bar group
   const barGroup = g.append("g").attr("class", "stacked-bar");
 
   return { g, axisYPosition, barYPosition, barGroup };
@@ -80,15 +84,16 @@ function createSliderAxis(svg, x, height) {
 
 /**
  * Adds brush interaction to the slider
- * @param {d3.Selection} g - The D3 group element
- * @param {d3.Scale} x - The D3 scale
- * @param {number} axisYPosition - The Y position of the axis
- * @param {number} width - The width of the SVG
- * @param {HTMLElement} container - The container element
- * @param {number} lower - Lower bound
- * @param {number} upper - Upper bound
  */
-function createSliderBrush(g, x, axisYPosition, width, container, lower, upper) {
+function createSliderBrush(
+  g: d3.Selection<SVGGElement, unknown, null, undefined>,
+  x: d3.ScaleLinear<number, number>,
+  axisYPosition: number,
+  width: number,
+  container: HTMLElement,
+  lower: number,
+  upper: number
+): void {
   const brushYPosition = axisYPosition - CONFIG.brushHeight / 2;
 
   const brushSelection = d3
@@ -100,7 +105,6 @@ function createSliderBrush(g, x, axisYPosition, width, container, lower, upper) 
     .on("brush", brushed)
     .on("end", brushended);
 
-  // Add brush group
   const brushGroup = g.append("g").attr("class", "brush").call(brushSelection);
 
   // Add custom handles
@@ -117,91 +121,74 @@ function createSliderBrush(g, x, axisYPosition, width, container, lower, upper) 
   // Set initial brush position
   brushGroup.call(brushSelection.move, [x(lower), x(upper)]);
 
-  // Brush event handlers
-  function brushed(event) {
+  function brushed(event: d3.D3BrushEvent<unknown>) {
     if (event.selection) {
-      handle.attr("transform", (d, i) => {
-        return "translate(" + [event.selection[i], 0] + ")";
-      });
+      handle.attr("transform", (_d, i) => `translate(${event.selection![i]}, 0)`);
     }
   }
 
-  function brushended(event) {
+  function brushended(event: d3.D3BrushEvent<unknown>) {
     if (!event.sourceEvent) return;
-    const [lower, upper] = event.selection.map(x.invert).map(Math.round);
+    const [lower, upper] = event.selection?.map(v => x.invert(v)).map(Math.round);
     d3.select(this).transition().call(brushSelection.move, [lower, upper].map(x));
-    container.dataset.lower = lower;
-    container.dataset.upper = upper;
-    handleOptimitzationInputs();
+    container.dataset.lower = String(lower);
+    container.dataset.upper = String(upper);
+    handleOptimizationInputs();
   }
 }
 
 /**
  * Initializes or updates a slider
- * @param {HTMLElement} container - The container element
- * @param {boolean} isUpdate - Whether this is an update or initial creation
  */
-function setupSlider(container, isUpdate = false) {
+function setupSlider(container: HTMLElement, isUpdate = false): void {
   const min = Number(container.dataset.min);
   const max = Number(container.dataset.max);
   let lower = Number(container.dataset.lower);
   let upper = Number(container.dataset.upper);
 
-  // If updating, ensure values are within range
   if (isUpdate) {
     lower = Math.max(min, Math.min(lower, max));
     upper = Math.max(min, Math.min(upper, max));
-    container.dataset.lower = lower;
-    container.dataset.upper = upper;
+    container.dataset.lower = String(lower);
+    container.dataset.upper = String(upper);
 
-    // Remove existing SVG if updating
     const existingSvg = container.querySelector("svg");
     if (existingSvg) {
       existingSvg.remove();
     }
   }
 
-  // Create SVG and scale
-  const { svg, x, width, height } = createSliderSVG(container, min, max, lower, upper);
-
-  // Add axis and bar group
+  const { svg, x, width, height } = createSliderSVG(container, min, max);
   const { g, axisYPosition, barYPosition, barGroup } = createSliderAxis(svg, x, height);
 
-  // Add brush interaction
   createSliderBrush(g, x, axisYPosition, width, container, lower, upper);
 }
 
 /**
  * Initialize all sliders on the page
  */
-function initializeSliders() {
-  const containers = document.querySelectorAll(".slider-container");
-  containers.forEach(setupSlider);
+function initializeSliders(): void {
+  const containers = document.querySelectorAll<HTMLElement>(".slider-container");
+  containers.forEach(container => setupSlider(container));
 }
 
 /**
  * Update the range of a slider
- * @param {string} sliderId - ID of the slider to update
- * @param {number} newMin - New minimum value
- * @param {number} newMax - New maximum value
  */
-export function updateSliderRange(sliderId, newMin, newMax) {
+export function updateSliderRange(sliderId: string, newMin: number, newMax: number): void {
   const container = document.getElementById(sliderId);
   if (!container) return;
 
-  // Update data attributes
-  container.dataset.min = newMin;
-  container.dataset.max = newMax;
+  container.dataset.min = String(newMin);
+  container.dataset.max = String(newMax);
 
-  // Re-initialize the slider with updated values
   setupSlider(container, true);
 }
 
 /**
  * Update the bar charts in sliders with product data
- * @param {Array} products - Array of product data
  */
-export function updateBars(products) {
+export function updateBars(products: Array<Record<string, any>>): void {
   const containers = document.querySelectorAll(".slider-container");
 
   containers.forEach(container => {
@@ -216,41 +203,30 @@ export function updateBars(products) {
     if (!svgElement) return;
 
     const svg = d3.select(svgElement);
-
-    // Recreate scale from stored values
     const rangeWidth = Number(svg.attr("data-range-width"));
     const barYPosition = Number(svg.attr("data-bar-y-position"));
     const barHeight = Number(svg.attr("data-bar-height"));
 
     const x = d3.scaleLinear().domain([min, max]).range([0, rangeWidth]);
-
-    // Get the barGroup within this SVG
     const barGroup = svg.select(".stacked-bar");
-
-    // Create segments data from products
     const segments = createSegmentsData(products, nutrientName);
-
-    // Update the visualization with segments
     updateSegments(barGroup, segments, x, barYPosition, barHeight);
   });
 }
 
 /**
  * Create segment data from products for a specific nutrient
- * @param {Array} products - Array of product data
- * @param {string} nutrientName - Name of the nutrient
- * @returns {Array} Array of segment data
  */
-function createSegmentsData(products, nutrientName) {
-  // Map products to segments
+function createSegmentsData(products: Array<Record<string, any>>, nutrientName: string) {
   const segments = products.map((product, i) => ({
-    i: i,
+    i,
     id: product.id,
     name: product.product_name,
-    level: Number(product[nutrientName])
+    level: Number(product[nutrientName]),
+    startValue: 0,
+    endValue: 0
   }));
 
-  // Calculate cumulative values
   let cum = 0;
   segments.forEach(d => {
     d.startValue = cum;
@@ -263,14 +239,14 @@ function createSegmentsData(products, nutrientName) {
 
 /**
  * Update the segments visualization with new data
- * @param {d3.Selection} barGroup - The D3 selection of the bar group
- * @param {Array} segments - Array of segment data
- * @param {d3.Scale} x - The D3 scale
- * @param {number} barYPosition - The Y position of the bars
- * @param {number} barHeight - The height of the bars
  */
-function updateSegments(barGroup, segments, x, barYPosition, barHeight) {
-  // Data join without key function (match by index)
+function updateSegments(
+  barGroup: d3.Selection<SVGGElement, unknown, null, undefined>,
+  segments: Array<any>,
+  x: d3.ScaleLinear<number, number>,
+  barYPosition: number,
+  barHeight: number
+): void {
   const segmentGroups = barGroup.selectAll(".segment-group").data(segments);
 
   // EXIT selection: Remove old elements
@@ -286,7 +262,6 @@ function updateSegments(barGroup, segments, x, barYPosition, barHeight) {
     .append("text")
     .attr("class", "segment-label")
     .attr("y", barYPosition - 5)
-    .text(d => d.name)
     .attr("opacity", 0);
 
   // Merge entering and updating segments
@@ -299,7 +274,7 @@ function updateSegments(barGroup, segments, x, barYPosition, barHeight) {
     .duration(750)
     .attr("x", d => x(d.startValue))
     .attr("width", d => x(d.endValue) - x(d.startValue))
-    .attr("fill", (d, i) => d3.schemeTableau10[d.i % 10]);
+    .attr("fill", d => d3.schemeTableau10[d.i % 10]);
 
   // Update positions and text of labels
   segmentGroupsMerge
@@ -323,7 +298,7 @@ function updateSegments(barGroup, segments, x, barYPosition, barHeight) {
 /**
  * Setup modal dialog for editing slider ranges
  */
-function setupRangeEditModal() {
+function setupRangeEditModal(): void {
   const modal = document.getElementById("rangeModal");
   const form = document.getElementById("rangeForm");
   const currentSliderId = document.getElementById("currentSliderId");
@@ -334,12 +309,10 @@ function setupRangeEditModal() {
 
 /**
  * Setup modal form submission
- * @param {HTMLFormElement} form - The form element
- * @param {HTMLElement} currentSliderId - The input for current slider ID
  */
-function setupModalFormSubmission(form, currentSliderId) {
-  form?.addEventListener("submit", event => {
-    if (event.submitter.name != "save") return; // Only make changes if "save" button is clicked
+function setupModalFormSubmission(form: HTMLFormElement, currentSliderId: HTMLInputElement): void {
+  form.addEventListener("submit", (event: SubmitEvent) => {
+    if (event.submitter?.name !== "save") return; // Only make changes if "save" button is clicked
     const formData = new FormData(form);
     const newMin = Number(formData.get("minVal"));
     const newMax = Number(formData.get("maxVal"));
@@ -355,12 +328,13 @@ function setupModalFormSubmission(form, currentSliderId) {
 
 /**
  * Setup click handlers for all "Edit Range" buttons
- * @param {HTMLFormElement} form - The form element
- * @param {HTMLElement} modalTitle - The modal title element
- * @param {HTMLElement} currentSliderId - The input for current slider ID
- * @param {HTMLElement} modal - The modal element
  */
-function setupEditButtons(form, modalTitle, currentSliderId, modal) {
+function setupEditButtons(
+  form: HTMLFormElement,
+  modalTitle: HTMLElement,
+  currentSliderId: HTMLInputElement,
+  modal: HTMLDialogElement
+): void {
   document.querySelectorAll(".range-edit-btn").forEach(button => {
     button.addEventListener("click", () => {
       const sliderId = button.dataset.sliderId;
@@ -378,7 +352,7 @@ function setupEditButtons(form, modalTitle, currentSliderId, modal) {
   });
 }
 
-// Initialize everything when DOM is ready
+// Initialize when DOM is ready
 document.addEventListener("DOMContentLoaded", () => {
   initializeSliders();
   setupRangeEditModal();

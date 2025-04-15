@@ -2,40 +2,35 @@
 import { h } from "./framework";
 import { makePie } from "./pie";
 
-function ResultRow({ id, product_code, product_name, ciqual_code, ciqual_name, location_osm_id, location, quantity_g, price }) {
+interface ResultProduct {
+  id: string;
+  product_code: string;
+  product_name: string;
+  ciqual_code: string;
+  ciqual_name: string;
+  location_osm_id: string;
+  location: string;
+  quantity_g: number;
+  price: number;
+  protein?: number;
+  carbohydrate?: number;
+  fat?: number;
+}
+
+function ResultRow(row: ResultProduct) {
+  // prettier-ignore
   return (
     <tr>
-      <td>
-        <a href={`https://world.openfoodfacts.org/product/${product_code}`} target="_blank" style={{ color: "black" }}>
-          {product_name}
-        </a>
-      </td>
-      <td>
-        <a href={`https://ciqual.anses.fr/#/aliments/${ciqual_code}`} target="_blank" style={{ color: "black" }}>
-          {ciqual_name}
-        </a>
-      </td>
-      <td>
-        <a href={`https://www.openstreetmap.org/way/${location_osm_id}`} target="_blank" style={{ color: "black" }}>
-          {location}
-        </a>
-      </td>
-      <td>
-        <a href={`info/${id}`} target="_blank" style={{ color: "black" }}>
-          {quantity_g}
-        </a>
-      </td>
-      <td>
-        <a href={`https://prices.openfoodfacts.org/prices/${id}`} target="_blank" className="price-highlight">
-          {price}
-        </a>
-      </td>
+      <td><a href={`https://world.openfoodfacts.org/product/${row.product_code}`} target="_blank" >{row.product_name}</a></td>
+      <td><a href={`https://ciqual.anses.fr/#/aliments/${row.ciqual_code}`} target="_blank" >{row.ciqual_name}</a></td>
+      <td><a href={`https://www.openstreetmap.org/way/${row.location_osm_id}`} target="_blank" >{row.location}</a></td>
+      <td><a href={`info/${row.id}`} target="_blank" >{row.quantity_g}</a></td>
+      <td><a href={`https://prices.openfoodfacts.org/prices/${row.id}`} target="_blank">{row.price}</a></td>
     </tr>
   );
 }
 
-export function ResultTable(data, result, currency) {
-  // If there is no data, display a message.
+export function ResultTable(data: ResultProduct[], result: number, currency: string): HTMLElement {
   if (data.length === 0) {
     return (
       <div style={{ marginTop: "1rem" }}>
@@ -44,16 +39,14 @@ export function ResultTable(data, result, currency) {
     );
   }
 
-  // Compute macronutrient totals.
   const totalProtein = data.reduce((acc, p) => acc + Number(p.protein || 0), 0);
   const totalCarbs = data.reduce((acc, p) => acc + Number(p.carbohydrate || 0), 0);
   const totalFat = data.reduce((acc, p) => acc + Number(p.fat || 0), 0);
-  const totalCalories = (totalProtein * 4 + totalCarbs * 4 + totalFat * 9).toFixed(1);
+  const totalCalories = totalProtein * 4 + totalCarbs * 4 + totalFat * 9;
   const proteinPercentage = totalCalories > 0 ? (((totalProtein * 4) / totalCalories) * 100).toFixed(1) : "0";
   const carbsPercentage = totalCalories > 0 ? (((totalCarbs * 4) / totalCalories) * 100).toFixed(1) : "0";
   const fatPercentage = totalCalories > 0 ? (((totalFat * 9) / totalCalories) * 100).toFixed(1) : "0";
 
-  // Render the macronutrient info if available.
   let macroInfo = null;
   if (data[0].hasOwnProperty("protein") && data[0].hasOwnProperty("carbohydrate") && data[0].hasOwnProperty("fat")) {
     macroInfo = (
@@ -66,7 +59,7 @@ export function ResultTable(data, result, currency) {
           <p style={{ margin: 0, fontSize: "0.85rem" }}>
             Protein: {totalProtein.toFixed(1)}g, Carbs: {totalCarbs.toFixed(1)}g, Fat: {totalFat.toFixed(1)}g
           </p>
-          <p style={{ margin: 0, fontSize: "0.85rem" }}>Energy: {totalCalories} kcal</p>
+          <p style={{ margin: 0, fontSize: "0.85rem" }}>Energy: {totalCalories.toFixed(1)} kcal</p>
           <p style={{ margin: 0, fontSize: "0.85rem" }}>
             Protein: {proteinPercentage}%, Carbs: {carbsPercentage}%, Fat: {fatPercentage}%
           </p>
@@ -74,16 +67,12 @@ export function ResultTable(data, result, currency) {
       </div>
     );
   }
-
-  // Build the complete table.
+  // prettier-ignore
   const table = (
     <div>
       <div>
         <h3>
-          Total price per day:{" "}
-          <span>
-            {result} {currency}
-          </span>
+          Total price per day: <span>{result} {currency}</span>
         </h3>
       </div>
       {macroInfo}
@@ -107,26 +96,17 @@ export function ResultTable(data, result, currency) {
             </tr>
           </thead>
           <tbody>
-            {data.map(product => (
-              <ResultRow key={product.id} {...product} />
-            ))}
+            {data.map(product => (<ResultRow {...product} />))}
           </tbody>
         </table>
       </div>
     </div>
   );
 
-  // After the table is mounted, schedule the pie chart drawing.
   setTimeout(() => {
     const pieElem = document.getElementById("pie");
-    if (pieElem) {
-      makePie(
-        pieElem,
-        [totalProtein.toFixed(1), totalCarbs.toFixed(1), totalFat.toFixed(1)],
-        ["Protein", "Carbs", "Fat"],
-        totalCalories
-      );
-    }
+    if (!pieElem) return;
+    makePie(pieElem, [totalProtein, totalCarbs, totalFat], ["Protein", "Carbs", "Fat"], totalCalories);
   }, 0);
 
   return table;
@@ -134,12 +114,8 @@ export function ResultTable(data, result, currency) {
 
 export function updateResultTable(products) {
   const resultDiv = document.getElementById("result");
-  // Calculate the total price per day.
   const totalPrice = products.reduce((acc, p) => acc + Number(p.price), 0).toFixed(2);
-  // Get the currency from the input.
   const currency = document.getElementById("currency").value;
-  // Render the ResultTable component into the target element.
   const tableComponent = ResultTable(products, totalPrice, currency);
-  resultDiv.innerHTML = "";
-  resultDiv.appendChild(tableComponent);
+  resultDiv.innerHTML = tableComponent.innerHTML;
 }
