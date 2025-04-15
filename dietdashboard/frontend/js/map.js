@@ -1,7 +1,6 @@
 import chroma from "chroma-js";
 import L from "leaflet";
-import "leaflet-draw"; // Import Leaflet.Draw
-import "leaflet.markercluster";
+import "leaflet-draw";
 import { csvParse } from "./d3";
 
 const osmUrl = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -9,51 +8,33 @@ const locationUrl = "/locations.csv";
 const osmAttribution = '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>';
 const osmTilesOptions = { maxZoom: 19, attribution: osmAttribution };
 const defaultMapState = { center: [49, 10], zoom: 5 };
-const markerClusterGroupOptions = {
-  showCoverageOnHover: false,
-  spiderfyOnMaxZoom: false,
-  removeOutsideVisibleBounds: true,
-  iconCreateFunction: iconCreateFunction,
-  disableClusteringAtZoom: 15
-};
 
-function addTileMarkers(markersLayer) {
-  fetch(locationUrl)
+function fetchAndAddAllLocations(addLocation) {
+  return fetch(locationUrl)
     .then(response => response.text())
     .then(text => csvParse(text))
-    .then(data => data.forEach(point => addMarker(markersLayer, point)))
-    .catch(error => console.error("Error loading tile:", error));
+    .then(data => data.forEach(location => addLocation(location)))
+    .catch(error => console.error("Error fetching locations:", error));
 }
 
-function getMarkerColor(markerCount, priceCount) {
-  const ratio = priceCount / markerCount;
+function getCircleColor(count) {
   const colorScale = chroma.scale("RdYlGn").padding(0.15).domain([0, 50]);
-  return ratio > 0 ? colorScale(ratio).hex() : "#666666";
+  return count > 0 ? colorScale(count).hex() : "#666666";
 }
 
-function iconCreateFunction(cluster) {
-  const markers = cluster.getAllChildMarkers();
-  const markerCount = markers.length;
-  const priceCount = markers.reduce((sum, marker) => sum + (marker.options.count || 0), 0);
-  return makeIcon(markerCount, priceCount);
-}
-
-function makeIcon(markerCount, priceCount) {
-  const html = `<div style="background-color:${getMarkerColor(markerCount, priceCount)};">
-    <span class="marker-count">${markerCount}</span>
-    <span class="price-count">${priceCount}</span>
-    </div>`;
-  return L.divIcon({
-    className: "custom-marker",
-    html: html,
-    iconSize: L.point(40, 40),
-    iconAnchor: L.point(20, 20),
-    popupAnchor: L.point(0, -20)
-  });
-}
-
-function addMarker(markersLayer, { lat, lon, count }) {
-  markersLayer.addLayer(L.marker([lat, lon], { icon: makeIcon(1, Number(count)), count: Number(count) }));
+function addLocation({ lat, lon, count }, renderer, layer) {
+  const priceCount = Number(count);
+  const radius = 100;
+  const circleOptions = {
+    renderer: renderer,
+    radius: radius,
+    fillColor: getCircleColor(priceCount),
+    color: "black",
+    weight: 1,
+    opacity: 1,
+    fillOpacity: 0.7
+  };
+  L.circle([lat, lon], circleOptions).bindPopup(`Price Count: ${priceCount}`).addTo(layer);
 }
 
 const map = L.map("map").setView(defaultMapState.center, defaultMapState.zoom);
@@ -102,8 +83,9 @@ function initDrawTools() {
 
 export function initMap() {
   L.tileLayer(osmUrl, osmTilesOptions).addTo(map); // Add OSM tiles
-  const markersLayer = L.markerClusterGroup(markerClusterGroupOptions).addTo(map);
-  addTileMarkers(markersLayer); // Add markers to the map
+  const renderer = L.canvas({ padding: 0.5 });
+  const locationsLayer = L.layerGroup().addTo(map); // Create a layer group for locations
+  fetchAndAddAllLocations(location => addLocation(location, renderer, locationsLayer));
   initDrawTools(); // Initialize drawing tools
   document.getElementById("map-tab").addEventListener("change", () => map.invalidateSize());
   map.on("resize", () => map.invalidateSize());
