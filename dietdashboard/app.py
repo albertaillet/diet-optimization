@@ -14,6 +14,7 @@ import json
 import math
 import os
 import time
+from collections.abc import Iterable
 from pathlib import Path
 
 import duckdb
@@ -94,49 +95,13 @@ def create_rangeslider(data: dict[str, str]) -> dict[str, float | str]:
     }
 
 
-def create_csv(
-    x: np.ndarray,
-    chosen_bounds: dict[str, tuple[float, float]],
-    products_and_prices: dict[str, np.ndarray],
-    c_costs: np.ndarray,
-    nutrients_levels: np.ndarray,
-) -> str:
-    # Sort by quantity and remove those with zero quantity
-    indices = np.argsort(x)[::-1]
-    indices = indices[x[indices] > 0]
-
-    # Prepare data for rendering in the HTML table
+def create_csv(fieldnames: list[str], data: Iterable[dict[str, str]]) -> str:
+    """Convert a list of dictionaries to a CSV string."""
     output = io.StringIO()
-    fieldnames = [
-        "id",
-        "product_code",
-        "product_name",
-        "ciqual_name",
-        "ciqual_code",
-        "location",
-        "location_osm_id",
-        "quantity_g",
-        "price",
-    ]
-    writer = csv.DictWriter(output, fieldnames=fieldnames + list(chosen_bounds))
+    writer = csv.DictWriter(output, fieldnames=fieldnames)
     writer.writeheader()
-    for i in indices:
-        location = ", ".join(str(products_and_prices["location_osm_display_name"][i]).split(", ")[:3])
-        product = {
-            "id": int(products_and_prices["price_id"][i]),
-            "product_code": products_and_prices["product_code"][i],
-            "product_name": products_and_prices["product_name"][i],
-            "ciqual_name": products_and_prices["ciqual_name"][i],
-            "ciqual_code": products_and_prices["ciqual_code"][i],
-            "location": location,
-            "location_osm_id": products_and_prices["location_osm_id"][i],
-            "quantity_g": round(100 * x[i], 1),  # type: ignore
-            "price": round(c_costs[i] * x[i], 2),  # type: ignore
-            **{nutrient_id: nutrients_levels[j, i].round(4) for j, nutrient_id in enumerate(chosen_bounds)},
-        }
-        writer.writerow(product)
-    output.seek(0)
-    return output.read()
+    writer.writerows(data)
+    return output.getvalue()
 
 
 def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
@@ -204,9 +169,44 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
         nutrients_levels = A_nutrients * result.x
         assert (nutrients_levels < -1e-7).sum() == 0, "Negative values in nutrients_levels."
 
-        reslut_csv_string = create_csv(result.x, chosen_bounds, products_and_prices, c_costs, nutrients_levels)
-        (debug_folder / "output.csv").write_text(reslut_csv_string)
-        return app.response_class(reslut_csv_string, mimetype="text/csv")
+        x = result.x
+        # Sort by quantity and remove those with zero quantity
+        indices = np.argsort(x)[::-1]
+        indices = indices[x[indices] > 0]
+
+        fieldnames = [
+            "id",
+            "product_code",
+            "product_name",
+            "ciqual_name",
+            "ciqual_code",
+            "location",
+            "location_osm_id",
+            "quantity_g",
+            "price",
+            *list(chosen_bounds),
+        ]
+        optimal_products = []
+        for i in indices:
+            location = ", ".join(str(products_and_prices["location_osm_display_name"][i]).split(", ")[:3])
+            product = {
+                "id": int(products_and_prices["price_id"][i]),
+                "product_code": products_and_prices["product_code"][i],
+                "product_name": products_and_prices["product_name"][i],
+                "ciqual_name": products_and_prices["ciqual_name"][i],
+                "ciqual_code": products_and_prices["ciqual_code"][i],
+                "location": location,
+                "location_osm_id": products_and_prices["location_osm_id"][i],
+                "quantity_g": round(100 * x[i], 1),  # type: ignore
+                "price": round(c_costs[i] * x[i], 2),  # type: ignore
+                **{nutrient_id: nutrients_levels[j, i].round(4) for j, nutrient_id in enumerate(chosen_bounds)},
+            }
+            optimal_products.append(product)
+        reslut_csv_string = create_csv(fieldnames, optimal_products)
+        (debug_folder / "output.csv").write_text(reslut_csv_string)  # Write the CSV to the debug folder
+        response = make_response(reslut_csv_string)
+        response.mimetype = "text/csv"
+        return response
 
     @app.route("/info/<price_id>", methods=["GET"])
     def info(price_id: str) -> str:
@@ -235,15 +235,11 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
         """Return a CSV of the locations within the given tile."""
         lat_min, lat_max, lon_min, lon_max = map(int, (lat_min, lat_max, lon_min, lon_max))
         locations = get_locations_within_bounds(lat_min, lat_max, lon_min, lon_max)
-
-        output = io.StringIO()  # Create a CSV output from the retrieved locations.  TODO: create a function, this is done twice
         fieldnames = ["id", "lat", "lon", "name", "count"]
-        keys = ["location_id", "location_osm_lat", "location_osm_lon", "location_osm_display_name", "count"]
-        writer = csv.writer(output)
-        writer.writerow(fieldnames)
-        writer.writerows((loc[key] for key in keys) for loc in locations)
-        output.seek(0)
-        response = make_response(output.getvalue())
+        colnames = ["location_id", "location_osm_lat", "location_osm_lon", "location_osm_display_name", "count"]
+        data = ({f: loc[c] for f, c in zip(fieldnames, colnames, strict=True)} for loc in locations)
+        csv_string = create_csv(fieldnames, data)
+        response = make_response(csv_string)
         response.mimetype = "text/csv"
         response.headers["Cache-Control"] = f"public, max-age={CACHE_TIMEOUT}"
         return response
