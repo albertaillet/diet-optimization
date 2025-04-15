@@ -1,5 +1,6 @@
 import chroma from "chroma-js";
 import L from "leaflet";
+import "leaflet-draw"; // Import Leaflet.Draw
 import "leaflet.markercluster";
 import { csvParse } from "./d3";
 
@@ -56,10 +57,51 @@ function addMarker(markersLayer, { lat, lon, count }) {
 }
 
 const map = L.map("map").setView(defaultMapState.center, defaultMapState.zoom);
+
+// Initialize drawing functionality
+function initDrawTools() {
+  // Create a feature group to store editable layers
+  const drawnItems = new L.FeatureGroup();
+  map.addLayer(drawnItems);
+
+  // Initialize the draw control and pass it the feature group
+  const drawControl = new L.Control.Draw({
+    draw: {
+      polyline: false,
+      polygon: false,
+      rectangle: false,
+      marker: false,
+      circlemarker: false,
+      circle: {
+        shapeOptions: {
+          color: "#3388ff",
+          fillOpacity: 0.2,
+          clickable: true
+        }
+      }
+    }
+  });
+
+  map.addControl(drawControl);
+
+  // Handle the created items
+  map.on(L.Draw.Event.CREATED, function (event) {
+    const layer = event.layer;
+    drawnItems.addLayer(layer);
+
+    if (layer instanceof L.Circle) {
+      const center = layer.getLatLng();
+      const radius = layer.getRadius();
+      console.log(`Circle created at ${center} with radius ${radius}m`);
+    }
+  });
+}
+
 export function initMap() {
   L.tileLayer(osmUrl, osmTilesOptions).addTo(map); // Add OSM tiles
   const markersLayer = L.markerClusterGroup(markerClusterGroupOptions).addTo(map);
   addTileMarkers(markersLayer); // Add markers to the map
+  initDrawTools(); // Initialize drawing tools
   document.getElementById("map-tab").addEventListener("change", () => map.invalidateSize());
   map.on("resize", () => map.invalidateSize());
 }
