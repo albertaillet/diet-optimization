@@ -222,21 +222,16 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
     def send_static(path):
         return app.send_static_file(path)
 
-    def get_locations_within_bounds(lat_min, lat_max, lon_min, lon_max):
-        """Get locations within the given bounds."""
-        t_con = duckdb.connect(DATA_DIR / "data.db", read_only=True)
-        q = """SELECT DISTINCT location_id, location_osm_lat, location_osm_lon, location_osm_display_name, COUNT(*) AS count
-            FROM data.final_table
-            WHERE location_osm_lat >= $lat_min AND location_osm_lat <= $lat_max
-              AND location_osm_lon >= $lon_min AND location_osm_lon <= $lon_max
-            GROUP BY location_id, location_osm_lat, location_osm_lon, location_osm_display_name"""
-        return query_dicts(con=t_con, query=q, lat_min=lat_min, lat_max=lat_max, lon_min=lon_min, lon_max=lon_max)
-
-    @app.route("/<lat_min>/<lat_max>/<lon_min>/<lon_max>/locations.csv", methods=["GET"])
-    def location(lat_min, lat_max, lon_min, lon_max):
+    @app.route("/locations.csv", methods=["GET"])
+    def locations():
         """Return a CSV of the locations within the given tile."""
-        lat_min, lat_max, lon_min, lon_max = map(int, (lat_min, lat_max, lon_min, lon_max))
-        locations = get_locations_within_bounds(lat_min, lat_max, lon_min, lon_max)
+        con = duckdb.connect(DATA_DIR / "data.db", read_only=True)
+        query = """SELECT DISTINCT ON (location_id)
+            location_id, location_osm_lat, location_osm_lon, location_osm_display_name, COUNT(*) AS count
+            FROM final_table
+            GROUP BY location_id, location_osm_lat, location_osm_lon, location_osm_display_name"""
+        locations = query_dicts(con=con, query=query)
+        print(len(locations), "locations found")
         fieldnames = ["id", "lat", "lon", "name", "count"]
         colnames = ["location_id", "location_osm_lat", "location_osm_lon", "location_osm_display_name", "count"]
         data = ({f: loc[c] for f, c in zip(fieldnames, colnames, strict=True)} for loc in locations)
