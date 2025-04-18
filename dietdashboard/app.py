@@ -174,7 +174,7 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
         x = result.x
         # Sort by quantity and remove those with zero quantity
         indices = np.argsort(x)[::-1]
-        indices = indices[x[indices] > 0]
+        indices = indices[x[indices] > 1e-3]
 
         fieldnames = [
             "id",
