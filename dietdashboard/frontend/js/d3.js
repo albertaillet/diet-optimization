@@ -9,7 +9,7 @@ export * from "d3-brush";
 // export * from "d3-drag";
 export * from "d3-dsv";
 // export * from "d3-ease";
-// export * from "d3-fetch";
+export * from "d3-fetch";
 // export * from "d3-force";
 // export * from "d3-format";
 export * from "d3-geo";

@@ -16,16 +16,14 @@ const width = 960,
   height = 500,
   deltas = [-100, -4, -1, 0];
 
-function fetchAndAddAllLocations(addLocation) {
-  return fetch(locationUrl)
-    .then(response => response.text())
-    .then(text => d3.csvParse(text))
-    .then(data => data.forEach(location => addLocation(location)))
-    .catch(error => console.error("Error fetching locations:", error));
-}
-
 function map() {
   const svg = d3.create("svg").attr("viewBox", [0, 0, width, height]);
+
+  // Initial projection setup (used only for initial coordinate calculation)
+  const projection = d3
+    .geoMercator()
+    .scale(1 / (2 * Math.PI))
+    .translate([0, 0]);
 
   const tile = d3
     .tile()
@@ -33,7 +31,7 @@ function map() {
       [0, 0],
       [width, height]
     ])
-    .tileSize(512)
+    .tileSize(256)
     .clampX(false);
 
   const zoom = d3
@@ -45,13 +43,41 @@ function map() {
     ])
     .on("zoom", event => zoomed(event.transform));
 
-  const levels = svg.append("g").attr("pointer-events", "none").selectAll("g").data(deltas).join("g").style("opacity", null);
+  const levels = svg
+    .append("g")
+    .attr("class", "tiles") // Add a class for tiles group
+    .attr("pointer-events", "none")
+    .selectAll("g")
+    .data(deltas)
+    .join("g")
+    .style("opacity", null);
+
+  // Svg group for the location markers
+  const markers = svg.append("g").attr("class", "markers").attr("pointer-events", "none");
 
   const transform = d3.zoomIdentity.translate(width >> 1, height >> 1).scale(1 << 12);
 
-  svg.call(zoom).call(zoom.transform, transform);
+  // Load the CSV file and plot the points
+  d3.csv(locationUrl)
+    .then(data => {
+      markers
+        .selectAll("circle")
+        .data(data, d => {
+          // Store the *initial* projected coordinates based on the base projection
+          const [x, y] = projection([+d.lon, +d.lat]);
+          (d.x = x), (d.y = y);
+        })
+        .join("circle")
+        .attr("r", 5)
+        .style("fill", "red")
+        .style("opacity", 0.7);
+
+      svg.call(zoom).call(zoom.transform, transform);
+    })
+    .catch(error => console.error("Error loading location CSV:", error));
 
   function zoomed(transform) {
+    // Update all tile levels based on the current transform
     levels.each(function (delta) {
       const tiles = tile.zoomDelta(delta)(transform);
       d3.select(this)
@@ -64,7 +90,14 @@ function map() {
         .attr("width", tiles.scale)
         .attr("height", tiles.scale);
     });
+
+    // Update marker positions
+    markers
+      .selectAll("circle")
+      .attr("cx", d => transform.applyX(d.x))
+      .attr("cy", d => transform.applyY(d.y));
   }
+
   return svg.node();
 }
 
