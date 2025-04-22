@@ -131,6 +131,17 @@ h3 {
 .segment-label:hover {
   opacity: 1;
 }
+/* Map styling */
+.markers circle {
+  cursor: pointer;
+  stroke-width: 0.5px;
+}
+.unselected-markers circle {
+  fill: red;
+}
+.selected-markers circle {
+  fill: var(--light-green);
+}
 
 /* Button Styles - shared by all <button> elements */
 button {
