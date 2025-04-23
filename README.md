@@ -158,9 +158,9 @@ For optimizing the diet, a linear programming python library is used, here are t
 A table with different solvers is available here:
 [cvxpy.org](https://www.cvxpy.org/tutorial/solvers/index.html#choosing-a-solver)
 
-### Other nutrient tackers:
+## Nutrition trackers and databases:
 
-Open source:
+### Open source:
 
 - [awesome-nutrition-tracking](https://github.com/jrhizor/awesome-nutrition-tracking)
 - [OpenNutriTracker](https://github.com/simonoppowa/OpenNutriTracker) (iOS / Android)
@@ -168,11 +168,11 @@ Open source:
 - 🎖️[Energize](https://codeberg.org/epinez/Energize/) (Android)
   - TODO: checkout this tool to extract the Swiss Food Composition Database [update_sfcd_data.py](https://codeberg.org/epinez/Energize/src/branch/main/scripts/update_sfcd_data/update_sfcd_data.py)
 
-Personal projects:
+### Personal projects:
 
 - 🎖️[kale.world](https://kale.world/) (Found on [Hacker News](https://news.ycombinator.com/item?id=22689346))
 
-### Proprietary nutrition trackers and databases:
+### Proprietary:
 
 Apps with API, database documentation, licensing or search tools:
 
@@ -227,7 +227,7 @@ Other tools:
 - NanEye, WIP project connecting biomarkers to nutrition data.
 - [Completefoods](https://www.completefoods.co/), prev diy soylent, a database of recipes for diy meal replacement shakes.
 
-### Food classification standards:
+## Food classification / taxonomy standards:
 
 Related [xkcd](https://xkcd.com/927/).
 
@@ -236,9 +236,9 @@ Related [xkcd](https://xkcd.com/927/).
 - [FoodEx2](https://www.efsa.europa.eu/en/data/data-standardisation), a food classification standardisation system.
 - [FoodOn](https://foodon.org/), an ontology for food [github](https://github.com/FoodOntology/foodon). Available in [Ontobee](https://ontobee.org/ontology/FOODON).
 
-### Other links
+## Other links
 
-Random links:
+### Random links:
 
 - [Open Food Facts post on HN](https://news.ycombinator.com/item?id=22683416)
 - [Food Facts](https://www.foodfacts.se/), Swedish food stratup at Norrsken House.
@@ -249,9 +249,23 @@ Random links:
 - 🎖️[knowledge-mining-nutrition](https://forgemia.inra.fr/stephane.dervaux/knowledge-mining-nutrition) Ongoing research project on knowledge mining in nutrition (02/2025).
 - [PyomoDietProblem](https://github.com/Pyomo/PyomoGallery/blob/main/diet/DietProblem.ipynb), a Pyomo example for the diet problem.
 
-Outdated projects:
+### Outdated projects:
 
 - [MyDietCoach](https://www.mydietcoachapp.com/) (deprecated, now redirects to [Bending Spoons](https://www.bendingspoons.com/))
 - [EuroFIR](https://www.eurofir.org/), a European network that provides a comprehensive food composition database. The project has ended, so support and database updates is questionable (https://www.eurofir.org/foodexplorer). It also seems to use Wordpress.
 - [Optifood](https://www.sciencedirect.com/science/article/pii/S0002916523049262) A paper about the use of linear programming to determine if a food product can ensure adequate nutrients for Cambodian infants.
 - [Nutrioptimizer](https://nutrioptimizer.com) indian website for diet optimization, by Sri Mookambika Infosystems, apparently only runs on Mozilla Firefox Browser.
+
+## D3 documentation
+
+- [d3-array](https://www.npmjs.com/package/d3-array)
+- Observable examples for enter / exit or join
+  - [general-update-pattern](https://observablehq.com/@d3/general-update-pattern) (Not recommended)
+  - [selection-join](https://observablehq.com/@d3/selection-join) (New recommended API)
+- Observable examples for d3-tile:
+  - [zoomable-tiles](https://observablehq.com/@d3/zoomable-tiles)
+  - [zoomable-map-tiles](https://observablehq.com/@d3/zoomable-map-tiles)
+  - [seamless-zoomable-map-tiles](https://observablehq.com/@d3/seamless-zoomable-map-tiles)
+  - [raster-vector](https://observablehq.com/@d3/raster-vector)
+  - [raster-vector-ii](https://observablehq.com/@d3/raster-vector-ii)
+  - [zoomable-raster-vector](https://observablehq.com/@d3/zoomable-raster-vector)
