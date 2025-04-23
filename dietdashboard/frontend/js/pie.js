@@ -1,81 +1,62 @@
 import * as d3 from "./d3";
 
-export function makePie(container, data, labels, totalCalories) {
+const DEFAULTS = {
+  height: 150,
+  padAngle: 0.02,
+  innerRadiusRatio: 0.4,
+  labelRadiusRatio: 0.7,
+  colorRange: [2, 4, 8] // indices from d3.schemeTableau10
+};
+
+export function displayMacroPie(data, total, container) {
   const width = container.clientWidth;
-  const height = 150;
-  const radius = Math.min(width, height) / 2.8;
+  const { height, padAngle, innerRadiusRatio, labelRadiusRatio, colorRange } = DEFAULTS;
+  const outerRadius = Math.min(width, height) / 2.8;
+  const innerRadius = outerRadius * innerRadiusRatio;
+  const labelRadius = outerRadius * labelRadiusRatio;
 
-  const color = d3.scaleOrdinal().domain(data).range([d3.schemeTableau10[2], d3.schemeTableau10[4], d3.schemeTableau10[8]]);
+  // Create the color scale
+  const color = d3
+    .scaleOrdinal()
+    .domain(data.map(d => d.name))
+    .range(colorRange.map(i => d3.schemeTableau10[i]));
 
-  // Create pie layout
-  const pie = d3.pie().padAngle(0.02);
-
-  // Create arc generators
-  const arc = d3
-    .arc()
-    .innerRadius(radius * 0.4) // Larger inner circle to fit text
-    .outerRadius(radius)
-    .cornerRadius(0); // No rounded corners
-
-  d3.select(container).selectAll("*").remove();
-
-  // Create SVG
-  const svg = d3
-    .select(container)
-    .append("svg")
-    .attr("width", "100%")
-    .attr("height", height)
-    .append("g")
-    .attr("transform", `translate(${width / 2}, ${height / 2})`);
-
-  // Create pie slices with data
+  // Create the pie layout and arc generator
+  // prettier-ignore
+  const pie = d3.pie().value(d => d.value).padAngle(padAngle).sort(null);
+  const arc = d3.arc().innerRadius(innerRadius).outerRadius(outerRadius);
   const arcs = pie(data);
 
-  // Add arcs with hover effects but no animation
-  const paths = svg
+  const svg = d3
+    .select(container)
+    .html("")
+    .append("svg")
+    .attr("viewBox", [-width / 2, -height / 2, width, height]);
+
+  // Add a sector path for each value
+  svg
+    .append("g")
+    .attr("stroke", "white")
     .selectAll("path")
     .data(arcs)
-    .enter()
-    .append("path")
-    .attr("d", arc)
-    .attr("fill", (d, i) => color(i))
-    .style("cursor", "pointer")
-    .on("mouseover", function (event, d) {
-      d3.select(this).attr("opacity", 0.85);
-    })
-    .on("mouseout", function (event, d) {
-      d3.select(this).attr("opacity", 1);
-    });
+    .join("path")
+    .attr("class", "slice")
+    .attr("fill", d => color(d.data.name))
+    .attr("d", arc);
 
+  // Add labels
+  const arcLabel = d3.arc().innerRadius(labelRadius).outerRadius(labelRadius);
   svg
-    .selectAll("text.value-label")
+    .append("g")
+    .attr("text-anchor", "middle")
+    .selectAll("text")
     .data(arcs)
-    .enter()
-    .append("text")
-    .attr("class", "value-label")
-    .attr("transform", d => `translate(${arc.centroid(d)})`)
-    .attr("dy", ".35em")
-    .attr("text-anchor", "middle")
-    .style("font-size", "11px")
-    .style("font-weight", "500")
-    .style("fill", "white")
-    .style("pointer-events", "none")
-    .text((d, i) => `${labels[i]}`);
+    .join("text")
+    .attr("class", "pie-label")
+    .attr("transform", d => `translate(${arcLabel.centroid(d)})`)
+    .call(text => text.text(d => d.data.name));
 
-  svg
-    .append("text")
-    .attr("text-anchor", "middle")
-    .attr("dy", "0em")
-    .style("font-size", "12px")
-    .style("font-weight", "bold")
-    .style("fill", "#333")
-    .text(`${Math.round(totalCalories)}`);
-
-  svg
-    .append("text")
-    .attr("text-anchor", "middle")
-    .attr("dy", "1.2em")
-    .style("font-size", "10px")
-    .style("fill", "#666")
-    .text("kcal");
+  // Center text
+  svg.append("text").attr("text-anchor", "middle").attr("dy", "0em").text(total.toFixed(0));
+  svg.append("text").attr("text-anchor", "middle").attr("dy", "1.2em").text("kcal");
 }

@@ -269,3 +269,9 @@ Related [xkcd](https://xkcd.com/927/).
   - [raster-vector](https://observablehq.com/@d3/raster-vector)
   - [raster-vector-ii](https://observablehq.com/@d3/raster-vector-ii)
   - [zoomable-raster-vector](https://observablehq.com/@d3/zoomable-raster-vector)
+- Observable examples for d3 pie charts (d3-shape):
+  - [pie-chart](https://observablehq.com/@d3/pie-chart/2)
+  - [pie-chart-component](https://observablehq.com/@d3/pie-chart-component)
+  - [pie-settings](https://observablehq.com/@d3/pie-settings)
+  - [arc-corners](https://observablehq.com/@d3/arc-corners)
+  - [arc-pad-angle](https://observablehq.com/@d3/arc-pad-angle)

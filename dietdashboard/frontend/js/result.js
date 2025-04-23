@@ -1,6 +1,7 @@
 import * as d3 from "./d3";
+import { displayMacroPie } from "./pie";
 
-function displayResultTable(container, data) {
+function displayResultTable(data, container) {
   d3.select(container)
     .selectAll("tr")
     .data(data, d => d.id)
@@ -17,38 +18,48 @@ function displayResultTable(container, data) {
     .html(d => `<a href="${d.link}" target="_blank">${d.text}</a>`);
 }
 
-function displayResultMacroTable(container, data) {
-  const fields = ["protein", "carbohydrate", "fat"];
-  if (!(data.length && fields.every(field => field in data[0]))) {
-    d3.select(container).selectAll("tr").remove(); // TODO: Handle this better
-    return;
-  }
-  const weight = Object.fromEntries(fields.map(key => [key, d3.sum(data, d => +d[key] || 0)]));
-  const energy = { protein: weight.protein * 4, carbohydrate: weight.carbohydrate * 4, fat: weight.fat * 9 };
-  const totalEnergy = d3.sum(Object.values(energy));
+function displayMacroTable(container, data) {
   d3.select(container)
     .selectAll("tr")
-    .data([
-      ["Weight", ...fields.map(field => `${weight[field].toFixed(0)}g`)],
-      ["Energy", ...fields.map(field => `${energy[field].toFixed(0)} kcal`)],
-      ["Percentage", ...fields.map(field => `${((energy[field] / totalEnergy) * 100).toFixed(0)}%`)]
-    ])
+    .data(data)
     .join("tr")
     .selectAll("td")
     .data(d => d)
     .join("td")
     .html(d => d);
-  // TODO: Pie chart
+}
+
+function displayMacroSummary(data, tableContainer, pieContainer) {
+  const fields = ["protein", "carbohydrate", "fat"];
+  if (!(data.length && fields.every(field => field in data[0]))) {
+    d3.select(tableContainer).selectAll("tr").remove(); // TODO: Handle this better
+    d3.select(pieContainer).selectAll("svg").remove();
+    return;
+  }
+  const weight = Object.fromEntries(fields.map(key => [key, d3.sum(data, d => +d[key] || 0)]));
+  const energy = { protein: weight.protein * 4, carbohydrate: weight.carbohydrate * 4, fat: weight.fat * 9 };
+  const totalEnergy = d3.sum(Object.values(energy));
+  displayMacroTable(tableContainer, [
+    ["Weight", ...fields.map(field => `${weight[field].toFixed(0)}g`)],
+    ["Energy", ...fields.map(field => `${energy[field].toFixed(0)} kcal`)],
+    ["Percentage", ...fields.map(field => `${((energy[field] / totalEnergy) * 100).toFixed(0)}%`)]
+  ]);
+  displayMacroPie(
+    fields.map(field => ({ name: field, value: energy[field] })),
+    totalEnergy,
+    pieContainer
+  );
 }
 
 const currencySelector = document.getElementById("currency");
 const resultTable = document.getElementById("result-table");
-const resultMacroTable = document.getElementById("macro-table-body");
+const macroTable = document.getElementById("macro-table-body");
+const macroPie = document.getElementById("macro-pie");
 
 export function updateResult(products) {
   const totalPrice = d3.sum(products, d => +d.price || 0).toFixed(2);
   document.getElementById("result-price").innerHTML = `${totalPrice} ${currencySelector.value}`;
 
-  displayResultTable(resultTable, products);
-  displayResultMacroTable(resultMacroTable, products);
+  displayResultTable(products, resultTable);
+  displayMacroSummary(products, macroTable, macroPie);
 }
