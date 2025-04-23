@@ -1,6 +1,25 @@
 <p>The recommended food items and quantities to meet your nutrient targets.</p>
 <h3>Total price per day: <span id="result-price"></span></h3>
-<div id="result-summary"></div>
+<div style="display: flex; flex-direction: row">
+  <div id="macro-pie-chart" style="width: 100%"></div>
+  <table style="width: 100%">
+    <colgroup>
+      <col style="width: 25%" />
+      <col style="width: 25%" />
+      <col style="width: 25%" />
+      <col style="width: 25%" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th></th>
+        <th>Protein</th>
+        <th>Carbs</th>
+        <th>Fat</th>
+      </tr>
+    </thead>
+    <tbody id="macro-table-body"></tbody>
+  </table>
+</div>
 <div>
   <table>
     <colgroup>
