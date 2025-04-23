@@ -1,26 +1,19 @@
 import * as d3 from "./d3";
 
-const rowData = product => [
-  { text: product.product_name, link: `https://world.openfoodfacts.org/product/${product.product_code}` },
-  { text: product.ciqual_name, link: `https://ciqual.anses.fr/#/aliments/${product.ciqual_code}` },
-  { text: product.location, link: `https://www.openstreetmap.org/way/${product.location_osm_id}` },
-  { text: product.quantity_g, link: `info/${product.id}` },
-  { text: product.price, link: `https://prices.openfoodfacts.org/prices/${product.id}` }
-];
-
 function displayResultTable(container, data) {
-  const rows = d3
-    .select(container)
+  d3.select(container)
     .selectAll("tr")
-    .data(data, d => d.id);
-  rows.exit().remove();
-  rows
-    .enter()
-    .append("tr")
+    .data(data, d => d.id)
+    .join("tr")
     .selectAll("td")
-    .data(d => rowData(d))
-    .enter()
-    .append("td")
+    .data(d => [
+      { text: d.product_name, link: `https://world.openfoodfacts.org/product/${d.product_code}` },
+      { text: d.ciqual_name, link: `https://ciqual.anses.fr/#/aliments/${d.ciqual_code}` },
+      { text: d.location, link: `https://www.openstreetmap.org/way/${d.location_osm_id}` },
+      { text: d.quantity_g, link: `info/${d.id}` },
+      { text: d.price, link: `https://prices.openfoodfacts.org/prices/${d.id}` }
+    ])
+    .join("td")
     .html(d => `<a href="${d.link}" target="_blank">${d.text}</a>`);
 }
 
