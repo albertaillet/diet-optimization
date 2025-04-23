@@ -1,6 +1,6 @@
 import { csvParse } from "./d3";
 import { initMap } from "./map";
-import { updateResultTable } from "./result";
+import { updateResult } from "./result";
 import { updateBars } from "./sliders";
 
 const optimizationInputs = () => document.querySelectorAll("[data-optimization]");
@@ -19,7 +19,7 @@ export function handleOptimitzationInputs() {
     .then(response => response.text())
     .then(text => csvParse(text))
     .then(csv => {
-      updateResultTable(csv);
+      updateResult(csv);
       updateBars(csv);
     });
 }
