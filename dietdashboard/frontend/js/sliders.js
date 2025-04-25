@@ -12,21 +12,18 @@ const CONFIG = {
 };
 
 /**
- * @param {d3.Selection} g
- * @param {d3.Scale} x
- * @param {number} axisYPosition
- * @param {number} width
  * @param {object} d
+ * @param {d3.Scale} x
+ * @param {number} height
+ * @param {number} width
  */
-function setupBrush(g, x, axisYPosition, width, d) {
+function setupBrush(g, d, x, height, width) {
   const { min, max, lower, upper, id } = d; // Get state from the passed object
-  const brushYPosition = axisYPosition - CONFIG.brushHeight / 2;
-
   const brushSelection = d3
     .brushX()
     .extent([
-      [0, brushYPosition],
-      [width, brushYPosition + CONFIG.brushHeight]
+      [0, height - CONFIG.brushHeight / 2],
+      [width, height + CONFIG.brushHeight / 2]
     ])
     .on("brush", moveHandle)
     .on("end", brushended);
@@ -41,7 +38,7 @@ function setupBrush(g, x, axisYPosition, width, d) {
     .attr("class", "handle--custom")
     .attr("cursor", "ew-resize");
 
-  handle.append("circle").attr("r", CONFIG.handleRadius).attr("cy", axisYPosition);
+  handle.append("circle").attr("r", CONFIG.handleRadius).attr("cy", height);
 
   // Set initial brush position
   brushGroup.call(brushSelection.move, [lower, upper].map(x));
@@ -61,9 +58,7 @@ function setupBrush(g, x, axisYPosition, width, d) {
 }
 
 /**
- * @param {HTMLElement} container
  * @param {object} d
- * @param {Array} segments
  */
 function setupSlider(d) {
   const svg = d3.select(this);
@@ -73,13 +68,12 @@ function setupSlider(d) {
 
   const x = d3.scaleLinear().domain([d.min, d.max]).range([0, width]);
   const g = svg.append("g").attr("transform", `translate(${CONFIG.margin.left},${CONFIG.margin.top})`);
-  const axisYPosition = height;
   g.append("g")
-    .attr("transform", `translate(0,${axisYPosition})`)
+    .attr("transform", `translate(0,${height})`)
     .call(d3.axisBottom(x).ticks(CONFIG.nTicks).tickSize(6).tickPadding(3));
 
   const bar = g.append("g").attr("class", "bar");
-  setupBrush(g, x, axisYPosition, width, d);
+  setupBrush(g, d, x, height, width);
   updateSegments(bar, d.segments, x);
 }
 
