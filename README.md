@@ -262,6 +262,7 @@ Related [xkcd](https://xkcd.com/927/).
 - Observable examples for enter / exit or join
   - [general-update-pattern](https://observablehq.com/@d3/general-update-pattern) (Not recommended)
   - [selection-join](https://observablehq.com/@d3/selection-join) (New recommended API)
+  - [Thinking with Joins](https://bost.ocks.org/mike/join/)
 - Observable examples for d3-tile:
   - [zoomable-tiles](https://observablehq.com/@d3/zoomable-tiles)
   - [zoomable-map-tiles](https://observablehq.com/@d3/zoomable-map-tiles)

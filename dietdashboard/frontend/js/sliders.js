@@ -111,27 +111,30 @@ function openModal(event, d) {
   modal.showModal();
 }
 
-/**
- * @param {d3.Selection} tableBody
- * @param {Array} sliderData
- * @param {Array} productsData
- */
-function displaySliderTable(tableBody, sliderData) {
-  const rows = tableBody
-    .selectAll("tr")
-    .data(sliderData, d => d.id) // Use unique ID as key from the source of truth
-    .join("tr");
-  const leftCell = rows
+function displayLabelCell(selection) {
+  const cell = selection
     .append("td")
     .style("padding", 0) // TODO: do all the styling in CSS
     .append("div")
     .attr("style", "display: flex; flex-direction: column; align-items: center;");
-  leftCell
+  cell
     .append("span")
     .attr("style", "padding: 0.3rem; font-weight: 500; font-size: 0.85rem;")
     .text(d => `${d.name} (${d.unit})`);
-  leftCell.append("button").text("Edit Range").on("click", openModal);
-  rows.append("td").append("svg").attr("width", "100%").attr("height", CONFIG.svgHeight).each(setupSlider);
+  cell.append("button").text("Edit Range").on("click", openModal);
+}
+
+function displaySliderCell(selection) {
+  selection.append("td").append("svg").attr("width", "100%").attr("height", CONFIG.svgHeight).each(setupSlider);
+}
+
+function displaySliderTable(selection, sliderData) {
+  selection
+    .selectAll("tr")
+    .data(sliderData, d => d.id) // Use unique ID as key from the source of truth
+    .join("tr")
+    .call(displayLabelCell)
+    .call(displaySliderCell);
 }
 
 /**
