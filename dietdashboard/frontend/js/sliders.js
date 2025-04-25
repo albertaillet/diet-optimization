@@ -39,11 +39,11 @@ function setupBrush(g, d, x, height, width) {
   const brushGroup = g.append("g").attr("class", "brush").call(brushSelection);
 
   const handle = brushGroup
-    .selectAll(".handle--custom")
+    .selectAll(".brush-handle")
     .data([{ type: "w" }, { type: "e" }])
     .enter()
     .append("g")
-    .attr("class", "handle--custom")
+    .attr("class", "brush-handle")
     .attr("cursor", "ew-resize");
 
   handle.append("circle").attr("r", CONFIG.handleRadius).attr("cy", height);
@@ -92,15 +92,9 @@ function displaySliderTable(selection, data) {
           .call(tr =>
             tr
               .append("td")
-              .style("padding", 0) // TODO: do all the styling in CSS
+              .attr("class", "slider-label")
               .append("div")
-              .attr("style", "display: flex; flex-direction: column; align-items: center;")
-              .call(div =>
-                div
-                  .append("span")
-                  .attr("style", "padding: 0.3rem; font-weight: 500; font-size: 0.85rem;")
-                  .text(d => `${d.name} (${d.unit})`)
-              )
+              .call(div => div.append("span").text(d => `${d.name} (${d.unit})`))
               .call(div => div.append("button").text("Edit Range").on("click", openModal))
           )
           .append("td")
@@ -165,9 +159,10 @@ function updateSegments(barGroup, segments, x) {
 
   // Use product ID as the key function for object constancy
   const segmentGroups = barGroup
-    .selectAll("g")
+    .selectAll("g.segment-group")
     .data(segments, d => `${d.id}-${d.quantity_g}`)
-    .join("g");
+    .join("g")
+    .attr("class", "segment-group");
 
   // Append rectangles to entering segments (start with 0 width at final position)
   segmentGroups
@@ -188,18 +183,7 @@ function updateSegments(barGroup, segments, x) {
     .attr("class", "segment-label")
     .attr("y", barYPosition - 5) // Position above bar
     .attr("x", d => x((d.startValue + d.endValue) / 2)) // Center based on final values
-    .text(d => d.name)
-    .attr("text-anchor", "middle")
-    .style("font-size", "10px")
-    .attr("opacity", 0); // Start hidden
-
-  segmentGroups
-    .on("pointerover", function (event, d) {
-      d3.select(this).select(".segment-label").attr("opacity", 1); // TODO: do this with CSS
-    })
-    .on("pointerleave", function (event, d) {
-      d3.select(this).select(".segment-label").attr("opacity", 0); // TODO: do this with CSS
-    });
+    .text(d => d.name);
 }
 
 const modal = document.getElementById("rangeModal");

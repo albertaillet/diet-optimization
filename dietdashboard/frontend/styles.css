@@ -101,13 +101,25 @@ h3 {
 }
 
 /* D3 chart styling */
+/* Slider label */
+td.slider-label div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+td.slider-label div span {
+  padding: 0.3rem;
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
 /* Bush styling */
 .brush .selection {
   fill: var(--primary-green);
   fill-opacity: 0.8;
   stroke: none;
 }
-.brush .handle--custom circle {
+.brush .brush-handle circle {
   fill: var(--primary-green);
   fill-opacity: 1;
   stroke: var(--text-color);
@@ -116,13 +128,13 @@ h3 {
 
 /* Tooltip styling */
 .segment-label {
-  font-size: 12px;
+  font-size: 11px;
   text-anchor: middle;
   fill: var(--text-color);
   font-weight: 500;
   pointer-events: none;
+  user-select: none;
   opacity: 0;
-  transition: opacity 0.2s ease;
 }
 .segment:hover {
   opacity: 0.8;
