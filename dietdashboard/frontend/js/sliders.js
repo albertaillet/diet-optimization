@@ -1,4 +1,5 @@
 import * as d3 from "./d3";
+import { optimize } from "./index";
 // Inspired by https://observablehq.com/@sarah37/snapping-range-slider-with-d3-brush
 
 // Common configuration values
@@ -25,8 +26,15 @@ function setupBrush(g, d, x, height, width) {
       [0, height - CONFIG.brushHeight / 2],
       [width, height + CONFIG.brushHeight / 2]
     ])
-    .on("brush", moveHandle)
-    .on("end", brushended);
+    .on("brush", function (event) {
+      if (!event.selection) return;
+      handle.attr("transform", (d, i) => `translate(${event.selection[i]},0)`);
+    })
+    .on("end", function (event) {
+      if (!event.sourceEvent) return;
+      [d.lower, d.upper] = event.selection.map(x.invert);
+      optimize();
+    });
 
   const brushGroup = g.append("g").attr("class", "brush").call(brushSelection);
 
@@ -42,19 +50,6 @@ function setupBrush(g, d, x, height, width) {
 
   // Set initial brush position
   brushGroup.call(brushSelection.move, [lower, upper].map(x));
-
-  function moveHandle(event) {
-    if (!event.selection) return;
-    handle.attr("transform", (d, i) => `translate(${event.selection[i]},0)`);
-  }
-
-  function brushended(event) {
-    if (!event.sourceEvent) return;
-    // TODO: update the lower and upper state and re-render the segments
-    // const [lower, upper] = event.selection.map(x.invert);
-    // d.lower = lower;
-    // d.upper = upper;
-  }
 }
 
 /**
@@ -78,7 +73,7 @@ function openModal(event, d) {
     // Clamp existing lower/upper bounds to the new min/max range
     d.lower = Math.max(newMin, Math.min(d.lower, newMax));
     d.upper = Math.max(newMin, Math.min(d.upper, newMax));
-    // TODO: Re-render the slider with the new min/max
+    optimize();
   });
   modalTitle.textContent = `Edit Range: ${d.name} (${d.unit})`;
   form.elements.minVal.value = d.min;
@@ -89,45 +84,47 @@ function openModal(event, d) {
 function displaySliderTable(selection, data) {
   selection
     .selectAll("tr")
-    .data(data, d => d.id) // Use unique ID as key from the source of truth
-    .join("tr")
-    .call(row =>
-      row
-        .append("td")
-        .style("padding", 0) // TODO: do all the styling in CSS
-        .append("div")
-        .attr("style", "display: flex; flex-direction: column; align-items: center;")
-        .call(div =>
-          div
-            .append("span")
-            .attr("style", "padding: 0.3rem; font-weight: 500; font-size: 0.85rem;")
-            .text(d => `${d.name} (${d.unit})`)
-        )
-        .call(div => div.append("button").text("Edit Range").on("click", openModal))
+    .data(data, d => d.id)
+    .join(
+      enter =>
+        enter
+          .append("tr")
+          .call(tr =>
+            tr
+              .append("td")
+              .style("padding", 0) // TODO: do all the styling in CSS
+              .append("div")
+              .attr("style", "display: flex; flex-direction: column; align-items: center;")
+              .call(div =>
+                div
+                  .append("span")
+                  .attr("style", "padding: 0.3rem; font-weight: 500; font-size: 0.85rem;")
+                  .text(d => `${d.name} (${d.unit})`)
+              )
+              .call(div => div.append("button").text("Edit Range").on("click", openModal))
+          )
+          .append("td")
+          .append("svg")
+          .attr("width", "100%")
+          .attr("height", CONFIG.svgHeight),
+      update => update.select("svg"),
+      exit => exit.remove()
     )
-    .call(row =>
-      row
-        .append("td")
-        .append("svg")
-        .attr("width", "100%")
-        .attr("height", CONFIG.svgHeight)
-        .each(function (d) {
-          const svg = d3.select(this);
-          // TODO: make this reactive to the container size on resize
-          const width = this.clientWidth - CONFIG.margin.left - CONFIG.margin.right;
-          const height = CONFIG.svgHeight - CONFIG.margin.top - CONFIG.margin.bottom;
+    .each(function (d) {
+      const svg = d3.select(this);
+      svg.selectAll("*").remove(); // Clear previous content TODO: update the content in a more efficient way
+      const width = this.clientWidth - CONFIG.margin.left - CONFIG.margin.right;
+      const height = CONFIG.svgHeight - CONFIG.margin.top - CONFIG.margin.bottom;
+      const x = d3.scaleLinear().domain([d.min, d.max]).range([0, width]);
+      const g = svg.append("g").attr("transform", `translate(${CONFIG.margin.left},${CONFIG.margin.top})`);
+      g.append("g")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x).ticks(CONFIG.nTicks).tickSize(6).tickPadding(3));
 
-          const x = d3.scaleLinear().domain([d.min, d.max]).range([0, width]);
-          const g = svg.append("g").attr("transform", `translate(${CONFIG.margin.left},${CONFIG.margin.top})`);
-          g.append("g")
-            .attr("transform", `translate(0,${height})`)
-            .call(d3.axisBottom(x).ticks(CONFIG.nTicks).tickSize(6).tickPadding(3));
-
-          const bar = g.append("g").attr("class", "bar");
-          setupBrush(g, d, x, height, width);
-          updateSegments(bar, d.segments, x);
-        })
-    );
+      const bar = g.append("g").attr("class", "bar");
+      setupBrush(g, d, x, height, width);
+      updateSegments(bar, d.segments, x);
+    });
 }
 
 /**
@@ -178,12 +175,13 @@ function updateSegments(barGroup, segments, x) {
     .attr("class", "segment")
     .attr("y", barYPosition)
     .attr("height", barHeight)
-    .attr("x", d => x(d.startValue)) // Position based on calculated start value
+    .attr("x", 0)
     .attr("width", 0) // Start with zero width for transition
     .attr("fill", (d, i) => d3.schemeTableau10[d.i % 10]) // Color based on original index
     .transition()
     .duration(750)
-    .attr("width", d => Math.max(0, x(d.endValue) - x(d.startValue))); // Ensure non-negative width
+    .attr("width", d => Math.max(0, x(d.endValue) - x(d.startValue))) // Ensure non-negative width
+    .attr("x", d => x(d.startValue));
 
   segmentGroups
     .append("text")
@@ -210,18 +208,10 @@ const modalTitle = document.getElementById("modalTitle");
 if (!modal || !form || !modalTitle) {
   alert("Missing modal elements");
 }
-const sliderCsv = document.getElementById("slider-csv-data");
 
 // --- Main Application Logic ---
-export function initSliders() {
-  const sliderData = d3.csvParse(sliderCsv.textContent, d3.autoType);
-  const productCsv = `id,product_code,product_name,ciqual_name,ciqual_code,location,location_osm_id,quantity_g,price,protein,fat
-14144,3068110702235,Farine de blé T45,"Wheat flour, type 55 (for pastry)",9440,"Intermarché, 3-5, Rue Villeneuve",246286922,357.1,0.38,30.0,3.9286
-13756,3410280010311,Top budget tournesol 1l c15,Sunflower oil,17440,"Intermarché, 3-5, Rue Villeneuve",246286922,1.2,0.0,0.0,1.0714`;
-  const productsData = d3.csvParse(productCsv, d3.autoType);
+export function Sliders(productsData, sliderData) {
   sliderData.forEach(d => (d.segments = createSegmentsData(productsData, d.id)));
-
   const tableBody = d3.select("#slider-table-body");
   displaySliderTable(tableBody, sliderData);
 }
-initSliders();

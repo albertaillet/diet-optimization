@@ -92,6 +92,7 @@ def create_rangeslider(data: dict[str, str]) -> dict[str, float | str]:
         "max": max_value,
         "lower": lower,
         "upper": upper if upper is not None else max_value,
+        "active": 1,
     }
 
 
@@ -121,7 +122,7 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
             {"name": "Micronutrients", "id": "micro", "nutrients": micro_recommendations},
         ]
         sliders = [create_rangeslider(rec) for rec in [*macro_recommendations, *micro_recommendations]]
-        slider_csv = create_csv(["id", "name", "unit", "min", "max", "lower", "upper"], sliders)  # type: ignore
+        slider_csv = create_csv(["id", "name", "unit", "min", "max", "lower", "upper", "active"], sliders)  # type: ignore
         return render_template(
             "dashboard.html", currencies=POSSIBLE_CURRENCIES, slider_csv=slider_csv, nutrient_groups=nutrient_groups
         )
@@ -134,7 +135,7 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
         debug_folder.mkdir(parents=True)
         with (debug_folder / "input.json").open("w+") as f:
             f.write(json.dumps(data, indent=2))
-        chosen_bounds = {nid: tuple(data[nid]) for nid in nutrient_ids if nid in data}
+        chosen_bounds = {nid: (data.get(f"{nid}_lower"), data.get(f"{nid}_upper")) for nid in nutrient_ids}
         if not chosen_bounds:
             print("No nutrients selected.")
             return ""

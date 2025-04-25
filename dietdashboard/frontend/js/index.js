@@ -1,71 +1,69 @@
-import { csvParse } from "./d3";
+import { autoType, csvParse } from "./d3";
 import { initMap } from "./map";
-import { updateResult } from "./result";
-import { initSliders } from "./sliders";
+import { Result } from "./result";
+import { Sliders } from "./sliders";
 
-const optimizationInputs = () => document.querySelectorAll("[data-optimization]");
-export function isVisible(element) {
-  return element.offsetParent !== null;
-}
-
-export function handleOptimitzationInputs() {
-  const data = {};
-  optimizationInputs().forEach(element => {
-    if (element.tagName.toLowerCase() === "select") {
-      data[element.dataset.optimization] = element.value;
-    } else if (element.dataset.optimization === "slider" && isVisible(element)) {
-      data[element.id] = [Number(element.dataset.lower), Number(element.dataset.upper)];
-    }
+// Uses the global state object to post data to the server and fetch the optimized results
+export function optimize() {
+  const data = { currency: state.currency };
+  state.sliders.forEach(nutrient => {
+    if (!nutrient.active) return;
+    data[`${nutrient.id}_lower`] = nutrient.lower;
+    data[`${nutrient.id}_upper`] = nutrient.upper;
   });
   fetch("/optimize.csv", { body: JSON.stringify(data), method: "POST", headers: { "Content-Type": "application/json" } })
     .then(response => response.text())
-    .then(text => csvParse(text))
-    .then(csv => {
-      updateResult(csv);
-      if (false) {
-        initSliders(csv);
-      }
+    .then(text => csvParse(text, autoType))
+    .then(data => {
+      Result(data, state.currency);
+      Sliders(data, state.sliders);
     });
 }
-
-function toggleSliderRowVisibility(sliderRowId, isChecked) {
-  return; // Todo: fix
-  document.getElementById(`slider-row-${sliderRowId}`).style.display = isChecked ? "" : "none";
-}
-
-function handleCheckboxChange(checkbox) {
-  toggleSliderRowVisibility(checkbox.value, checkbox.checked);
-  handleOptimitzationInputs();
-}
-
-// Function that sets up the event listeners for the select all and deselect all buttons
-// It takes a selector for the buttons and a boolean indicating whether to check or uncheck the boxes
-function handleAllButton(selector, checked) {
-  function handleAllButton(e, c) {
-    e.preventDefault();
-    const category = e.target.dataset.category;
-    const checkboxes = document.querySelectorAll(`.nutrient-checkbox[data-category="${category}"]`);
-    checkboxes.forEach(checkbox => {
-      checkbox.checked = c;
-      toggleSliderRowVisibility(checkbox.value, c);
-    });
-    handleOptimitzationInputs();
-  }
-  document.querySelectorAll(selector).forEach(btn => btn.addEventListener("click", e => handleAllButton(e, checked)));
-}
-document.addEventListener("DOMContentLoaded", () => {
-  optimizationInputs().forEach(element => {
-    element.addEventListener("change", handleOptimitzationInputs); // Set up optimization input change listeners
+/**
+ * @param {HTMLElement} button
+ * @param {boolean} checked
+ */
+function handleAllButton(button, checked) {
+  button.addEventListener("click", event => {
+    document
+      .querySelectorAll(`.nutrient-checkbox[data-category="${event.target.dataset.category}"]`)
+      .forEach(checkbox => (checkbox.checked = checked));
+    // TODO: fetch optimize and re-render the sliders
   });
+}
 
-  // Set up nutrient checkbox listeners
-  document.querySelectorAll(".nutrient-checkbox").forEach(checkbox => {
-    checkbox.addEventListener("change", () => handleCheckboxChange(checkbox));
-    toggleSliderRowVisibility(checkbox.value, checkbox.checked);
+// Set up nutrient checkbox listeners
+document.querySelectorAll(".nutrient-checkbox").forEach(checkbox => {
+  checkbox.addEventListener("change", () => {
+    state.sliders.find(n => n.id === checkbox.value).active = checkbox.checked;
+    // TODO: fetch optimize and re-render the sliders
   });
-
-  handleAllButton(".select-all-btn", true); // Set up select all button
-  handleAllButton(".deselect-all-btn", false); // Set up deselect all button
-  initMap(); // Initialize the map
-  handleOptimitzationInputs(); // Initialize optimization
 });
+
+document.querySelectorAll(".select-all-btn").forEach(btn => handleAllButton(btn, true)); // Set up select all button
+document.querySelectorAll(".deselect-all-btn").forEach(btn => handleAllButton(btn, false)); // Set up deselect all button
+
+const currencySelect = document.getElementById("currency-select");
+const sliderCsvData = document.getElementById("slider-csv-data");
+if (!currencySelect || !sliderCsvData) {
+  alert("Missing required elements in the HTML");
+}
+
+const state = {
+  currency: currencySelect.value,
+  sliders: [],
+  map: {
+    map: null,
+    markers: [],
+    bounds: null
+  }
+};
+initMap(); // Initialize the map
+
+currencySelect.addEventListener("change", () => {
+  state.currency = currencySelect.value;
+  optimize();
+});
+const defaultSliderData = csvParse(sliderCsvData.textContent, autoType);
+state.sliders = defaultSliderData;
+optimize();

@@ -51,14 +51,16 @@ function displayMacroSummary(data, tableContainer, pieContainer) {
   );
 }
 
-const currencySelector = document.getElementById("currency");
 const resultTable = document.getElementById("result-table");
 const macroTable = document.getElementById("macro-table-body");
 const macroPie = document.getElementById("macro-pie");
+if (!resultTable || !macroTable || !macroPie) {
+  alert("Missing result table or macro table or macro pie");
+}
 
-export function updateResult(products) {
+export function Result(products, currency) {
   const totalPrice = d3.sum(products, d => +d.price || 0).toFixed(2);
-  document.getElementById("result-price").innerHTML = `${totalPrice} ${currencySelector.value}`;
+  document.getElementById("result-price").innerHTML = `${totalPrice} ${currency}`;
 
   displayResultTable(products, resultTable);
   displayMacroSummary(products, macroTable, macroPie);
