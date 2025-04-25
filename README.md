@@ -275,3 +275,5 @@ Related [xkcd](https://xkcd.com/927/).
   - [pie-settings](https://observablehq.com/@d3/pie-settings)
   - [arc-corners](https://observablehq.com/@d3/arc-corners)
   - [arc-pad-angle](https://observablehq.com/@d3/arc-pad-angle)
+- Observable example of range slider with d3.brush
+  - [Range Sliders with d3.brush](https://observablehq.com/@sarah37/snapping-range-slider-with-d3-brush) by [Sarah Schöttler](https://sarahschoettler.com)

@@ -1,5 +1,4 @@
 import * as d3 from "./d3";
-import { handleOptimitzationInputs, isVisible } from "./index";
 // Inspired by https://observablehq.com/@sarah37/snapping-range-slider-with-d3-brush
 
 // Common configuration values
@@ -13,82 +12,14 @@ const CONFIG = {
 };
 
 /**
- * Creates an SVG element for a slider with D3
- * @param {HTMLElement} container - The container element
- * @param {number} min - Minimum value
- * @param {number} max - Maximum value
- * @param {number} lower - Lower bound
- * @param {number} upper - Upper bound
- * @returns {Object} Object containing the SVG and scale
+ * @param {d3.Selection} g
+ * @param {d3.Scale} x
+ * @param {number} axisYPosition
+ * @param {number} width
+ * @param {object} d
  */
-function createSliderSVG(container, min, max, lower, upper) {
-  // Create SVG element
-  const svg = d3
-    .select(container)
-    .append("svg")
-    .attr("width", "100%")
-    .attr("height", CONFIG.svgHeight)
-    .attr("data-nutrient", container.id);
-
-  // Store configuration in data attributes
-  svg.attr("data-domain-min", min).attr("data-domain-max", max).attr("data-container-id", container.id);
-
-  const width = container.clientWidth - CONFIG.margin.left - CONFIG.margin.right;
-  const height = CONFIG.svgHeight - CONFIG.margin.top - CONFIG.margin.bottom;
-
-  svg.attr("data-range-width", width);
-
-  // Create scale
-  const x = d3.scaleLinear().domain([min, max]).range([0, width]);
-
-  return { svg, x, width, height };
-}
-
-/**
- * Adds axis to the slider
- * @param {d3.Selection} svg - The D3 selection of the SVG element
- * @param {d3.Scale} x - The D3 scale
- * @param {number} height - The height of the SVG
- * @returns {Object} Object containing the group element and y positions
- */
-function createSliderAxis(svg, x, height) {
-  const g = svg.append("g").attr("transform", `translate(${CONFIG.margin.left},${CONFIG.margin.top})`);
-
-  const axisYPosition = height;
-
-  // Create X-axis
-  const xAxis = d3.axisBottom(x).ticks(CONFIG.nTicks).tickSize(6).tickPadding(3);
-
-  g.append("g")
-    .attr("class", "x axis")
-    .attr("transform", `translate(0,${axisYPosition})`)
-    .call(xAxis)
-    .selectAll("text")
-    .style("text-anchor", "middle");
-
-  // Calculate bar position
-  const barYPosition = axisYPosition - CONFIG.barHeight - 2;
-
-  // Store bar configuration
-  svg.attr("data-bar-height", CONFIG.barHeight).attr("data-bar-y-position", barYPosition);
-
-  // Create bar group
-  const barGroup = g.append("g").attr("class", "stacked-bar");
-
-  return { g, axisYPosition, barYPosition, barGroup };
-}
-
-/**
- * Adds brush interaction to the slider
- * @param {d3.Selection} g - The D3 group element
- * @param {d3.Scale} x - The D3 scale
- * @param {number} axisYPosition - The Y position of the axis
- * @param {number} width - The width of the SVG
- * @param {HTMLElement} container - The container element
- * @param {number} lower - Lower bound
- * @param {number} upper - Upper bound
- */
-function createSliderBrush(g, x, axisYPosition, width, container, lower, upper) {
+function setupBrush(g, x, axisYPosition, width, d) {
+  const { min, max, lower, upper, id } = d; // Get state from the passed object
   const brushYPosition = axisYPosition - CONFIG.brushHeight / 2;
 
   const brushSelection = d3
@@ -97,13 +28,11 @@ function createSliderBrush(g, x, axisYPosition, width, container, lower, upper) 
       [0, brushYPosition],
       [width, brushYPosition + CONFIG.brushHeight]
     ])
-    .on("brush", brushed)
+    .on("brush", moveHandle)
     .on("end", brushended);
 
-  // Add brush group
   const brushGroup = g.append("g").attr("class", "brush").call(brushSelection);
 
-  // Add custom handles
   const handle = brushGroup
     .selectAll(".handle--custom")
     .data([{ type: "w" }, { type: "e" }])
@@ -115,139 +44,107 @@ function createSliderBrush(g, x, axisYPosition, width, container, lower, upper) 
   handle.append("circle").attr("r", CONFIG.handleRadius).attr("cy", axisYPosition);
 
   // Set initial brush position
-  brushGroup.call(brushSelection.move, [x(lower), x(upper)]);
+  brushGroup.call(brushSelection.move, [lower, upper].map(x));
 
-  // Brush event handlers
-  function brushed(event) {
-    if (event.selection) {
-      handle.attr("transform", (d, i) => {
-        return "translate(" + [event.selection[i], 0] + ")";
-      });
-    }
+  function moveHandle(event) {
+    if (!event.selection) return;
+    handle.attr("transform", (d, i) => `translate(${event.selection[i]},0)`);
   }
 
   function brushended(event) {
     if (!event.sourceEvent) return;
-    const [lower, upper] = event.selection.map(x.invert).map(Math.round);
-    d3.select(this).transition().call(brushSelection.move, [lower, upper].map(x));
-    container.dataset.lower = lower;
-    container.dataset.upper = upper;
-    handleOptimitzationInputs();
+    // TODO: update the lower and upper state and re-render the segments
+    // const [lower, upper] = event.selection.map(x.invert);
+    // d.lower = lower;
+    // d.upper = upper;
   }
 }
 
 /**
- * Initializes or updates a slider
- * @param {HTMLElement} container - The container element
- * @param {boolean} isUpdate - Whether this is an update or initial creation
+ * @param {HTMLElement} container
+ * @param {object} d
+ * @param {Array} segments
  */
-function setupSlider(container, isUpdate = false) {
-  const min = Number(container.dataset.min);
-  const max = Number(container.dataset.max);
-  let lower = Number(container.dataset.lower);
-  let upper = Number(container.dataset.upper);
+function setupSlider(d) {
+  // TODO: make this reactive to the container size on resize
+  const width = this.clientWidth - CONFIG.margin.left - CONFIG.margin.right;
+  const height = CONFIG.svgHeight - CONFIG.margin.top - CONFIG.margin.bottom;
 
-  // If updating, ensure values are within range
-  if (isUpdate) {
-    lower = Math.max(min, Math.min(lower, max));
-    upper = Math.max(min, Math.min(upper, max));
-    container.dataset.lower = lower;
-    container.dataset.upper = upper;
+  const x = d3.scaleLinear().domain([d.min, d.max]).range([0, width]);
+  const g = d3.select(this).append("g").attr("transform", `translate(${CONFIG.margin.left},${CONFIG.margin.top})`);
+  const axisYPosition = height;
+  g.append("g")
+    .attr("transform", `translate(0,${axisYPosition})`)
+    .call(d3.axisBottom(x).ticks(CONFIG.nTicks).tickSize(6).tickPadding(3));
 
-    // Remove existing SVG if updating
-    const existingSvg = container.querySelector("svg");
-    if (existingSvg) {
-      existingSvg.remove();
+  const bar = g.append("g").attr("class", "bar");
+  setupBrush(g, x, axisYPosition, width, d);
+  updateSegments(bar, d.segments, x);
+}
+
+/**
+ * @param {Event} event
+ * @param {object} d
+ */
+function openModal(event, d) {
+  form.addEventListener("submit", event => {
+    if (event.submitter.name != "save") return;
+    const formData = new FormData(form);
+    const newMin = Number(formData.get("minVal"));
+    const newMax = Number(formData.get("maxVal"));
+    // Validate input
+    if (newMin >= newMax) {
+      alert("Minimum value must be less than maximum value");
+      return;
     }
-  }
-
-  // Create SVG and scale
-  const { svg, x, width, height } = createSliderSVG(container, min, max, lower, upper);
-
-  // Add axis and bar group
-  const { g, axisYPosition, barYPosition, barGroup } = createSliderAxis(svg, x, height);
-
-  // Add brush interaction
-  createSliderBrush(g, x, axisYPosition, width, container, lower, upper);
-}
-
-/**
- * Initialize all sliders on the page
- */
-function initializeSliders() {
-  const containers = document.querySelectorAll(".slider-container");
-  containers.forEach(setupSlider);
-}
-
-/**
- * Update the range of a slider
- * @param {string} sliderId - ID of the slider to update
- * @param {number} newMin - New minimum value
- * @param {number} newMax - New maximum value
- */
-export function updateSliderRange(sliderId, newMin, newMax) {
-  const container = document.getElementById(sliderId);
-  if (!container) return;
-
-  // Update data attributes
-  container.dataset.min = newMin;
-  container.dataset.max = newMax;
-
-  // Re-initialize the slider with updated values
-  setupSlider(container, true);
-}
-
-/**
- * Update the bar charts in sliders with product data
- * @param {Array} products - Array of product data
- */
-export function updateBars(products) {
-  const containers = document.querySelectorAll(".slider-container");
-
-  containers.forEach(container => {
-    // Skip hidden containers
-    if (!isVisible(container)) return;
-
-    const min = Number(container.dataset.min);
-    const max = Number(container.dataset.max);
-    const nutrientName = container.id;
-
-    const svgElement = container.querySelector("svg");
-    if (!svgElement) return;
-
-    const svg = d3.select(svgElement);
-
-    // Recreate scale from stored values
-    const rangeWidth = Number(svg.attr("data-range-width"));
-    const barYPosition = Number(svg.attr("data-bar-y-position"));
-    const barHeight = Number(svg.attr("data-bar-height"));
-
-    const x = d3.scaleLinear().domain([min, max]).range([0, rangeWidth]);
-
-    // Get the barGroup within this SVG
-    const barGroup = svg.select(".stacked-bar");
-
-    // Create segments data from products
-    const segments = createSegmentsData(products, nutrientName);
-
-    // Update the visualization with segments
-    updateSegments(barGroup, segments, x, barYPosition, barHeight);
+    // Directly MUTATE the object's properties
+    d.min = newMin;
+    d.max = newMax;
+    // Clamp existing lower/upper bounds to the new min/max range
+    d.lower = Math.max(newMin, Math.min(d.lower, newMax));
+    d.upper = Math.max(newMin, Math.min(d.upper, newMax));
+    // TODO: Re-render the slider with the new min/max
   });
+  modalTitle.textContent = `Edit Range: ${d.name} (${d.unit})`;
+  form.elements.minVal.value = d.min;
+  form.elements.maxVal.value = d.max;
+  modal.showModal();
 }
 
 /**
- * Create segment data from products for a specific nutrient
- * @param {Array} products - Array of product data
- * @param {string} nutrientName - Name of the nutrient
- * @returns {Array} Array of segment data
+ * @param {d3.Selection} tableBody
+ * @param {Array} sliderData
+ * @param {Array} productsData
  */
-function createSegmentsData(products, nutrientName) {
+function displaySliderTable(tableBody, sliderData) {
+  const rows = tableBody
+    .selectAll("tr")
+    .data(sliderData, d => d.id) // Use unique ID as key from the source of truth
+    .join("tr");
+  const leftCell = rows
+    .append("td")
+    .style("padding", 0) // TODO: do all the styling in CSS
+    .append("div")
+    .attr("style", "display: flex; flex-direction: column; align-items: center;");
+  leftCell
+    .append("span")
+    .attr("style", "padding: 0.3rem; font-weight: 500; font-size: 0.85rem;")
+    .text(d => `${d.name} (${d.unit})`);
+  leftCell.append("button").text("Edit Range").on("click", openModal);
+  rows.append("td").append("svg").attr("width", "100%").attr("height", CONFIG.svgHeight).each(setupSlider);
+}
+
+/**
+ * @param {Array} products
+ * @param {string} nutrientId
+ */
+function createSegmentsData(products, nutrientId) {
   // Map products to segments
   const segments = products.map((product, i) => ({
     i: i,
     id: product.id,
     name: product.product_name,
-    level: Number(product[nutrientName])
+    level: Number(product[nutrientId]) || 0
   }));
 
   // Calculate cumulative values
@@ -262,124 +159,77 @@ function createSegmentsData(products, nutrientName) {
 }
 
 /**
- * Update the segments visualization with new data
- * @param {d3.Selection} barGroup - The D3 selection of the bar group
- * @param {Array} segments - Array of segment data
- * @param {d3.Scale} x - The D3 scale
- * @param {number} barYPosition - The Y position of the bars
- * @param {number} barHeight - The height of the bars
+ * @param {d3.Selection} barGroup
+ * @param {Array} segments
+ * @param {d3.Scale} x
  */
-function updateSegments(barGroup, segments, x, barYPosition, barHeight) {
-  // Data join without key function (match by index)
-  const segmentGroups = barGroup.selectAll(".segment-group").data(segments);
+function updateSegments(barGroup, segments, x) {
+  // Setup bar positioning
+  const height = CONFIG.svgHeight - CONFIG.margin.top - CONFIG.margin.bottom;
+  const axisYPosition = height;
+  const barYPosition = axisYPosition - CONFIG.barHeight - 2;
+  const barHeight = CONFIG.barHeight; // From config
 
-  // EXIT selection: Remove old elements
-  segmentGroups.exit().transition().duration(100).style("opacity", 0).remove();
+  // Use product ID as the key function for object constancy
+  const segmentGroups = barGroup
+    .selectAll("g")
+    .data(segments, d => `${d.id}-${d.quantity_g}`)
+    .join("g");
 
-  // ENTER selection: Create new elements
-  const segmentGroupsEnter = segmentGroups.enter().append("g").attr("class", "segment-group");
+  // Append rectangles to entering segments (start with 0 width at final position)
+  segmentGroups
+    .append("rect")
+    .attr("class", "segment")
+    .attr("y", barYPosition)
+    .attr("height", barHeight)
+    .attr("x", d => x(d.startValue)) // Position based on calculated start value
+    .attr("width", 0) // Start with zero width for transition
+    .attr("fill", (d, i) => d3.schemeTableau10[d.i % 10]) // Color based on original index
+    .transition()
+    .duration(750)
+    .attr("width", d => Math.max(0, x(d.endValue) - x(d.startValue))); // Ensure non-negative width
 
-  // Append rectangles to entering segments
-  segmentGroupsEnter.append("rect").attr("class", "segment").attr("y", barYPosition).attr("height", barHeight).attr("width", 0); // Start with zero width for transition
-
-  segmentGroupsEnter
+  segmentGroups
     .append("text")
     .attr("class", "segment-label")
-    .attr("y", barYPosition - 5)
+    .attr("y", barYPosition - 5) // Position above bar
+    .attr("x", d => x((d.startValue + d.endValue) / 2)) // Center based on final values
     .text(d => d.name)
-    .attr("opacity", 0);
+    .attr("text-anchor", "middle")
+    .style("font-size", "10px")
+    .attr("opacity", 0); // Start hidden
 
-  // Merge entering and updating segments
-  const segmentGroupsMerge = segmentGroupsEnter.merge(segmentGroups);
-
-  // Update positions and sizes of rectangles
-  segmentGroupsMerge
-    .select(".segment")
-    .transition()
-    .duration(750)
-    .attr("x", d => x(d.startValue))
-    .attr("width", d => x(d.endValue) - x(d.startValue))
-    .attr("fill", (d, i) => d3.schemeTableau10[d.i % 10]);
-
-  // Update positions and text of labels
-  segmentGroupsMerge
-    .select(".segment-label")
-    .transition()
-    .duration(750)
-    .attr("x", d => x((d.startValue + d.endValue) / 2))
-    .text(d => d.name);
-
-  // Add hover interactions
-  segmentGroupsMerge
-    .select(".segment")
-    .on("mouseover", function (event, d) {
-      d3.select(this.parentNode).select(".segment-label").attr("opacity", 1);
+  segmentGroups
+    .on("pointerover", function (event, d) {
+      d3.select(this).select(".segment-label").attr("opacity", 1); // TODO: do this with CSS
     })
-    .on("mouseout", function (event, d) {
-      d3.select(this.parentNode).select(".segment-label").attr("opacity", 0);
+    .on("pointerleave", function (event, d) {
+      d3.select(this).select(".segment-label").attr("opacity", 0); // TODO: do this with CSS
     });
 }
 
-/**
- * Setup modal dialog for editing slider ranges
- */
-function setupRangeEditModal() {
-  const modal = document.getElementById("rangeModal");
-  const form = document.getElementById("rangeForm");
-  const currentSliderId = document.getElementById("currentSliderId");
-  const modalTitle = document.getElementById("modalTitle");
-  setupModalFormSubmission(form, currentSliderId);
-  setupEditButtons(form, modalTitle, currentSliderId, modal);
+const modal = document.getElementById("rangeModal");
+const form = document.getElementById("rangeForm");
+const modalTitle = document.getElementById("modalTitle");
+if (!modal || !form || !modalTitle) {
+  alert("Missing modal elements");
 }
 
-/**
- * Setup modal form submission
- * @param {HTMLFormElement} form - The form element
- * @param {HTMLElement} currentSliderId - The input for current slider ID
- */
-function setupModalFormSubmission(form, currentSliderId) {
-  form?.addEventListener("submit", event => {
-    if (event.submitter.name != "save") return; // Only make changes if "save" button is clicked
-    const formData = new FormData(form);
-    const newMin = Number(formData.get("minVal"));
-    const newMax = Number(formData.get("maxVal"));
-    // Validate input
-    if (newMin >= newMax) {
-      alert("Minimum value must be less than maximum value");
-      return;
-    }
-    const sliderId = currentSliderId.value;
-    updateSliderRange(sliderId, newMin, newMax); // Update the slider with new values
-  });
-}
+// --- Main Application Logic ---
+export function initSliders() {
+  // TODO: use actual data from the server
+  const sliderData = [
+    { id: "fat", name: "Fat", unit: "g/100g", min: 0, lower: 5, max: 100, upper: 30 },
+    { id: "protein", name: "Proteins", unit: "g/100g", min: 0, lower: 10, max: 100, upper: 40 }
+  ];
+  const productCsv = `id,product_code,product_name,ciqual_name,ciqual_code,location,location_osm_id,quantity_g,price,protein,fat
+14144,3068110702235,Farine de blé T45,"Wheat flour, type 55 (for pastry)",9440,"Intermarché, 3-5, Rue Villeneuve",246286922,357.1,0.38,30.0,3.9286
+13756,3410280010311,Top budget tournesol 1l c15,Sunflower oil,17440,"Intermarché, 3-5, Rue Villeneuve",246286922,1.2,0.0,0.0,1.0714`;
+  const productsData = d3.csvParse(productCsv);
 
-/**
- * Setup click handlers for all "Edit Range" buttons
- * @param {HTMLFormElement} form - The form element
- * @param {HTMLElement} modalTitle - The modal title element
- * @param {HTMLElement} currentSliderId - The input for current slider ID
- * @param {HTMLElement} modal - The modal element
- */
-function setupEditButtons(form, modalTitle, currentSliderId, modal) {
-  document.querySelectorAll(".range-edit-btn").forEach(button => {
-    button.addEventListener("click", () => {
-      const sliderId = button.dataset.sliderId;
-      const sliderName = button.dataset.sliderName;
-      const sliderUnit = button.dataset.sliderUnit;
-      const sliderContainer = document.getElementById(sliderId);
-      if (!sliderContainer) return;
-      modalTitle.textContent = `Edit Range: ${sliderName} (${sliderUnit})`; // Set modal title
-      currentSliderId.value = sliderId; // Set current slider ID
-      // Set current min/max values
-      form.elements.minVal.value = sliderContainer.dataset.min;
-      form.elements.maxVal.value = sliderContainer.dataset.max;
-      modal.showModal(); // Show the modal
-    });
-  });
-}
+  sliderData.forEach(d => (d.segments = createSegmentsData(productsData, d.id)));
 
-// Initialize everything when DOM is ready
-document.addEventListener("DOMContentLoaded", () => {
-  initializeSliders();
-  setupRangeEditModal();
-});
+  const tableBody = d3.select("#slider-table-body");
+  displaySliderTable(tableBody, sliderData);
+}
+initSliders();

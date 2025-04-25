@@ -1,10 +1,12 @@
 import { csvParse } from "./d3";
 import { initMap } from "./map";
 import { updateResult } from "./result";
-import { updateBars } from "./sliders";
+import { initSliders } from "./sliders";
 
 const optimizationInputs = () => document.querySelectorAll("[data-optimization]");
-export const isVisible = element => element.offsetParent !== null;
+export function isVisible(element) {
+  return element.offsetParent !== null;
+}
 
 export function handleOptimitzationInputs() {
   const data = {};
@@ -20,11 +22,14 @@ export function handleOptimitzationInputs() {
     .then(text => csvParse(text))
     .then(csv => {
       updateResult(csv);
-      updateBars(csv);
+      if (false) {
+        initSliders(csv);
+      }
     });
 }
 
 function toggleSliderRowVisibility(sliderRowId, isChecked) {
+  return; // Todo: fix
   document.getElementById(`slider-row-${sliderRowId}`).style.display = isChecked ? "" : "none";
 }
 
