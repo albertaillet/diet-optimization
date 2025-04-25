@@ -176,11 +176,11 @@ function updateSegments(barGroup, segments, x) {
     .attr("y", barYPosition)
     .attr("height", barHeight)
     .attr("x", 0)
-    .attr("width", 0) // Start with zero width for transition
-    .attr("fill", (d, i) => d3.schemeTableau10[d.i % 10]) // Color based on original index
+    .attr("width", 0)
+    .attr("fill", d => d3.schemeTableau10[d.i % 10])
     .transition()
     .duration(750)
-    .attr("width", d => Math.max(0, x(d.endValue) - x(d.startValue))) // Ensure non-negative width
+    .attr("width", d => x(d.endValue) - x(d.startValue))
     .attr("x", d => x(d.startValue));
 
   segmentGroups
@@ -209,9 +209,9 @@ if (!modal || !form || !modalTitle) {
   alert("Missing modal elements");
 }
 
-// --- Main Application Logic ---
 export function Sliders(productsData, sliderData) {
-  sliderData.forEach(d => (d.segments = createSegmentsData(productsData, d.id)));
+  const filteredSliders = sliderData.filter(d => d.active == 1);
+  filteredSliders.forEach(d => (d.segments = createSegmentsData(productsData, d.id)));
   const tableBody = d3.select("#slider-table-body");
-  displaySliderTable(tableBody, sliderData);
+  displaySliderTable(tableBody, filteredSliders);
 }

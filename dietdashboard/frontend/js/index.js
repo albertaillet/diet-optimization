@@ -25,21 +25,21 @@ export function optimize() {
  */
 function handleAllButton(button, checked) {
   button.addEventListener("click", event => {
-    document
-      .querySelectorAll(`.nutrient-checkbox[data-category="${event.target.dataset.category}"]`)
-      .forEach(checkbox => (checkbox.checked = checked));
-    // TODO: fetch optimize and re-render the sliders
+    document.querySelectorAll(`.nutrient-checkbox[data-category="${event.target.dataset.category}"]`).forEach(checkbox => {
+      checkbox.checked = checked;
+      state.sliders.find(n => n.id === checkbox.value).active = checked;
+    });
+    optimize();
   });
 }
 
 // Set up nutrient checkbox listeners
-document.querySelectorAll(".nutrient-checkbox").forEach(checkbox => {
+document.querySelectorAll(".nutrient-checkbox").forEach(checkbox =>
   checkbox.addEventListener("change", () => {
     state.sliders.find(n => n.id === checkbox.value).active = checkbox.checked;
-    // TODO: fetch optimize and re-render the sliders
-  });
-});
-
+    optimize();
+  })
+);
 document.querySelectorAll(".select-all-btn").forEach(btn => handleAllButton(btn, true)); // Set up select all button
 document.querySelectorAll(".deselect-all-btn").forEach(btn => handleAllButton(btn, false)); // Set up deselect all button
 
@@ -49,6 +49,7 @@ if (!currencySelect || !sliderCsvData) {
   alert("Missing required elements in the HTML");
 }
 
+// Global state
 const state = {
   currency: currencySelect.value,
   sliders: [],
