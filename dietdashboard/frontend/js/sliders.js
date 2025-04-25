@@ -13,46 +13,6 @@ const CONFIG = {
 };
 
 /**
- * @param {object} d
- * @param {d3.Scale} x
- * @param {number} height
- * @param {number} width
- */
-function Brush(g, d, x, height, width) {
-  const { min, max, lower, upper, id } = d; // Get state from the passed object
-  const brushSelection = d3
-    .brushX()
-    .extent([
-      [0, height - CONFIG.brushHeight / 2],
-      [width, height + CONFIG.brushHeight / 2]
-    ])
-    .on("brush", function (event) {
-      if (!event.selection) return;
-      handle.attr("transform", (d, i) => `translate(${event.selection[i]},0)`);
-    })
-    .on("end", function (event) {
-      if (!event.sourceEvent) return;
-      [d.lower, d.upper] = event.selection.map(x.invert);
-      optimize();
-    });
-
-  const brushGroup = g.append("g").attr("class", "brush").call(brushSelection);
-
-  const handle = brushGroup
-    .selectAll(".brush-handle")
-    .data([{ type: "w" }, { type: "e" }])
-    .enter()
-    .append("g")
-    .attr("class", "brush-handle")
-    .attr("cursor", "ew-resize");
-
-  handle.append("circle").attr("r", CONFIG.handleRadius).attr("cy", height);
-
-  // Set initial brush position
-  brushGroup.call(brushSelection.move, [lower, upper].map(x));
-}
-
-/**
  * @param {Event} event
  * @param {object} d
  */
@@ -79,59 +39,6 @@ function openModal(event, d) {
   form.elements.minVal.value = d.min;
   form.elements.maxVal.value = d.max;
   modal.showModal();
-}
-
-/**
- * @param {d3.Selection} selection
- * @param {Array} data
- */
-function displaySliderTable(selection, data) {
-  const x = d3.local();
-  const width = d3.local();
-  const height = CONFIG.svgHeight - CONFIG.margin.top - CONFIG.margin.bottom;
-  selection
-    .selectAll("tr")
-    .data(data, d => d.id)
-    .join(
-      enter =>
-        enter
-          .append("tr")
-          .call(tr =>
-            tr
-              .append("td")
-              .attr("class", "slider-label")
-              .append("div")
-              .call(div => div.append("span").text(d => `${d.name} (${d.unit})`))
-              .call(div => div.append("button").text("Edit Range").on("click", openModal))
-          )
-          .append("td")
-          .append("svg")
-          .attr("width", "100%")
-          .attr("height", CONFIG.svgHeight),
-      update => update.select("svg"),
-      exit => exit.remove()
-    )
-    .each(function (d) {
-      // Setup local variables for each SVG element
-      d3.select(this).selectAll("*").remove(); // Clear previous content TODO: update the content in a more efficient way
-      const w = this.clientWidth - CONFIG.margin.left - CONFIG.margin.right;
-      x.set(this, d3.scaleLinear().domain([d.min, d.max]).range([0, w]));
-      width.set(this, w);
-    })
-    .append("g")
-    .attr("transform", `translate(${CONFIG.margin.left},${CONFIG.margin.top})`)
-    .each(function (d) {
-      Segment(d3.select(this), d.segments, x.get(this));
-    })
-    .each(function (d) {
-      d3.select(this)
-        .append("g")
-        .attr("transform", `translate(0,${height})`)
-        .call(d3.axisBottom(x.get(this)).ticks(CONFIG.nTicks).tickSize(6).tickPadding(3));
-    })
-    .each(function (d) {
-      Brush(d3.select(this), d, x.get(this), height, width.get(this));
-    });
 }
 
 /**
@@ -193,6 +100,45 @@ function Segment(barGroup, segments, x) {
     .text(d => d.name);
 }
 
+/**
+ * @param {d3.Selection} g
+ * @param {object} d
+ * @param {d3.Scale} x
+ * @param {number} height
+ * @param {number} width
+ */
+function Brush(g, d, x, height, width) {
+  const { min, max, lower, upper, id } = d; // Get state from the passed object
+  const brushSelection = d3
+    .brushX()
+    .extent([
+      [0, height - CONFIG.brushHeight / 2],
+      [width, height + CONFIG.brushHeight / 2]
+    ])
+    .on("brush", function (event) {
+      if (!event.selection) return;
+      handle.attr("transform", (d, i) => `translate(${event.selection[i]},0)`);
+    })
+    .on("end", function (event) {
+      if (!event.sourceEvent) return;
+      [d.lower, d.upper] = event.selection.map(x.invert);
+      optimize();
+    });
+
+  const brushGroup = g.append("g").attr("class", "brush").call(brushSelection);
+
+  const handle = brushGroup
+    .selectAll(".brush-handle")
+    .data([{ type: "w" }, { type: "e" }])
+    .enter()
+    .append("g")
+    .attr("class", "brush-handle")
+    .attr("cursor", "ew-resize");
+
+  handle.append("circle").attr("r", CONFIG.handleRadius).attr("cy", height);
+  brushGroup.call(brushSelection.move, [lower, upper].map(x));
+}
+
 const modal = document.getElementById("rangeModal");
 const form = document.getElementById("rangeForm");
 const modalTitle = document.getElementById("modalTitle");
@@ -201,8 +147,53 @@ if (!modal || !form || !modalTitle) {
 }
 
 export function Sliders(productsData, sliderData) {
-  const filteredSliders = sliderData.filter(d => d.active == 1);
-  filteredSliders.forEach(d => (d.segments = createSegmentsData(productsData, d.id)));
-  const tableBody = d3.select("#slider-table-body");
-  displaySliderTable(tableBody, filteredSliders);
+  const data = sliderData.filter(d => d.active == 1);
+  data.forEach(d => (d.segments = createSegmentsData(productsData, d.id)));
+  const height = CONFIG.svgHeight - CONFIG.margin.top - CONFIG.margin.bottom;
+  // Local variables for each SVG element
+  const x = d3.local();
+  const width = d3.local();
+  d3.select("#slider-table-body")
+    .selectAll("tr")
+    .data(data, d => d.id)
+    .join(
+      enter =>
+        enter
+          .append("tr")
+          .call(tr =>
+            tr
+              .append("td")
+              .attr("class", "slider-label")
+              .append("div")
+              .call(div => div.append("span").text(d => `${d.name} (${d.unit})`))
+              .call(div => div.append("button").text("Edit Range").on("click", openModal))
+          )
+          .append("td")
+          .append("svg")
+          .attr("width", "100%")
+          .attr("height", CONFIG.svgHeight),
+      update => update.select("svg"),
+      exit => exit.remove()
+    )
+    .each(function (d) {
+      // Setup local variables for each SVG element
+      d3.select(this).selectAll("*").remove(); // Clear previous content TODO: update the content in a more efficient way
+      const w = this.clientWidth - CONFIG.margin.left - CONFIG.margin.right;
+      x.set(this, d3.scaleLinear().domain([d.min, d.max]).range([0, w]));
+      width.set(this, w);
+    })
+    .append("g")
+    .attr("transform", `translate(${CONFIG.margin.left},${CONFIG.margin.top})`)
+    .each(function (d) {
+      Segment(d3.select(this), d.segments, x.get(this));
+    })
+    .each(function (d) {
+      d3.select(this)
+        .append("g")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x.get(this)).ticks(CONFIG.nTicks).tickSize(6).tickPadding(3));
+    })
+    .each(function (d) {
+      Brush(d3.select(this), d, x.get(this), height, width.get(this));
+    });
 }
