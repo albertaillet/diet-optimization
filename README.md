@@ -263,6 +263,7 @@ Related [xkcd](https://xkcd.com/927/).
   - [general-update-pattern](https://observablehq.com/@d3/general-update-pattern) (Not recommended)
   - [selection-join](https://observablehq.com/@d3/selection-join) (New recommended API)
   - [Thinking with Joins](https://bost.ocks.org/mike/join/)
+  - [Local variables](https://gist.github.com/mbostock/e1192fe405703d8321a5187350910e08)
 - Observable examples for d3-tile:
   - [zoomable-tiles](https://observablehq.com/@d3/zoomable-tiles)
   - [zoomable-map-tiles](https://observablehq.com/@d3/zoomable-map-tiles)

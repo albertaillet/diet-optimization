@@ -66,12 +66,13 @@ function setupBrush(g, x, axisYPosition, width, d) {
  * @param {Array} segments
  */
 function setupSlider(d) {
+  const svg = d3.select(this);
   // TODO: make this reactive to the container size on resize
   const width = this.clientWidth - CONFIG.margin.left - CONFIG.margin.right;
   const height = CONFIG.svgHeight - CONFIG.margin.top - CONFIG.margin.bottom;
 
   const x = d3.scaleLinear().domain([d.min, d.max]).range([0, width]);
-  const g = d3.select(this).append("g").attr("transform", `translate(${CONFIG.margin.left},${CONFIG.margin.top})`);
+  const g = svg.append("g").attr("transform", `translate(${CONFIG.margin.left},${CONFIG.margin.top})`);
   const axisYPosition = height;
   g.append("g")
     .attr("transform", `translate(0,${axisYPosition})`)
@@ -111,30 +112,26 @@ function openModal(event, d) {
   modal.showModal();
 }
 
-function displayLabelCell(selection) {
-  const cell = selection
-    .append("td")
-    .style("padding", 0) // TODO: do all the styling in CSS
-    .append("div")
-    .attr("style", "display: flex; flex-direction: column; align-items: center;");
-  cell
-    .append("span")
-    .attr("style", "padding: 0.3rem; font-weight: 500; font-size: 0.85rem;")
-    .text(d => `${d.name} (${d.unit})`);
-  cell.append("button").text("Edit Range").on("click", openModal);
-}
-
-function displaySliderCell(selection) {
-  selection.append("td").append("svg").attr("width", "100%").attr("height", CONFIG.svgHeight).each(setupSlider);
-}
-
 function displaySliderTable(selection, sliderData) {
   selection
     .selectAll("tr")
     .data(sliderData, d => d.id) // Use unique ID as key from the source of truth
     .join("tr")
-    .call(displayLabelCell)
-    .call(displaySliderCell);
+    .call(row =>
+      row
+        .append("td")
+        .style("padding", 0) // TODO: do all the styling in CSS
+        .append("div")
+        .attr("style", "display: flex; flex-direction: column; align-items: center;")
+        .call(div =>
+          div
+            .append("span")
+            .attr("style", "padding: 0.3rem; font-weight: 500; font-size: 0.85rem;")
+            .text(d => `${d.name} (${d.unit})`)
+        )
+        .call(div => div.append("button").text("Edit Range").on("click", openModal))
+    )
+    .call(row => row.append("td").append("svg").attr("width", "100%").attr("height", CONFIG.svgHeight).each(setupSlider));
 }
 
 /**
