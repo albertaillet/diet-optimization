@@ -58,26 +58,6 @@ function setupBrush(g, d, x, height, width) {
 }
 
 /**
- * @param {object} d
- */
-function setupSlider(d) {
-  const svg = d3.select(this);
-  // TODO: make this reactive to the container size on resize
-  const width = this.clientWidth - CONFIG.margin.left - CONFIG.margin.right;
-  const height = CONFIG.svgHeight - CONFIG.margin.top - CONFIG.margin.bottom;
-
-  const x = d3.scaleLinear().domain([d.min, d.max]).range([0, width]);
-  const g = svg.append("g").attr("transform", `translate(${CONFIG.margin.left},${CONFIG.margin.top})`);
-  g.append("g")
-    .attr("transform", `translate(0,${height})`)
-    .call(d3.axisBottom(x).ticks(CONFIG.nTicks).tickSize(6).tickPadding(3));
-
-  const bar = g.append("g").attr("class", "bar");
-  setupBrush(g, d, x, height, width);
-  updateSegments(bar, d.segments, x);
-}
-
-/**
  * @param {Event} event
  * @param {object} d
  */
@@ -106,10 +86,10 @@ function openModal(event, d) {
   modal.showModal();
 }
 
-function displaySliderTable(selection, sliderData) {
+function displaySliderTable(selection, data) {
   selection
     .selectAll("tr")
-    .data(sliderData, d => d.id) // Use unique ID as key from the source of truth
+    .data(data, d => d.id) // Use unique ID as key from the source of truth
     .join("tr")
     .call(row =>
       row
@@ -125,7 +105,29 @@ function displaySliderTable(selection, sliderData) {
         )
         .call(div => div.append("button").text("Edit Range").on("click", openModal))
     )
-    .call(row => row.append("td").append("svg").attr("width", "100%").attr("height", CONFIG.svgHeight).each(setupSlider));
+    .call(row =>
+      row
+        .append("td")
+        .append("svg")
+        .attr("width", "100%")
+        .attr("height", CONFIG.svgHeight)
+        .each(function (d) {
+          const svg = d3.select(this);
+          // TODO: make this reactive to the container size on resize
+          const width = this.clientWidth - CONFIG.margin.left - CONFIG.margin.right;
+          const height = CONFIG.svgHeight - CONFIG.margin.top - CONFIG.margin.bottom;
+
+          const x = d3.scaleLinear().domain([d.min, d.max]).range([0, width]);
+          const g = svg.append("g").attr("transform", `translate(${CONFIG.margin.left},${CONFIG.margin.top})`);
+          g.append("g")
+            .attr("transform", `translate(0,${height})`)
+            .call(d3.axisBottom(x).ticks(CONFIG.nTicks).tickSize(6).tickPadding(3));
+
+          const bar = g.append("g").attr("class", "bar");
+          setupBrush(g, d, x, height, width);
+          updateSegments(bar, d.segments, x);
+        })
+    );
 }
 
 /**
@@ -217,7 +219,6 @@ export function initSliders() {
 14144,3068110702235,Farine de blé T45,"Wheat flour, type 55 (for pastry)",9440,"Intermarché, 3-5, Rue Villeneuve",246286922,357.1,0.38,30.0,3.9286
 13756,3410280010311,Top budget tournesol 1l c15,Sunflower oil,17440,"Intermarché, 3-5, Rue Villeneuve",246286922,1.2,0.0,0.0,1.0714`;
   const productsData = d3.csvParse(productCsv, d3.autoType);
-
   sliderData.forEach(d => (d.segments = createSegmentsData(productsData, d.id)));
 
   const tableBody = d3.select("#slider-table-body");
