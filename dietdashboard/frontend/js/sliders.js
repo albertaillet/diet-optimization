@@ -18,7 +18,7 @@ const CONFIG = {
  * @param {number} height
  * @param {number} width
  */
-function setupBrush(g, d, x, height, width) {
+function Brush(g, d, x, height, width) {
   const { min, max, lower, upper, id } = d; // Get state from the passed object
   const brushSelection = d3
     .brushX()
@@ -81,7 +81,14 @@ function openModal(event, d) {
   modal.showModal();
 }
 
+/**
+ * @param {d3.Selection} selection
+ * @param {Array} data
+ */
 function displaySliderTable(selection, data) {
+  const x = d3.local();
+  const width = d3.local();
+  const height = CONFIG.svgHeight - CONFIG.margin.top - CONFIG.margin.bottom;
   selection
     .selectAll("tr")
     .data(data, d => d.id)
@@ -105,19 +112,25 @@ function displaySliderTable(selection, data) {
       exit => exit.remove()
     )
     .each(function (d) {
-      const svg = d3.select(this);
-      svg.selectAll("*").remove(); // Clear previous content TODO: update the content in a more efficient way
-      const width = this.clientWidth - CONFIG.margin.left - CONFIG.margin.right;
-      const height = CONFIG.svgHeight - CONFIG.margin.top - CONFIG.margin.bottom;
-      const x = d3.scaleLinear().domain([d.min, d.max]).range([0, width]);
-      const g = svg.append("g").attr("transform", `translate(${CONFIG.margin.left},${CONFIG.margin.top})`);
-      g.append("g")
+      // Setup local variables for each SVG element
+      d3.select(this).selectAll("*").remove(); // Clear previous content TODO: update the content in a more efficient way
+      const w = this.clientWidth - CONFIG.margin.left - CONFIG.margin.right;
+      x.set(this, d3.scaleLinear().domain([d.min, d.max]).range([0, w]));
+      width.set(this, w);
+    })
+    .append("g")
+    .attr("transform", `translate(${CONFIG.margin.left},${CONFIG.margin.top})`)
+    .each(function (d) {
+      Segment(d3.select(this), d.segments, x.get(this));
+    })
+    .each(function (d) {
+      d3.select(this)
+        .append("g")
         .attr("transform", `translate(0,${height})`)
-        .call(d3.axisBottom(x).ticks(CONFIG.nTicks).tickSize(6).tickPadding(3));
-
-      const bar = g.append("g").attr("class", "bar");
-      setupBrush(g, d, x, height, width);
-      updateSegments(bar, d.segments, x);
+        .call(d3.axisBottom(x.get(this)).ticks(CONFIG.nTicks).tickSize(6).tickPadding(3));
+    })
+    .each(function (d) {
+      Brush(d3.select(this), d, x.get(this), height, width.get(this));
     });
 }
 
@@ -126,22 +139,18 @@ function displaySliderTable(selection, data) {
  * @param {string} nutrientId
  */
 function createSegmentsData(products, nutrientId) {
-  // Map products to segments
-  const segments = products.map((product, i) => ({
+  const segments = products.map((p, i) => ({
     i: i,
-    id: product.id,
-    name: product.product_name,
-    level: Number(product[nutrientId]) || 0
+    id: p.id,
+    name: p.product_name,
+    level: Number(p[nutrientId]) || 0
   }));
-
-  // Calculate cumulative values
   let cum = 0;
-  segments.forEach(d => {
-    d.startValue = cum;
-    cum += d.level;
-    d.endValue = cum;
+  segments.forEach(p => {
+    p.startValue = cum;
+    cum += p.level;
+    p.endValue = cum;
   });
-
   return segments;
 }
 
@@ -150,17 +159,15 @@ function createSegmentsData(products, nutrientId) {
  * @param {Array} segments
  * @param {d3.Scale} x
  */
-function updateSegments(barGroup, segments, x) {
+function Segment(barGroup, segments, x) {
   // Setup bar positioning
   const height = CONFIG.svgHeight - CONFIG.margin.top - CONFIG.margin.bottom;
   const axisYPosition = height;
   const barYPosition = axisYPosition - CONFIG.barHeight - 2;
   const barHeight = CONFIG.barHeight; // From config
-
-  // Use product ID as the key function for object constancy
   const segmentGroups = barGroup
     .selectAll("g.segment-group")
-    .data(segments, d => `${d.id}-${d.quantity_g}`)
+    .data(segments, p => `${p.id}-${p.quantity_g}`)
     .join("g")
     .attr("class", "segment-group");
 
@@ -172,11 +179,11 @@ function updateSegments(barGroup, segments, x) {
     .attr("height", barHeight)
     .attr("x", 0)
     .attr("width", 0)
-    .attr("fill", d => d3.schemeTableau10[d.i % 10])
+    .attr("fill", p => d3.schemeTableau10[p.i % 10])
     .transition()
     .duration(750)
-    .attr("width", d => x(d.endValue) - x(d.startValue))
-    .attr("x", d => x(d.startValue));
+    .attr("width", p => x(p.endValue) - x(p.startValue))
+    .attr("x", p => x(p.startValue));
 
   segmentGroups
     .append("text")
