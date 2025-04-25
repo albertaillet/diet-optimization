@@ -85,8 +85,8 @@ def create_rangeslider(data: dict[str, str]) -> dict[str, float | str]:
     max_value = 4 * lower if upper is None else math.ceil(upper + lower - min_value)
     max_value = min_value + 100 if max_value == min_value else max_value
     return {
-        "name": data["name"],
         "id": data["id"],
+        "name": data["name"],
         "unit": data["rec_unit"],
         "min": min_value,
         "max": max_value,
@@ -121,7 +121,10 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
             {"name": "Micronutrients", "id": "micro", "nutrients": micro_recommendations},
         ]
         sliders = [create_rangeslider(rec) for rec in [*macro_recommendations, *micro_recommendations]]
-        return render_template("dashboard.html", currencies=POSSIBLE_CURRENCIES, sliders=sliders, nutrient_groups=nutrient_groups)
+        slider_csv = create_csv(["id", "name", "unit", "min", "max", "lower", "upper"], sliders)  # type: ignore
+        return render_template(
+            "dashboard.html", currencies=POSSIBLE_CURRENCIES, slider_csv=slider_csv, nutrient_groups=nutrient_groups
+        )
 
     @app.route("/optimize.csv", methods=["POST"])
     def optimize():

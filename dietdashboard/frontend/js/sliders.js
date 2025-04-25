@@ -208,18 +208,15 @@ const modalTitle = document.getElementById("modalTitle");
 if (!modal || !form || !modalTitle) {
   alert("Missing modal elements");
 }
+const sliderCsv = document.getElementById("slider-csv-data");
 
 // --- Main Application Logic ---
 export function initSliders() {
-  // TODO: use actual data from the server
-  const sliderData = [
-    { id: "fat", name: "Fat", unit: "g/100g", min: 0, lower: 5, max: 100, upper: 30 },
-    { id: "protein", name: "Proteins", unit: "g/100g", min: 0, lower: 10, max: 100, upper: 40 }
-  ];
+  const sliderData = d3.csvParse(sliderCsv.textContent, d3.autoType);
   const productCsv = `id,product_code,product_name,ciqual_name,ciqual_code,location,location_osm_id,quantity_g,price,protein,fat
 14144,3068110702235,Farine de blé T45,"Wheat flour, type 55 (for pastry)",9440,"Intermarché, 3-5, Rue Villeneuve",246286922,357.1,0.38,30.0,3.9286
 13756,3410280010311,Top budget tournesol 1l c15,Sunflower oil,17440,"Intermarché, 3-5, Rue Villeneuve",246286922,1.2,0.0,0.0,1.0714`;
-  const productsData = d3.csvParse(productCsv);
+  const productsData = d3.csvParse(productCsv, d3.autoType);
 
   sliderData.forEach(d => (d.segments = createSegmentsData(productsData, d.id)));
 
