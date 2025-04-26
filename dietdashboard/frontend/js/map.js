@@ -86,7 +86,7 @@ function map() {
       const tiles = tile.zoomDelta(delta)(transform);
       d3.select(this)
         .selectAll("image")
-        .data(tiles)
+        .data(tiles, d => d)
         .join("image")
         .attr("xlink:href", d => url(...d3.tileWrap(d)))
         .attr("x", ([x]) => (x + tiles.translate[0]) * tiles.scale)
