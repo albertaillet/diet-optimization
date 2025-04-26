@@ -124,8 +124,13 @@ frontend-bundle:
 frontend-watch:
 	cd dietdashboard/frontend && ./bundle.sh watch
 
+# https://x.com/karpathy/status/1915581920022585597
+# pipe this into clipboard
 frontend-copy:
-	uvx files-to-prompt dietdashboard/frontend/js/*.js dietdashboard/frontend/*.css dietdashboard/frontend/html/**/*.html
+	uv run files-to-prompt dietdashboard/frontend \
+	-e js -e css -e html \
+	--ignore node_modules --ignore d3.js \
+	--cxml
 
 # ---------- Create the nutrient extraction template. ----------
 
