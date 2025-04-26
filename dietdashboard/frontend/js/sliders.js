@@ -48,12 +48,7 @@ function openModal(event, d) {
  */
 function createSegmentsData(products, nutrientId) {
   const segments = products
-    .map((p, i) => ({
-      i: i,
-      id: p.id,
-      name: p.product_name,
-      level: Number(p[nutrientId]) || 0
-    }))
+    .map((p, i) => ({ i: i, id: p.id, name: p.product_name, level: Number(p[nutrientId]) || 0 }))
     .reverse();
   let cum = 0;
   segments.forEach(p => {
@@ -66,19 +61,17 @@ function createSegmentsData(products, nutrientId) {
 
 /**
  * @param {d3.Selection} slider
- * @param {Array} segments
  * @param {d3.Scale} x
+ * @param {Array} segments
+ * @param {number} height
  */
-function Segment(slider, segments, x) {
-  // Setup bar positioning
-  const height = CONFIG.svgHeight - CONFIG.margin.top - CONFIG.margin.bottom;
-  const axisYPosition = height;
-  const barYPosition = axisYPosition - CONFIG.barHeight - 2;
+function Segments(slider, x, segments, height) {
+  const barYPosition = height - CONFIG.barHeight - 2;
   const barHeight = CONFIG.barHeight; // From config
   const labelYPosition = barYPosition - 5;
   slider
     .selectAll("g.segment-group")
-    .data(segments, d => d.i)
+    .data(segments, (d, i) => i)
     .join(
       enter =>
         enter
@@ -99,6 +92,8 @@ function Segment(slider, segments, x) {
       update => update,
       exit => exit.transition().duration(100).style("opacity", 0).remove()
     )
+    .transition()
+    .duration(750)
     .call(segmentGroup =>
       segmentGroup
         .select("text.segment-label")
@@ -108,8 +103,6 @@ function Segment(slider, segments, x) {
     .call(segmentGroup =>
       segmentGroup
         .select("rect.segment")
-        .transition()
-        .duration(750)
         .attr("x", p => x(p.startValue))
         .attr("width", p => x(p.endValue) - x(p.startValue))
     );
@@ -117,12 +110,12 @@ function Segment(slider, segments, x) {
 
 /**
  * @param {d3.Selection} slider
- * @param {object} d
  * @param {d3.Scale} x
+ * @param {object} d
  * @param {number} height
  * @param {number} width
  */
-function Brush(slider, d, x, height, width) {
+function Brush(slider, x, d, height, width) {
   const brushSelection = d3
     .brushX()
     .extent([
@@ -162,6 +155,24 @@ function Brush(slider, d, x, height, width) {
   brushGroup.call(brushSelection.move, [d.lower, d.upper].map(x));
 }
 
+/**
+ * @param {d3.Selection} slider
+ * @param {d3.Scale} x
+ * @param {object} d
+ * @param {number} height
+ */
+function Axis(slider, x, d, height) {
+  slider
+    .selectAll("g.axis")
+    .data([d], d => d.id)
+    .join(
+      enter => enter.append("g").attr("class", "axis").attr("transform", `translate(0,${height})`),
+      update => update,
+      exit => exit.remove()
+    )
+    .call(d3.axisBottom(x).ticks(CONFIG.nTicks).tickSize(6).tickPadding(3));
+}
+
 const modal = document.getElementById("rangeModal");
 const form = document.getElementById("rangeForm");
 const modalTitle = document.getElementById("modalTitle");
@@ -171,11 +182,7 @@ if (!modal || !form || !modalTitle) {
 
 export function Sliders(productsData, sliderData) {
   const data = sliderData.filter(d => d.active);
-  data.forEach(d => (d.segments = createSegmentsData(productsData, d.id)));
   const height = CONFIG.svgHeight - CONFIG.margin.top - CONFIG.margin.bottom;
-  // Local variables for each SVG element
-  const x = d3.local();
-  const width = d3.local();
   d3.select("#slider-table-body")
     .selectAll("tr")
     .data(data, d => d.id)
@@ -196,32 +203,17 @@ export function Sliders(productsData, sliderData) {
           .attr("width", "100%")
           .attr("height", CONFIG.svgHeight)
           .append("g")
-          .attr("class", "slider"),
+          .attr("class", "slider")
+          .attr("transform", `translate(${CONFIG.margin.left},${CONFIG.margin.top})`),
       update => update.select("svg").select("g.slider"),
       exit => exit.remove()
     )
     .each(function (d) {
-      // Setup local variables for each SVG element
-      const w = this.parentNode.clientWidth - CONFIG.margin.left - CONFIG.margin.right;
-      x.set(this, d3.scaleLinear().domain([d.min, d.max]).range([0, w]));
-      width.set(this, w);
-    })
-    .attr("transform", `translate(${CONFIG.margin.left},${CONFIG.margin.top})`)
-    .each(function (d) {
-      d3.select(this)
-        .selectAll("g.axis")
-        .data([d])
-        .join(
-          enter => enter.append("g").attr("class", "axis").attr("transform", `translate(0,${height})`),
-          update => update,
-          exit => exit.remove()
-        )
-        .call(d3.axisBottom(x.get(this)).ticks(CONFIG.nTicks).tickSize(6).tickPadding(3));
-    })
-    .each(function (d) {
-      Segment(d3.select(this), d.segments, x.get(this));
-    })
-    .each(function (d) {
-      Brush(d3.select(this), d, x.get(this), height, width.get(this));
+      const slider = d3.select(this);
+      const width = this.parentNode.clientWidth - CONFIG.margin.left - CONFIG.margin.right;
+      const x = d3.scaleLinear().domain([d.min, d.max]).range([0, width]);
+      Axis(slider, x, d, height);
+      Segments(slider, x, createSegmentsData(productsData, d.id), height);
+      Brush(slider, x, d, height, width);
     });
 }
