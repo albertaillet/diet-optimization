@@ -124,10 +124,11 @@ td.slider-label div span {
   fill-opacity: 1;
   stroke: var(--text-color);
   stroke-width: 1px;
+  cursor: ew-resize;
 }
 
 /* Tooltip styling */
-.segment-label {
+text.segment-label {
   font-size: 11px;
   text-anchor: middle;
   fill: var(--text-color);
@@ -136,11 +137,11 @@ td.slider-label div span {
   user-select: none;
   opacity: 0;
 }
-.segment:hover {
+rect.segment:hover {
   opacity: 0.8;
 }
-.segment:hover + .segment-label,
-.segment-label:hover {
+g.segment-group:hover text.segment-label,
+text.segment-label:hover {
   opacity: 1;
 }
 /* Map styling */
