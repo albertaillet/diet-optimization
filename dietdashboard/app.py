@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run
 """This script creates a flask app for optimizing a diet with linear optimization to get the optimal quantities of food products.
 
-TODO: Advanced filter: location, vegan, vegetarian, indiviudal off categories
+TODO: Advanced filter: vegan, vegetarian, indiviudal off categories
 TODO: Include other objectives with tunable hyperparameters (t.ex. minimize environmental impact, added sugar, saturated fat).
 TODO: In frontend button to download the results as a CSV file.
 TODO: Log all requests and responses in a database.
@@ -136,12 +136,13 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
         with (debug_folder / "input.json").open("w+") as f:
             f.write(json.dumps(data, indent=2))
         chosen_bounds = {nid: (data.get(f"{nid}_lower"), data.get(f"{nid}_upper")) for nid in nutrient_ids}
+        locations = [int(loc) for loc in data.get("locations", [154])]  # id: 154, name: Auchan, Rue Lieutenant André Argenton
         if not chosen_bounds:
             print("No nutrients selected.")
             return ""
 
         start = time.perf_counter()
-        products_and_prices = query_numpy(con, QUERY, location_like="Toulouse")  # TODO: this should be a parameter
+        products_and_prices = query_numpy(con, QUERY, locations=locations)
         query_time = time.perf_counter() - start
 
         start = time.perf_counter()

@@ -18,7 +18,7 @@ const restoreState = () => JSON.parse(localStorage.getItem("state"));
  * @param {object} state
  */
 function optimize(state) {
-  const data = { currency: state.currency };
+  const data = { currency: state.currency, locations: Object.keys(state.locations) };
   state.sliders.forEach(nutrient => {
     if (!nutrient.active) return;
     data[`${nutrient.id}_lower`] = nutrient.lower;

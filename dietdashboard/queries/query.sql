@@ -76,6 +76,6 @@ vitamin_b12_value,
 FROM final_table
 WHERE currency IN ('EUR', 'CHF')  -- Hardcoded currencies for now
 AND price_per_quantity IS NOT NULL
-AND location_osm_display_name LIKE '%' || $location_like || '%'
+AND location_id IN (SELECT UNNEST($locations))
 AND price_per_quantity > 0
 AND product_quantity > 0;
