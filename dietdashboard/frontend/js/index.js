@@ -3,8 +3,21 @@ import { initMap } from "./map";
 import { Result } from "./result";
 import { Sliders } from "./sliders";
 
-// Uses the global state object to post data to the server and fetch the optimized results
-export function optimize() {
+/**
+ * @param {object} state
+ */
+export function handleStateChange() {
+  persistState(state);
+  optimize(state);
+}
+
+export const persistState = state => localStorage.setItem("state", JSON.stringify(state));
+const restoreState = () => JSON.parse(localStorage.getItem("state"));
+
+/**
+ * @param {object} state
+ */
+function optimize(state) {
   const data = { currency: state.currency };
   state.sliders.forEach(nutrient => {
     if (!nutrient.active) return;
@@ -19,6 +32,7 @@ export function optimize() {
       Sliders(data, state.sliders);
     });
 }
+
 /**
  * @param {HTMLElement} button
  * @param {boolean} checked
@@ -29,7 +43,7 @@ function handleAllButton(button, checked) {
       checkbox.checked = checked;
       state.sliders.find(n => n.id === checkbox.value).active = checked;
     });
-    optimize();
+    handleStateChange();
   });
 }
 
@@ -37,7 +51,7 @@ function handleAllButton(button, checked) {
 document.querySelectorAll(".nutrient-checkbox").forEach(checkbox =>
   checkbox.addEventListener("change", () => {
     state.sliders.find(n => n.id === checkbox.value).active = checkbox.checked;
-    optimize();
+    handleStateChange();
   })
 );
 document.querySelectorAll(".select-all-btn").forEach(btn => handleAllButton(btn, true)); // Set up select all button
@@ -49,19 +63,26 @@ if (!currencySelect || !sliderCsvData) {
   alert("Missing required elements in the HTML");
 }
 
-// Global state
-const state = {
-  currency: currencySelect.value,
-  sliders: [],
-  mapTransform: { k: 4096, x: 480, y: 250 },
-  locations: new Set()
-};
-initMap(state); // Initialize the map
-
-currencySelect.addEventListener("change", () => {
-  state.currency = currencySelect.value;
-  optimize();
+// Set up currency select listener
+currencySelect.addEventListener("change", event => {
+  state.currency = event.target.value;
+  handleStateChange();
 });
-const defaultSliderData = csvParse(sliderCsvData.textContent, autoType);
-state.sliders = defaultSliderData;
-optimize();
+
+// Global state
+var state = {
+  currency: currencySelect.value,
+  sliders: csvParse(sliderCsvData.textContent, autoType), // Default slider data
+  mapTransform: { k: 4096, x: 480, y: 250 },
+  locations: {}
+};
+state = restoreState() || state; // Restore state from localStorage or use default
+console.log(state);
+state.sliders.forEach(nutrient => {
+  const checkbox = document.querySelector(`.nutrient-checkbox[value="${nutrient.id}"]`);
+  if (checkbox) {
+    checkbox.checked = nutrient.active;
+  }
+});
+initMap(state); // Initialize the map
+handleStateChange();

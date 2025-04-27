@@ -9,6 +9,7 @@
 // https://observablehq.com/@d3/zoomable-raster-vector?collection=@d3/d3-geo
 // https://observablehq.com/@d3/seamless-zoomable-map-tiles?collection=@d3/d3-tile
 import * as d3 from "./d3";
+import { handleStateChange, persistState } from "./index";
 
 const url = (x, y, z) => `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
 const locationUrl = "/locations.csv";
@@ -58,14 +59,16 @@ function Map(selection, state, data) {
     .data(data, d => d.id)
     .join("circle")
     .attr("r", 5)
+    .classed("selected", d => d.id in state.locations)
     .on("click", handleMarkerClick);
 
   selection.call(zoom).call(zoom.transform, transform);
 
   function handleMarkerClick(event, d) {
     event.stopPropagation(); // Prevent map zoom/pan on marker click
-    state.locations.has(d.id) ? state.locations.delete(d.id) : state.locations.add(d.id, d); // Toggle selection
-    d3.select(this).classed("selected", state.locations.has(d.id));
+    d.id in state.locations ? delete state.locations[d.id] : (state.locations[d.id] = null);
+    d3.select(this).classed("selected", d.id in state.locations);
+    handleStateChange();
   }
 
   function zoomed(transform) {
@@ -88,6 +91,12 @@ function Map(selection, state, data) {
       .selectAll("circle")
       .attr("cx", d => transform.applyX(d.x))
       .attr("cy", d => transform.applyY(d.y));
+    state.mapTransform = {
+      k: transform.k,
+      x: transform.x,
+      y: transform.y
+    };
+    persistState(state);
   }
 }
 

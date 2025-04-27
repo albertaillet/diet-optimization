@@ -1,5 +1,5 @@
 import * as d3 from "./d3";
-import { optimize } from "./index";
+import { handleStateChange } from "./index";
 // Inspired by https://observablehq.com/@sarah37/snapping-range-slider-with-d3-brush
 
 // Common configuration values
@@ -34,7 +34,7 @@ function openModal(event, d) {
     // Clamp existing lower/upper bounds to the new min/max range
     d.lower = Math.max(newMin, Math.min(d.lower, newMax));
     d.upper = Math.max(newMin, Math.min(d.upper, newMax));
-    optimize();
+    handleStateChange();
   });
   modalTitle.textContent = `Edit Range: ${d.name} (${d.unit})`;
   form.elements.minVal.value = d.min;
@@ -87,7 +87,7 @@ function Segments(slider, x, segments, height) {
                 .attr("height", barHeight)
                 .attr("x", 0)
                 .attr("width", 0)
-                .attr("fill", p => d3.schemeTableau10[p.i % 10]) // TODO: define this in the data.
+                .attr("fill", p => d3.schemeTableau10[p.i % 10]) // TODO: define this in the data. Move this to after the transition
           ),
       update => update,
       exit => exit.transition().duration(100).style("opacity", 0).remove()
@@ -129,7 +129,7 @@ function Brush(slider, x, d, height, width) {
     .on("end", function (event) {
       if (!event.sourceEvent) return;
       [d.lower, d.upper] = event.selection.map(x.invert);
-      optimize();
+      handleStateChange();
     });
 
   const brushGroup = slider
