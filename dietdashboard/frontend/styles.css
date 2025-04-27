@@ -145,14 +145,14 @@ text.segment-label:hover {
   opacity: 1;
 }
 /* Map styling */
-.markers circle {
+g.markers circle {
   cursor: pointer;
   stroke-width: 0.5px;
 }
-.unselected-markers circle {
+g.markers circle {
   fill: red;
 }
-.selected-markers circle {
+g.markers circle.selected {
   fill: var(--light-green);
 }
 

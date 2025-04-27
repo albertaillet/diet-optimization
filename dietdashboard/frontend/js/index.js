@@ -53,13 +53,10 @@ if (!currencySelect || !sliderCsvData) {
 const state = {
   currency: currencySelect.value,
   sliders: [],
-  map: {
-    map: null,
-    markers: [],
-    bounds: null
-  }
+  mapTransform: { k: 4096, x: 480, y: 250 },
+  locations: new Set()
 };
-initMap(); // Initialize the map
+initMap(state); // Initialize the map
 
 currencySelect.addEventListener("change", () => {
   state.currency = currencySelect.value;
