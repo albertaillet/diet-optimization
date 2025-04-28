@@ -1,15 +1,13 @@
+import { Axis } from "./components/axis";
+import { Brush } from "./components/brush";
 import * as d3 from "./d3";
 import { handleStateChange } from "./index";
+import { Segments } from "./segments";
 // Inspired by https://observablehq.com/@sarah37/snapping-range-slider-with-d3-brush
 
-// Common configuration values
 const CONFIG = {
   margin: { top: 5, right: 20, bottom: 20, left: 10 },
-  svgHeight: 50,
-  nTicks: 10,
-  barHeight: 10,
-  brushHeight: 4,
-  handleRadius: 7
+  svgHeight: 50
 };
 
 /**
@@ -59,120 +57,6 @@ function createSegmentsData(products, nutrientId) {
   return segments;
 }
 
-/**
- * @param {d3.Selection} slider
- * @param {d3.Scale} x
- * @param {Array} segments
- * @param {number} height
- */
-function Segments(slider, x, segments, height) {
-  const barYPosition = height - CONFIG.barHeight - 2;
-  const barHeight = CONFIG.barHeight; // From config
-  const labelYPosition = barYPosition - 5;
-  slider
-    .selectAll("g.segment-group")
-    .data(segments, (d, i) => i)
-    .join(
-      enter =>
-        enter
-          .append("g")
-          .attr("class", "segment-group")
-          .call(segmentGroup => segmentGroup.append("text").attr("class", "segment-label").attr("y", labelYPosition))
-          .call(
-            segmentGroup =>
-              segmentGroup
-                .append("rect")
-                .attr("class", "segment")
-                .attr("y", barYPosition)
-                .attr("height", barHeight)
-                .attr("x", 0)
-                .attr("width", 0)
-                .attr("fill", p => d3.schemeTableau10[p.i % 10]) // TODO: define this in the data. Move this to after the transition
-          ),
-      update => update,
-      exit => exit.transition().duration(100).style("opacity", 0).remove()
-    )
-    .transition()
-    .duration(750)
-    .call(segmentGroup =>
-      segmentGroup
-        .select("text.segment-label")
-        .attr("x", d => x((d.startValue + d.endValue) / 2))
-        .text(d => d.name)
-    )
-    .call(segmentGroup =>
-      segmentGroup
-        .select("rect.segment")
-        .attr("x", p => x(p.startValue))
-        .attr("width", p => x(p.endValue) - x(p.startValue))
-    );
-}
-
-/**
- * @param {d3.Selection} slider
- * @param {d3.Scale} x
- * @param {object} d
- * @param {number} height
- * @param {number} width
- */
-function Brush(slider, x, d, height, width) {
-  const brushSelection = d3
-    .brushX()
-    .extent([
-      [0, height - CONFIG.brushHeight / 2],
-      [width, height + CONFIG.brushHeight / 2]
-    ])
-    .on("brush", function (event) {
-      if (!event.selection) return;
-      handle.attr("transform", (d, i) => `translate(${event.selection[i]},0)`);
-    })
-    .on("end", function (event) {
-      if (!event.sourceEvent) return;
-      [d.lower, d.upper] = event.selection.map(x.invert);
-      handleStateChange();
-    });
-
-  const brushGroup = slider
-    .selectAll("g.brush")
-    .data([d], d => d.id)
-    .join(
-      enter => enter.append("g").attr("class", "brush"),
-      update => update,
-      exit => exit.remove()
-    )
-    .call(brushSelection)
-    .raise(); // Raise the brush above the segments
-
-  const handle = brushGroup
-    .selectAll("g.brush-handle")
-    .data([{ type: "w" }, { type: "e" }])
-    .join(enter =>
-      enter
-        .append("g")
-        .attr("class", "brush-handle")
-        .call(g => g.append("circle").attr("r", CONFIG.handleRadius).attr("cy", height))
-    );
-  brushGroup.call(brushSelection.move, [d.lower, d.upper].map(x));
-}
-
-/**
- * @param {d3.Selection} slider
- * @param {d3.Scale} x
- * @param {object} d
- * @param {number} height
- */
-function Axis(slider, x, d, height) {
-  slider
-    .selectAll("g.axis")
-    .data([d], d => d.id)
-    .join(
-      enter => enter.append("g").attr("class", "axis").attr("transform", `translate(0,${height})`),
-      update => update,
-      exit => exit.remove()
-    )
-    .call(d3.axisBottom(x).ticks(CONFIG.nTicks).tickSize(6).tickPadding(3));
-}
-
 const modal = document.getElementById("rangeModal");
 const form = document.getElementById("rangeForm");
 const modalTitle = document.getElementById("modalTitle");
@@ -212,8 +96,8 @@ export function Sliders(productsData, sliderData) {
       const slider = d3.select(this);
       const width = this.parentNode.clientWidth - CONFIG.margin.left - CONFIG.margin.right;
       const x = d3.scaleLinear().domain([d.min, d.max]).range([0, width]);
-      Axis(slider, x, d, height);
-      Segments(slider, x, createSegmentsData(productsData, d.id), height);
-      Brush(slider, x, d, height, width);
+      Axis(slider, d, x, height);
+      Segments(slider, createSegmentsData(productsData, d.id), x, height);
+      Brush(slider, d, x, height, width);
     });
 }
