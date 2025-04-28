@@ -279,3 +279,25 @@ Related [xkcd](https://xkcd.com/927/).
   - [arc-pad-angle](https://observablehq.com/@d3/arc-pad-angle)
 - Observable example of range slider with d3.brush
   - [Range Sliders with d3.brush](https://observablehq.com/@sarah37/snapping-range-slider-with-d3-brush) by [Sarah Schöttler](https://sarahschoettler.com)
+
+## Other frontend links
+
+For layout and integration with Observable notebooks:
+
+- [hpcc-systems/Visualization](http://hpcc-systems.github.io/Visualization/)
+  - http://hpcc-systems.github.io/Visualization/components/README.html
+  - http://hpcc-systems.github.io/Visualization/components/layout/README.html
+  - https://github.com/hpcc-systems/Visualization/tree/trunk/packages/layout
+
+Observable libraries:
+
+- [Observable runtime](https://github.com/observablehq/runtime) (the reactivity system behind Observable notebooks and framework)
+- [Observable framework](https://github.com/observablehq/framework) (static site generator for data apps, dashboards)
+- [Observable plot](https://github.com/observablehq/plot) (high-level plotting library using D3)
+- [Observable notebooks](https://observablehq.com/documentation/notebooks/)
+
+Layout used in JupyterLab:
+
+- [Lumino](https://github.com/jupyterlab/lumino)
+  - Fork of [PhosphorJS](https://github.com/phosphorjs/phosphor)
+  - [Examples](https://lumino.readthedocs.io/en/latest/examples.html)
