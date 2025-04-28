@@ -3,9 +3,6 @@ import { initMap } from "./map";
 import { Result } from "./result";
 import { Sliders } from "./sliders";
 
-/**
- * @param {object} state
- */
 export function handleStateChange() {
   persistState(state);
   optimize(state);
