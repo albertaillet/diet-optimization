@@ -1,6 +1,6 @@
 import { Map } from "./components/map";
+import { Result } from "./components/result";
 import { autoType, csv, csvParse, select } from "./d3";
-import { Result } from "./result";
 import { Sliders } from "./sliders";
 
 export function handleStateChange() {

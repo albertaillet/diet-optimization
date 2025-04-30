@@ -1,16 +1,17 @@
-import * as d3 from "./d3";
+import * as d3 from "../d3";
 
-const DEFAULTS = {
-  height: 150,
-  padAngle: 0.02,
-  innerRadiusRatio: 0.4,
-  labelRadiusRatio: 0.7,
-  colorRange: [2, 4, 8] // indices from d3.schemeTableau10
-};
-
-export function displayMacroPie(data, total, container) {
-  const width = container.clientWidth;
-  const { height, padAngle, innerRadiusRatio, labelRadiusRatio, colorRange } = DEFAULTS;
+/**
+ * @param {d3.Selection} parent
+ * @param {Array} data
+ * @param {number} total
+ */
+export function MacroPie(parent, data, total) {
+  const height = 150;
+  const padAngle = 0.02;
+  const innerRadiusRatio = 0.4;
+  const labelRadiusRatio = 0.7;
+  const colorRange = [2, 4, 8]; // indices from d3.schemeTableau10
+  const width = parent.node().clientWidth;
   const outerRadius = Math.min(width, height) / 2.8;
   const innerRadius = outerRadius * innerRadiusRatio;
   const labelRadius = outerRadius * labelRadiusRatio;
@@ -27,8 +28,7 @@ export function displayMacroPie(data, total, container) {
   const arc = d3.arc().innerRadius(innerRadius).outerRadius(outerRadius);
   const arcs = pie(data);
 
-  const svg = d3
-    .select(container)
+  const svg = parent
     .html("")
     .append("svg")
     .attr("viewBox", [-width / 2, -height / 2, width, height]);
