@@ -1,5 +1,5 @@
-import { autoType, csvParse } from "./d3";
-import { initMap } from "./map";
+import { Map } from "./components/map";
+import { autoType, csv, csvParse, select } from "./d3";
 import { Result } from "./result";
 import { Sliders } from "./sliders";
 
@@ -81,5 +81,7 @@ state.sliders.forEach(nutrient => {
     checkbox.checked = nutrient.active;
   }
 });
-initMap(state); // Initialize the map
+
+const locationData = await csv("/locations.csv", autoType);
+Map(select("#map"), locationData, state); // Initialize the map
 handleStateChange();

@@ -13,7 +13,8 @@
       </div>
       <div id="map-content" class="tab-content">
         <p style="margin: 0 0 0.5rem; font-size: 0.85rem">A map-based approach to selecting items or regions.</p>
-        {% include 'partials/map.html' %}
+        <div id="map"></div>
+        <!-- TODO: min-height needed here for some reason -->
       </div>
     </div>
   </div>
@@ -23,6 +24,9 @@
   </div>
 </div>
 <style>
+  #map {
+    min-height: 300px;
+  }
   /* Basic tab label styling */
   .tab-label {
     cursor: pointer;

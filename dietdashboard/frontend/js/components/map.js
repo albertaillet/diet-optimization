@@ -8,29 +8,34 @@
 // https://observablehq.com/@d3/zoomable-map-tiles?collection=@d3/d3-tile
 // https://observablehq.com/@d3/zoomable-raster-vector?collection=@d3/d3-geo
 // https://observablehq.com/@d3/seamless-zoomable-map-tiles?collection=@d3/d3-tile
-import * as d3 from "./d3";
-import { handleStateChange, persistState } from "./index";
+import * as d3 from "../d3";
+import { handleStateChange, persistState } from "../index";
 
 const url = (x, y, z) => `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
-const locationUrl = "/locations.csv";
 const width = 960,
   height = 500,
   deltas = [-100, -4, -1, 0];
 
 /**
- * @param {d3.Selection} selection
- * @param {object} state
+ * @param {d3.Selection} parent
  * @param {Array} data
+ * @param {object} state
  */
-function Map(selection, state, data) {
-  const tile = d3
-    .tile()
-    .extent([
-      [0, 0],
-      [width, height]
-    ])
-    .tileSize(256)
-    .clampX(false);
+export function Map(parent, data, state) {
+  const projection = d3
+    .geoMercator()
+    .scale(1 / (2 * Math.PI))
+    .translate([0, 0]);
+
+  data.forEach(d => ([d.x, d.y] = projection([d.lon, d.lat])));
+
+  const svg = parent.append("svg").attr("viewBox", [0, 0, width, height]);
+
+  const extent = [
+    [0, 0],
+    [width, height]
+  ];
+  const tile = d3.tile().extent(extent).tileSize(256).clampX(false);
 
   const zoom = d3
     .zoom()
@@ -41,19 +46,12 @@ function Map(selection, state, data) {
     ])
     .on("zoom", event => zoomed(event.transform));
 
-  const levels = selection
-    .append("g")
-    .attr("pointer-events", "none")
-    .selectAll("g")
-    .data(deltas)
-    .join("g")
-    .style("opacity", null);
+  const levels = svg.append("g").attr("pointer-events", "none").selectAll("g").data(deltas).join("g").style("opacity", null);
 
-  const markers = selection.append("g").attr("class", "markers");
+  const markers = svg.append("g").attr("class", "markers");
 
   const transform = d3.zoomIdentity.translate(state.mapTransform.x, state.mapTransform.y).scale(state.mapTransform.k);
 
-  // Add circles to the UNSELECTED group initially
   markers
     .selectAll("circle")
     .data(data, d => d.id)
@@ -62,7 +60,7 @@ function Map(selection, state, data) {
     .classed("selected", d => d.id in state.locations)
     .on("click", handleMarkerClick);
 
-  selection.call(zoom).call(zoom.transform, transform);
+  svg.call(zoom).call(zoom.transform, transform);
 
   function handleMarkerClick(event, d) {
     event.stopPropagation(); // Prevent map zoom/pan on marker click
@@ -91,24 +89,7 @@ function Map(selection, state, data) {
       .selectAll("circle")
       .attr("cx", d => transform.applyX(d.x))
       .attr("cy", d => transform.applyY(d.y));
-    state.mapTransform = {
-      k: transform.k,
-      x: transform.x,
-      y: transform.y
-    };
+    state.mapTransform = { k: transform.k, x: transform.x, y: transform.y };
     persistState(state);
   }
-}
-
-export async function initMap(state) {
-  const projection = d3
-    .geoMercator()
-    .scale(1 / (2 * Math.PI))
-    .translate([0, 0]);
-
-  const data = await d3.csv(locationUrl, d3.autoType);
-  data.forEach(d => ([d.x, d.y] = projection([d.lon, d.lat])));
-
-  const svg = d3.select("#map").append("svg").attr("viewBox", [0, 0, width, height]);
-  Map(svg, state, data);
 }
