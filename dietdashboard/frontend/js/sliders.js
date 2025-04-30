@@ -1,8 +1,8 @@
 import { Axis } from "./components/axis";
 import { Brush } from "./components/brush";
+import { Segments } from "./components/segments";
 import * as d3 from "./d3";
 import { handleStateChange } from "./index";
-import { Segments } from "./segments";
 // Inspired by https://observablehq.com/@sarah37/snapping-range-slider-with-d3-brush
 
 const CONFIG = {

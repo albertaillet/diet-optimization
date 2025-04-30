@@ -1,5 +1,6 @@
 import * as d3 from "../d3";
 import { MacroPie } from "./pie";
+import { Table } from "./table";
 /**
  * @param {d3.Selection} parent
  * @param {Array} data
@@ -22,21 +23,6 @@ function ResultTable(parent, data) {
 }
 
 /**
- * @param {d3.Selection} parent
- * @param {Array} data
- */
-function MacroTable(parent, data) {
-  parent
-    .selectAll("tr")
-    .data(data)
-    .join("tr")
-    .selectAll("td")
-    .data(d => d)
-    .join("td")
-    .html(d => d);
-}
-
-/**
  * @param {d3.Selection} tableContainer
  * @param {d3.Selection} pieContainer
  * @param {Array} data
@@ -51,7 +37,7 @@ function MacroSummary(tableContainer, pieContainer, data) {
   const weight = Object.fromEntries(fields.map(key => [key, d3.sum(data, d => +d[key] || 0)]));
   const energy = { protein: weight.protein * 4, carbohydrate: weight.carbohydrate * 4, fat: weight.fat * 9 };
   const totalEnergy = d3.sum(Object.values(energy));
-  MacroTable(tableContainer, [
+  Table(tableContainer, [
     ["Weight", ...fields.map(field => `${weight[field].toFixed(0)}g`)],
     ["Energy", ...fields.map(field => `${energy[field].toFixed(0)} kcal`)],
     ["Percentage", ...fields.map(field => `${((energy[field] / totalEnergy) * 100).toFixed(0)}%`)]
