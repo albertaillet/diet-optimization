@@ -61,7 +61,7 @@ export function Sliders(productsData, sliderData) {
       const slider = d3.select(this);
       const width = this.parentNode.clientWidth - CONFIG.margin.left - CONFIG.margin.right;
       const x = d3.scaleLinear().domain([d.min, d.max]).range([0, width]);
-      Axis(slider, d, x, height);
+      Axis(slider, x, height);
       Segments(slider, createSegmentsData(productsData, d.id), x, height);
       Brush(slider, d, x, height, width);
     });

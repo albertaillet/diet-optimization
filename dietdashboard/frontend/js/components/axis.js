@@ -1,11 +1,11 @@
-import * as d3 from "../d3";
+import { axisBottom } from "../d3";
+
 /**
  * @param {d3.Selection} parent
- * @param {object} d
  * @param {d3.Scale} x
  * @param {number} height
  */
-export function Axis(parent, d, x, height) {
+export function Axis(parent, x, height) {
   const nTicks = 10;
   const tickSize = 6;
   const tickPadding = 3;
@@ -18,5 +18,5 @@ export function Axis(parent, d, x, height) {
       exit => exit.remove()
     )
     .attr("transform", `translate(0,${height})`)
-    .call(d3.axisBottom(x).ticks(nTicks).tickSize(tickSize).tickPadding(tickPadding));
+    .call(axisBottom(x).ticks(nTicks).tickSize(tickSize).tickPadding(tickPadding));
 }
