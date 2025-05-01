@@ -1,10 +1,11 @@
 import { handleStateChange } from "../index";
 
 /**
+ * @param {object} state
  * @param {HTMLElement} button
  * @param {boolean} checked
  */
-function handleAllButton(button, checked) {
+function handleAllButton(state, button, checked) {
   button.addEventListener("click", event => {
     document.querySelectorAll(`.nutrient-checkbox[data-category="${event.target.dataset.category}"]`).forEach(checkbox => {
       checkbox.checked = checked;
@@ -25,8 +26,8 @@ export function registerCheckBoxes(state) {
       handleStateChange();
     })
   );
-  document.querySelectorAll(".select-all-btn").forEach(btn => handleAllButton(btn, true)); // Set up select all button
-  document.querySelectorAll(".deselect-all-btn").forEach(btn => handleAllButton(btn, false)); // Set up deselect all button
+  document.querySelectorAll(".select-all-btn").forEach(btn => handleAllButton(state, btn, true)); // Set up select all button
+  document.querySelectorAll(".deselect-all-btn").forEach(btn => handleAllButton(state, btn, false)); // Set up deselect all button
   state.sliders.forEach(nutrient => {
     const checkbox = document.querySelector(`.nutrient-checkbox[value="${nutrient.id}"]`);
     checkbox ? (checkbox.checked = nutrient.active) : null;
