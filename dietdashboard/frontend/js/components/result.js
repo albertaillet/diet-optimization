@@ -7,20 +7,16 @@ import { Table } from "./table";
  * @param {Array} data
  */
 function ResultTable(parent, data) {
-  parent
-    .selectAll("tr")
-    .data(data, d => d.id)
-    .join("tr")
-    .selectAll("td")
-    .data(d => [
-      { text: d.product_name, link: `https://world.openfoodfacts.org/product/${d.product_code}` },
-      { text: d.ciqual_name, link: `https://ciqual.anses.fr/#/aliments/${d.ciqual_code}` },
-      { text: d.location, link: `https://www.openstreetmap.org/way/${d.location_osm_id}` },
-      { text: d.quantity_g, link: `info/${d.id}` },
-      { text: d.price, link: `https://prices.openfoodfacts.org/prices/${d.id}` }
+  Table(
+    parent,
+    data.map(d => [
+      `<a href="https://world.openfoodfacts.org/product/${d.product_code}" target="_blank">${d.product_name}</a>`,
+      `<a href="https://ciqual.anses.fr/#/aliments/${d.ciqual_code}" target="_blank">${d.ciqual_name}</a>`,
+      `<a href="https://www.openstreetmap.org/way/${d.location_osm_id}" target="_blank">${d.location}</a>`,
+      `<a href="info/${d.id}" target="_blank">${d.quantity_g}</a>`,
+      `<a href="https://prices.openfoodfacts.org/prices/${d.id}" target="_blank">${d.price}</a>`
     ])
-    .join("td")
-    .html(d => `<a href="${d.link}" target="_blank">${d.text}</a>`);
+  );
 }
 
 /**
