@@ -1,6 +1,7 @@
 import * as d3 from "../d3";
 import { MacroPie } from "./pie";
 import { Table } from "./table";
+
 /**
  * @param {d3.Selection} parent
  * @param {Array} data

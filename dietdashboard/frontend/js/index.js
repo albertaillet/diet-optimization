@@ -1,7 +1,7 @@
 import { Map } from "./components/map";
 import { Result } from "./components/result";
+import { Sliders } from "./components/sliders";
 import { autoType, csv, csvParse, select } from "./d3";
-import { Sliders } from "./sliders";
 
 export function handleStateChange() {
   persistState(state);

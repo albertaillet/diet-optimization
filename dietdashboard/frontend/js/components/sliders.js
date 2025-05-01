@@ -1,44 +1,14 @@
-import { Axis } from "./components/axis";
-import { Brush } from "./components/brush";
-import { Segments } from "./components/segments";
-import * as d3 from "./d3";
-import { handleStateChange } from "./index";
+import * as d3 from "../d3";
+import { Axis } from "./axis";
+import { Brush } from "./brush";
+import { openModal } from "./rangemodal";
+import { Segments } from "./segments";
 // Inspired by https://observablehq.com/@sarah37/snapping-range-slider-with-d3-brush
 
 const CONFIG = {
   margin: { top: 5, right: 20, bottom: 20, left: 10 },
   svgHeight: 50
 };
-
-/**
- * @param {Event} event
- * @param {object} d
- */
-function openModal(event, d) {
-  form.addEventListener("submit", event => {
-    const btn = event.submitter || document.activeElement;
-    if (btn.name !== "save") return;
-    const formData = new FormData(form);
-    const newMin = Number(formData.get("minVal"));
-    const newMax = Number(formData.get("maxVal"));
-    // Validate input
-    if (newMin >= newMax) {
-      alert("Minimum value must be less than maximum value");
-      return;
-    }
-    // Directly MUTATE the object's properties
-    d.min = newMin;
-    d.max = newMax;
-    // Clamp existing lower/upper bounds to the new min/max range
-    d.lower = Math.max(newMin, Math.min(d.lower, newMax));
-    d.upper = Math.max(newMin, Math.min(d.upper, newMax));
-    handleStateChange();
-  });
-  modalTitle.textContent = `Edit Range: ${d.name} (${d.unit})`;
-  form.elements.minVal.value = d.min;
-  form.elements.maxVal.value = d.max;
-  modal.showModal();
-}
 
 /**
  * @param {Array} products
@@ -55,13 +25,6 @@ function createSegmentsData(products, nutrientId) {
     p.endValue = cum;
   });
   return segments;
-}
-
-const modal = document.getElementById("rangeModal");
-const form = document.getElementById("rangeForm");
-const modalTitle = document.getElementById("modalTitle");
-if (!modal || !form || !modalTitle) {
-  alert("Missing modal elements");
 }
 
 export function Sliders(productsData, sliderData) {
