@@ -15,9 +15,7 @@ const CONFIG = {
  * @param {string} nutrientId
  */
 function createSegmentsData(products, nutrientId) {
-  const segments = products
-    .map((p, i) => ({ i: i, id: p.id, name: p.product_name, level: Number(p[nutrientId]) || 0 }))
-    .reverse();
+  const segments = products.map((p, i) => ({ i: i, id: p.id, name: p.product_name, level: p[nutrientId] })).reverse();
   let cum = 0;
   segments.forEach(p => {
     p.startValue = cum;
@@ -27,6 +25,10 @@ function createSegmentsData(products, nutrientId) {
   return segments;
 }
 
+/**
+ * @param {Array} productsData
+ * @param {Array} sliderData
+ */
 export function Sliders(productsData, sliderData) {
   const data = sliderData.filter(d => d.active);
   const height = CONFIG.svgHeight - CONFIG.margin.top - CONFIG.margin.bottom;

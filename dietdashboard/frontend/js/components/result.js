@@ -57,6 +57,10 @@ if (!resultTable || !macroTable || !macroPie) {
   alert("Missing result table or macro table or macro pie");
 }
 
+/**
+ * @param {Array} products
+ * @param {string} currency
+ */
 export function Result(products, currency) {
   const totalPrice = d3.sum(products, d => +d.price || 0).toFixed(2);
   document.getElementById("result-price").innerHTML = `${totalPrice} ${currency}`;
