@@ -1,9 +1,9 @@
 import { registerCheckBoxes } from "./components/checkboxes";
 import { registerCurrencySelect } from "./components/currency";
-import { Map } from "./components/map";
+import { Locations } from "./components/locations";
 import { Result } from "./components/result";
 import { Sliders } from "./components/sliders";
-import { autoType, csv, csvParse, select } from "./d3";
+import { autoType, csv, csvParse } from "./d3";
 
 export function handleStateChange() {
   persistState(state);
@@ -44,5 +44,5 @@ registerCheckBoxes(state);
 registerCurrencySelect(state);
 
 const locationData = await csv("/locations.csv", autoType);
-Map(select("#map"), locationData, state); // Initialize the map
+Locations(locationData, state);
 handleStateChange();

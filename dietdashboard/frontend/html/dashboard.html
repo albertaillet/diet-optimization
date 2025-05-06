@@ -9,12 +9,31 @@
 
       <div id="sliders-content" class="tab-content">
         <p style="margin: 0 0 0.5rem; font-size: 0.85rem">Adjust your nutrient targets to optimize your diet.</p>
-        {% include 'partials/slider_table.html' %}
+        <table style="border-spacing: 0">
+          <colgroup>
+            <col style="width: 15%" />
+            <col style="width: 85%" />
+          </colgroup>
+          <tbody id="slider-table-body"></tbody>
+        </table>
       </div>
       <div id="map-content" class="tab-content">
         <p style="margin: 0 0 0.5rem; font-size: 0.85rem">A map-based approach to selecting items or regions.</p>
         <div id="map"></div>
-        <!-- TODO: min-height needed here for some reason -->
+        <table>
+          <!-- id,name,count -->
+          <colgroup>
+            <col style="width: 90%" />
+            <col style="width: 10%" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Count</th>
+            </tr>
+          </thead>
+          <tbody id="location-table-body"></tbody>
+        </table>
       </div>
     </div>
   </div>
