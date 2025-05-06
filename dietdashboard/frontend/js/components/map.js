@@ -10,6 +10,7 @@
 // https://observablehq.com/@d3/seamless-zoomable-map-tiles?collection=@d3/d3-tile
 import * as d3 from "../d3";
 import { persistState } from "../index";
+import { locationStateChange } from "./locations";
 import { Markers } from "./markers";
 
 const url = (x, y, z) => `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
@@ -34,10 +35,7 @@ export function Map(parent, data, state) {
   const zoom = d3
     .zoom()
     .scaleExtent([1 << 8, 1 << 22])
-    .extent([
-      [0, 0],
-      [width, height]
-    ])
+    .extent(extent)
     .on("zoom", event => zoomed(event.transform));
 
   const levels = svg.append("g").attr("pointer-events", "none").selectAll("g").data(deltas).join("g").style("opacity", null);
@@ -46,9 +44,18 @@ export function Map(parent, data, state) {
 
   const transform = d3.zoomIdentity.translate(state.mapTransform.x, state.mapTransform.y).scale(state.mapTransform.k);
 
+  // Brush overlay for rectangular selection (uncomment to enable)
+  // const brush = d3.brush().extent(extent).on("end", brushed);
+  // svg.append("g").attr("class", "brush").call(brush);
+
   Markers(markerGroup, data, state);
 
-  svg.call(zoom).call(zoom.transform, transform);
+  svg
+    .call(zoom)
+    // .on("dblclick.zoom", null)
+    // .on("mousedown.zoom", null)
+    // .on("touchstart.zoom", null)
+    .call(zoom.transform, transform);
 
   function zoomed(transform) {
     // Update all tile levels based on the current transform
@@ -72,5 +79,24 @@ export function Map(parent, data, state) {
       .attr("cy", d => transform.applyY(d.y));
     state.mapTransform = { k: transform.k, x: transform.x, y: transform.y };
     persistState(state);
+  }
+
+  /**
+   * @param {d3.Event}
+   */
+  function brushed(event) {
+    if (!event.selection) return;
+    const [[x0, y0], [x1, y1]] = event.selection;
+
+    data.forEach(d => {
+      const cx = transform.applyX(d.x);
+      const cy = transform.applyY(d.y);
+      if (cx >= x0 && cx <= x1 && cy >= y0 && cy <= y1) {
+        state.locations[d.id] = null;
+      }
+    });
+
+    locationStateChange(data, state);
+    svg.select(".brush").call(brush.move, null);
   }
 }
