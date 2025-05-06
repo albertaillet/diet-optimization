@@ -2,14 +2,15 @@
 // d3-zoom for panning and zooming.
 // Note that unlike dedicated libraries for slippy maps such as Leaflet,
 // d3-tile relies on the browser for caching and queueing,
-// and thus you may see more flickering as tiles load.s
+// and thus you may see more flickering as tiles load.
 // References:
 // https://observablehq.com/@d3/zoomable-tiles?collection=@d3/d3-tile
 // https://observablehq.com/@d3/zoomable-map-tiles?collection=@d3/d3-tile
 // https://observablehq.com/@d3/zoomable-raster-vector?collection=@d3/d3-geo
 // https://observablehq.com/@d3/seamless-zoomable-map-tiles?collection=@d3/d3-tile
 import * as d3 from "../d3";
-import { handleStateChange, persistState } from "../index";
+import { persistState } from "../index";
+import { Markers } from "./markers";
 
 const url = (x, y, z) => `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
 const width = 960,
@@ -22,13 +23,6 @@ const width = 960,
  * @param {object} state
  */
 export function Map(parent, data, state) {
-  const projection = d3
-    .geoMercator()
-    .scale(1 / (2 * Math.PI))
-    .translate([0, 0]);
-
-  data.forEach(d => ([d.x, d.y] = projection([d.lon, d.lat])));
-
   const svg = parent.append("svg").attr("viewBox", [0, 0, width, height]);
 
   const extent = [
@@ -48,26 +42,13 @@ export function Map(parent, data, state) {
 
   const levels = svg.append("g").attr("pointer-events", "none").selectAll("g").data(deltas).join("g").style("opacity", null);
 
-  const markers = svg.append("g").attr("class", "markers");
+  const markerGroup = svg.append("g").attr("class", "markers");
 
   const transform = d3.zoomIdentity.translate(state.mapTransform.x, state.mapTransform.y).scale(state.mapTransform.k);
 
-  markers
-    .selectAll("circle")
-    .data(data, d => d.id)
-    .join("circle")
-    .attr("r", 5)
-    .classed("selected", d => d.id in state.locations)
-    .on("click", handleMarkerClick);
+  Markers(markerGroup, data, state);
 
   svg.call(zoom).call(zoom.transform, transform);
-
-  function handleMarkerClick(event, d) {
-    event.stopPropagation(); // Prevent map zoom/pan on marker click
-    d.id in state.locations ? delete state.locations[d.id] : (state.locations[d.id] = null);
-    d3.select(this).classed("selected", d.id in state.locations);
-    handleStateChange();
-  }
 
   function zoomed(transform) {
     // Update all tile levels based on the current transform
@@ -85,7 +66,7 @@ export function Map(parent, data, state) {
     });
 
     // Update marker positions
-    markers
+    markerGroup
       .selectAll("circle")
       .attr("cx", d => transform.applyX(d.x))
       .attr("cy", d => transform.applyY(d.y));
