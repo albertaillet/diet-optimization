@@ -1,5 +1,3 @@
-import { handleStateChange } from "../index.js";
-
 const currencySelect = document.getElementById("currency-select");
 
 /**
@@ -7,8 +5,5 @@ const currencySelect = document.getElementById("currency-select");
  */
 export function registerCurrencySelect(state) {
   currencySelect.value = state.currency;
-  currencySelect.addEventListener("change", event => {
-    state.currency = event.target.value;
-    handleStateChange();
-  });
+  currencySelect.addEventListener("change", event => (state.currency = event.target.value));
 }

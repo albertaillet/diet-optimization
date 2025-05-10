@@ -1,5 +1,3 @@
-import { handleStateChange } from "../index.js";
-
 const modal = document.getElementById("rangeModal");
 const form = document.getElementById("rangeForm");
 const modalTitle = document.getElementById("modalTitle");
@@ -23,13 +21,13 @@ export function openModal(event, d) {
       alert("Minimum value must be less than maximum value");
       return;
     }
+    // TODO: Reactivity change broke the range modal
     // Directly MUTATE the object's properties
     d.min = newMin;
     d.max = newMax;
     // Clamp existing lower/upper bounds to the new min/max range
     d.lower = Math.max(newMin, Math.min(d.lower, newMax));
     d.upper = Math.max(newMin, Math.min(d.upper, newMax));
-    handleStateChange();
   });
   modalTitle.textContent = `Edit Range: ${d.name} (${d.unit})`;
   form.elements.minVal.value = d.min;

@@ -4,11 +4,7 @@ import { Locations } from "./components/locations";
 import { Result } from "./components/result";
 import { Sliders } from "./components/sliders";
 import { autoType, csv, csvParse } from "./d3";
-
-export function handleStateChange() {
-  persistState(state);
-  optimize(state);
-}
+import { effect, reactive } from "./reactivity";
 
 export const persistState = state => localStorage.setItem("state", JSON.stringify(state));
 const restoreState = () => JSON.parse(localStorage.getItem("state"));
@@ -40,9 +36,12 @@ var state = {
   locations: {}
 };
 state = restoreState() || state; // Restore state from localStorage or use default
+state = reactive(state); // Make state reactive
 registerCheckBoxes(state);
 registerCurrencySelect(state);
 
 const locationData = await csv("/locations.csv", autoType);
 Locations(locationData, state);
-handleStateChange();
+
+effect(() => persistState(state));
+effect(() => optimize(state));

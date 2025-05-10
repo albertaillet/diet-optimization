@@ -1,5 +1,5 @@
 import { select } from "../d3";
-import { handleStateChange } from "../index";
+import { effect } from "../reactivity";
 import { Map } from "./map";
 import { Markers } from "./markers";
 import { Table } from "./table";
@@ -9,7 +9,7 @@ import { Table } from "./table";
  * @param {Array} data - location data
  * @param {object} state
  */
-export function LocationTable(parent, data, state) {
+function LocationTable(parent, data, state) {
   const rows = data.filter(location => location.id in state.locations).map(location => [location.name, location.count]);
   Table(parent, rows);
 }
@@ -18,10 +18,9 @@ export function LocationTable(parent, data, state) {
  * @param {Array} data - location data
  * @param {object} state
  */
-export function locationStateChange(data, state) {
+function locationStateChange(data, state) {
   LocationTable(select("#location-table-body"), data, state);
   Markers(select("g.markers"), data, state);
-  handleStateChange();
 }
 
 /**
@@ -31,4 +30,5 @@ export function locationStateChange(data, state) {
 export function Locations(data, state) {
   Map(select("#map"), data, state);
   LocationTable(select("#location-table-body"), data, state);
+  effect(() => locationStateChange(data, state));
 }

@@ -1,5 +1,4 @@
 import * as d3 from "../d3";
-import { handleStateChange } from "../index";
 
 /**
  * @param {d3.Selection} parent
@@ -24,7 +23,6 @@ export function Brush(parent, d, x, height, width) {
     .on("end", function (event) {
       if (!event.sourceEvent) return;
       [d.lower, d.upper] = event.selection.map(x.invert);
-      handleStateChange();
     });
 
   const brushGroup = parent

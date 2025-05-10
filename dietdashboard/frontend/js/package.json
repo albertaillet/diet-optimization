@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@vue/reactivity": "^3.5.13",
     "d3-array": "^3.2.4",
     "d3-axis": "^3.0.0",
     "d3-brush": "^3.0.0",

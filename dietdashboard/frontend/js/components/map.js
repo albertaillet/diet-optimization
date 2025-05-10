@@ -10,7 +10,6 @@
 // https://observablehq.com/@d3/seamless-zoomable-map-tiles?collection=@d3/d3-tile
 import * as d3 from "../d3";
 import { persistState } from "../index";
-import { locationStateChange } from "./locations";
 import { Markers } from "./markers";
 
 const url = (x, y, z) => `https://tile.openstreetmap.org/${z}/${x}/${y}.png`;
@@ -96,7 +95,6 @@ export function Map(parent, data, state) {
       }
     });
 
-    locationStateChange(data, state);
     svg.select(".brush").call(brush.move, null);
   }
 }

@@ -1,5 +1,3 @@
-import { handleStateChange } from "../index";
-
 /**
  * @param {object} state
  * @param {HTMLElement} button
@@ -11,7 +9,6 @@ function handleAllButton(state, button, checked) {
       checkbox.checked = checked;
       state.sliders.find(n => n.id === checkbox.value).active = checked;
     });
-    handleStateChange();
   });
 }
 
@@ -23,7 +20,6 @@ export function registerCheckBoxes(state) {
   document.querySelectorAll(".nutrient-checkbox").forEach(checkbox =>
     checkbox.addEventListener("change", () => {
       state.sliders.find(n => n.id === checkbox.value).active = checkbox.checked;
-      handleStateChange();
     })
   );
   document.querySelectorAll(".select-all-btn").forEach(btn => handleAllButton(state, btn, true)); // Set up select all button
