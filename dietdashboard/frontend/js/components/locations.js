@@ -9,7 +9,7 @@ import { Table } from "./table";
  * @param {Array} data - location data
  * @param {object} state
  */
-export function LocationTable(parent, data, state) {
+function LocationTable(parent, data, state) {
   const rows = data.filter(location => location.id in state.locations).map(location => [location.name, location.count]);
   Table(parent, rows);
 }
