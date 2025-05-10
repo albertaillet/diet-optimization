@@ -1,5 +1,5 @@
 import { select } from "../d3";
-import { effect } from "../reactivity";
+import { watch } from "../reactivity";
 import { Map } from "./map";
 import { Markers } from "./markers";
 import { Table } from "./table";
@@ -30,5 +30,5 @@ function locationStateChange(data, state) {
 export function Locations(data, state) {
   Map(select("#map"), data, state);
   LocationTable(select("#location-table-body"), data, state);
-  effect(() => locationStateChange(data, state));
+  watch(state.locations, () => locationStateChange(data, state));
 }

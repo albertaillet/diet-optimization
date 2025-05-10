@@ -21,7 +21,6 @@ export function openModal(event, d) {
       alert("Minimum value must be less than maximum value");
       return;
     }
-    // TODO: Reactivity change broke the range modal
     // Directly MUTATE the object's properties
     d.min = newMin;
     d.max = newMax;

@@ -4,7 +4,7 @@ import { Locations } from "./components/locations";
 import { Result } from "./components/result";
 import { Sliders } from "./components/sliders";
 import { autoType, csv, csvParse } from "./d3";
-import { effect, reactive } from "./reactivity";
+import { reactive, watch } from "./reactivity";
 
 export const persistState = state => localStorage.setItem("state", JSON.stringify(state));
 const restoreState = () => JSON.parse(localStorage.getItem("state"));
@@ -43,5 +43,5 @@ registerCurrencySelect(state);
 const locationData = await csv("/locations.csv", autoType);
 Locations(locationData, state);
 
-effect(() => persistState(state));
-effect(() => optimize(state));
+watch(state, () => persistState(state));
+watch([state.sliders, state.locations, () => state.currency], () => optimize(state), { immediate: true });
