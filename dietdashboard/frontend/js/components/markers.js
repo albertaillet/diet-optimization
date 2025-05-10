@@ -7,7 +7,6 @@ import { locationStateChange } from "./locations";
  * @param {object} state
  */
 export function Markers(parent, data, state) {
-  console.log(parent, data, state);
   const projection = d3
     .geoMercator()
     .scale(1 / (2 * Math.PI))
