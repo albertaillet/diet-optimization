@@ -5,6 +5,7 @@ import { Markers } from "./markers";
 import { Table } from "./table";
 
 const template = `<p style="margin: 0 0 0.5rem; font-size: 0.85rem">A map-based approach to selecting items or regions.</p>
+  <div id="location-controls"></div>
   <div id="map"></div>
   <table>
     <colgroup>
@@ -50,4 +51,33 @@ export function Locations(parent, data, state) {
   parent.html(template);
   Map(parent.select("#map"), data, state);
   LocationTable(parent.select("#location-table-body"), data, state);
+  LocationControls(parent.select("#location-controls"), data, state);
+}
+
+/**
+ * @param {d3.Selection} parent
+ * @param {Array} data - location data
+ * @param {object} state
+ */
+function LocationControls(parent, data, state) {
+  const selectAll = () => {
+    data.forEach(location => (state.locations[location.id] = true));
+    locationStateChange(data, state);
+  };
+  const clearAll = () => {
+    state.locations = {};
+    locationStateChange(data, state);
+  };
+
+  parent
+    .selectAll("button")
+    .data([
+      // { label: "Brush Selection", click: () => {} },
+      // { label: "Clear Brush", click: () => {} },
+      { label: "Select All Locations", click: selectAll },
+      { label: "Clear All Locations", click: clearAll }
+    ])
+    .join("button")
+    .text(d => d.label)
+    .on("click", (event, d) => d.click());
 }
