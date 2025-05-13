@@ -4,6 +4,23 @@ import { Map } from "./map";
 import { Markers } from "./markers";
 import { Table } from "./table";
 
+const template = `<p style="margin: 0 0 0.5rem; font-size: 0.85rem">A map-based approach to selecting items or regions.</p>
+  <div id="map"></div>
+  <table>
+    <colgroup>
+      <col style="width: 90%" />
+      <col style="width: 10%" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Count</th>
+      </tr>
+    </thead>
+    <tbody id="location-table-body"></tbody>
+  </table>
+</template>`;
+
 /**
  * @param {d3.Selection} parent
  * @param {Array} data - location data
@@ -25,10 +42,12 @@ export function locationStateChange(data, state) {
 }
 
 /**
+ * @param {d3.Selection} parent
  * @param {Array} data - location data
  * @param {object} state
  */
-export function Locations(data, state) {
-  Map(select("#map"), data, state);
-  LocationTable(select("#location-table-body"), data, state);
+export function Locations(parent, data, state) {
+  parent.html(template);
+  Map(parent.select("#map"), data, state);
+  LocationTable(parent.select("#location-table-body"), data, state);
 }

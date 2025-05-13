@@ -1,6 +1,8 @@
 {% extends "base.html" %} {% block content %}
 <div class="dashboard-content">
-  <div class="dashboard-column">{% include 'partials/tabs.html' %}</div>
+  <div class="dashboard-column">
+    <div id="input-tabs"></div>
+  </div>
   <div class="dashboard-column">
     <h2>Optimized Meal</h2>
     {% include 'partials/result.html' %}

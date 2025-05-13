@@ -78,7 +78,7 @@ export function Map(parent, data, state) {
       .attr("cx", d => transform.applyX(d.x))
       .attr("cy", d => transform.applyY(d.y));
     state.mapTransform = { k: transform.k, x: transform.x, y: transform.y };
-    persistState(state);
+    persistState();
   }
 
   /**

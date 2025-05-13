@@ -234,6 +234,7 @@ select:focus {
 table {
   width: 100%;
   border-collapse: collapse;
+  border-spacing: 0;
 }
 table th {
   padding: 0.5rem;
@@ -258,4 +259,12 @@ a {
 a:hover {
   color: var(--light-green) !important;
   text-decoration: underline;
+}
+
+/* Tabs */
+button.tab-button {
+  position: relative;
+}
+button.tab-button.active {
+  font-weight: bold;
 }

@@ -5,6 +5,16 @@ import { openModal } from "./rangemodal";
 import { Segments } from "./segments";
 // Inspired by https://observablehq.com/@sarah37/snapping-range-slider-with-d3-brush
 
+const template = `
+<p style="margin-top: 0.5rem">Adjust your nutrient targets to optimize your diet.</p>
+<table style="border-spacing: 0">
+  <colgroup>
+    <col style="width: 15%" />
+    <col style="width: 85%" />
+  </colgroup>
+  <tbody id="slider-table-body"></tbody>
+</table>`;
+
 const CONFIG = {
   margin: { top: 5, right: 20, bottom: 20, left: 10 },
   svgHeight: 50
@@ -26,13 +36,25 @@ function createSegmentsData(products, nutrientId) {
 }
 
 /**
+ * @param {d3.Selection} parent
  * @param {Array} productsData
  * @param {Array} sliderData
  */
-export function Sliders(productsData, sliderData) {
+export function Sliders(parent, productsData, sliderData) {
+  parent.html(template);
+  const tableBody = parent.select("#slider-table-body");
+  SlidersTableBody(tableBody, productsData, sliderData);
+}
+
+/**
+ * @param {d3.Selection} parent
+ * @param {Array} productsData
+ * @param {Array} sliderData
+ */
+export function SlidersTableBody(parent, productsData, sliderData) {
   const data = sliderData.filter(d => d.active);
   const height = CONFIG.svgHeight - CONFIG.margin.top - CONFIG.margin.bottom;
-  d3.select("#slider-table-body")
+  parent
     .selectAll("tr")
     .data(data, d => d.id)
     .join(

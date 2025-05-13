@@ -2,15 +2,17 @@ import { registerCheckBoxes } from "./components/checkboxes";
 import { registerCurrencySelect } from "./components/currency";
 import { Locations } from "./components/locations";
 import { Result } from "./components/result";
-import { Sliders } from "./components/sliders";
-import { autoType, csv, csvParse } from "./d3";
+
+import { Sliders, SlidersTableBody } from "./components/sliders";
+import { Tabs } from "./components/tabs";
+import { autoType, csv, csvParse, select } from "./d3";
 
 export function handleStateChange() {
-  persistState(state);
+  persistState();
   optimize(state);
 }
 
-export const persistState = state => localStorage.setItem("state", JSON.stringify(state));
+export const persistState = () => localStorage.setItem("state", JSON.stringify(state));
 const restoreState = () => JSON.parse(localStorage.getItem("state"));
 
 /**
@@ -27,8 +29,11 @@ function optimize(state) {
     .then(response => response.text())
     .then(text => csvParse(text, autoType))
     .then(data => {
-      Result(data, state.currency);
-      Sliders(data, state.sliders);
+      state.resultData = data;
+      Result(state.resultData, state.currency);
+      if (state.inputTabs.current === "sliders-tab") {
+        SlidersTableBody(select("#slider-table-body"), state.resultData, state.sliders);
+      }
     });
 }
 
@@ -37,12 +42,24 @@ var state = {
   currency: "EUR",
   sliders: csvParse(document.getElementById("slider-csv-data").textContent, autoType), // Default slider data
   mapTransform: { k: 4096, x: 480, y: 250 },
-  locations: {}
+  locations: {},
+  resultData: [],
+  inputTabs: { current: "sliders-tab" }
 };
-state = restoreState() || state; // Restore state from localStorage or use default
+state = { ...state, ...restoreState() };
 registerCheckBoxes(state);
 registerCurrencySelect(state);
 
 const locationData = await csv("/locations.csv", autoType);
-Locations(locationData, state);
+
+const tabs = [
+  { id: "sliders-tab", name: "Nutrient Targets", component: parent => Sliders(parent, state.resultData, state.sliders) },
+  { id: "locations-tab", name: "Location Selection", component: parent => Locations(parent, locationData, state) }
+];
+
+function App(state) {
+  Tabs(select("#input-tabs"), tabs, state.inputTabs);
+}
+
+App(state);
 handleStateChange();
