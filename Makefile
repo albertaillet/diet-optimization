@@ -4,31 +4,26 @@ SHELL := /bin/bash
 
 # This file is not used anymore, the full ANSES-CIQUAL 2020 Table in xml format is used instead.
 # CIQUAL_CSV := data/ciqual2020.csv
-# CIQUAL_URL := https://raw.githubusercontent.com/openfoodfacts/openfoodfacts-server/main/external-data/ciqual/ciqual/CIQUAL2020_ENG_2020_07_07.csv
 # $(CIQUAL_CSV):
-# 	wget -O $(CIQUAL_CSV) $(CIQUAL_URL)
+# 	wget -O $(CIQUAL_CSV) https://raw.githubusercontent.com/openfoodfacts/openfoodfacts-server/main/external-data/ciqual/ciqual/CIQUAL2020_ENG_2020_07_07.csv
 
 CIQUAL_XML_ZIP := data/XML_2020_07_07.zip
-CIQUAL_XML_URL := https://ciqual.anses.fr/cms/sites/default/files/inline-files/XML_2020_07_07.zip
 $(CIQUAL_XML_ZIP):
-	wget -O $(CIQUAL_XML_ZIP) $(CIQUAL_XML_URL)
+	wget -O $(CIQUAL_XML_ZIP) https://ciqual.anses.fr/cms/sites/default/files/inline-files/XML_2020_07_07.zip
 
 CALNUT_0_CSV := data/calnut.0.csv
-CALNUT_0_URL := https://github.com/openfoodfacts/openfoodfacts-server/raw/refs/heads/main/external-data/ciqual/calnut/CALNUT.csv.0
 $(CALNUT_0_CSV):
-	wget -O $(CALNUT_0_CSV) $(CALNUT_0_URL)
+	wget -O $(CALNUT_0_CSV) https://raw.githubusercontent.com/openfoodfacts/openfoodfacts-server/refs/heads/main/external-data/ciqual/calnut/CALNUT.csv.0
 
 CALNUT_1_CSV := data/calnut.1.csv
-CALNUT_1_URL := https://github.com/openfoodfacts/openfoodfacts-server/raw/refs/heads/main/external-data/ciqual/calnut/CALNUT.csv.1
 $(CALNUT_1_CSV):
-	wget -O $(CALNUT_1_CSV) $(CALNUT_1_URL)
+	wget -O $(CALNUT_1_CSV) https://raw.githubusercontent.com/openfoodfacts/openfoodfacts-server/refs/heads/main/external-data/ciqual/calnut/CALNUT.csv.1
 
 # ---------- Fetch the nutrient map from recipe estimator map. ----------
 
 NUTRIENT_MAP_RE := data/nutrient_map_recipe_estimator.csv
-NUTRIENT_MAP_RE_URL := https://raw.githubusercontent.com/openfoodfacts/recipe-estimator/main/ciqual/nutrient_map.csv
 $(NUTRIENT_MAP_RE):
-	wget -O $(NUTRIENT_MAP_RE) $(NUTRIENT_MAP_RE_URL)
+	wget -O $(NUTRIENT_MAP_RE) https://raw.githubusercontent.com/openfoodfacts/recipe-estimator/main/ciqual/nutrient_map.csv
 
 nutrient-map-reformat: $(NUTRIENT_MAP_RE)
 	./scripts/nutrient_map/nutrient_map_reformat.py
@@ -42,19 +37,16 @@ nutrient-map-update-ciqual:
 # ---------- Fetch the prices parquet file and the products jsonl file. ----------
 
 PRICES_PARQUET := data/prices.parquet
-PRICES_PARQUET_URL := https://huggingface.co/datasets/openfoodfacts/open-prices/resolve/main/prices.parquet
 $(PRICES_PARQUET):
-	wget -O $(PRICES_PARQUET) $(PRICES_PARQUET_URL)
+	wget -O $(PRICES_PARQUET) https://huggingface.co/datasets/openfoodfacts/open-prices/resolve/main/prices.parquet
 
 PRODUCTS_PARQUET := data/products.parquet
-PRODUCTS_PARQUET_URL := https://huggingface.co/datasets/openfoodfacts/product-database/resolve/main/food.parquet
 $(PRODUCTS_PARQUET):
-	wget -O $(PRODUCTS_PARQUET) $(PRODUCTS_PARQUET_URL)
+	wget -O $(PRODUCTS_PARQUET) https://huggingface.co/datasets/openfoodfacts/product-database/resolve/main/food.parquet
 
 PRODUCT_JSONL_GZ := data/openfoodfacts-products.jsonl.gz
-PRODUCT_JSONL_GZ_URL := https://static.openfoodfacts.org/data/openfoodfacts-products.jsonl.gz
 $(PRODUCT_JSONL_GZ):
-	wget -O $(PRODUCT_JSONL_GZ) $(PRODUCT_JSONL_GZ_URL)
+	wget -O $(PRODUCT_JSONL_GZ) https://static.openfoodfacts.org/data/openfoodfacts-products.jsonl.gz
 
 # ---------- Fetch all. ----------
 
@@ -80,11 +72,9 @@ NNR_HTML := data/recommendations_nnr2023.html
 NNR_EXTRACTED_TABLES := data/recommendations_nnr2023/*.csv
 NNR_SUMMARY_CSV := data/recommendations_nnr2023.csv
 # Original URL: https://pub.norden.org/nord2023-003/recommendations.html
-# Snapshot 29 July 2024:
-NNR_HTML_URL := https://web.archive.org/web/20240729193940/https://pub.norden.org/nord2023-003/recommendations.html
-
+# Using a snapshot of 29 July 2024:
 $(NNR_HTML):
-	wget -O $(NNR_HTML) $(NNR_HTML_URL)
+	wget -O $(NNR_HTML) https://web.archive.org/web/20240729193940/https://pub.norden.org/nord2023-003/recommendations.html
 
 $(NNR_EXTRACTED_TABLES): $(NNR_HTML)
 	./scripts/recommendations_nnr2023/recommendations_extract_tables.py
