@@ -2,12 +2,11 @@
 """This script add updated counts to the nutrient_map.csv."""
 
 import csv
-import os
 from pathlib import Path
 
 import duckdb
 
-DATA_DIR = Path(os.getenv("DATA_DIR", ""))
+DATA_DIR = Path(__file__).parent.parent.parent / "data"
 
 
 def first_nutriment_in_prducts(con: duckdb.DuckDBPyConnection) -> dict:

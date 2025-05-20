@@ -2,11 +2,10 @@
 """This script summarizes the extracted csv tables from the Nordic Nutrition Recommendations 2023."""
 
 import csv
-import os
 from pathlib import Path
 from typing import Any
 
-DATA_DIR = Path(os.getenv("DATA_DIR", ""))
+DATA_DIR = Path(__file__).parent.parent.parent / "data"
 
 
 def extract_summary_table(file) -> dict[str, dict[str, Any]]:

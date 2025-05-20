@@ -3,11 +3,10 @@
 NOTE: This script is unfinished in its current form."""
 
 import csv
-import os
 from enum import StrEnum
 from pathlib import Path
 
-DATA_DIR = Path(os.getenv("DATA_DIR", ""))
+DATA_DIR = Path(__file__).parent.parent.parent / "data"
 
 
 class Groups(StrEnum):

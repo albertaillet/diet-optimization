@@ -2,13 +2,12 @@
 """This script reformats the fetched nutrient_map_recipe_estimator."""
 
 import csv
-import os
 import re
 from collections.abc import Generator
 from pathlib import Path
 from typing import Any
 
-DATA_DIR = Path(os.getenv("DATA_DIR", ""))
+DATA_DIR = Path(__file__).parent.parent.parent / "data"
 
 
 def extract_ciqual_cols(header: list[str]) -> Generator[tuple[str, str, str]]:

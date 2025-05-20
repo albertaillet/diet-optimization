@@ -24,7 +24,7 @@ from flask_compress import Compress
 from scipy.optimize import linprog
 
 DEBUG_DIR = Path(__file__).parent.parent / "tmp"
-DATA_DIR = Path(os.getenv("DATA_DIR", "data"))
+DATA_DIR = Path(__file__).parent.parent / "data"
 OFF_USERNAME = os.getenv("OFF_USERNAME")
 POSSIBLE_CURRENCIES = ["EUR", "CHF"]
 TEMPLATE_FOLDER = Path(__file__).parent / "frontend/html"

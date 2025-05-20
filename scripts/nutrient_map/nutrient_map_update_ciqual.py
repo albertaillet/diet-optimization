@@ -2,10 +2,9 @@
 """This script adds all the ciqual const information to the nutrient_map.csv."""
 
 import csv
-import os
 from pathlib import Path
 
-DATA_DIR = Path(os.getenv("DATA_DIR", ""))
+DATA_DIR = Path(__file__).parent.parent.parent / "data"
 
 if __name__ == "__main__":
     nutrient_map = DATA_DIR / "nutrient_map.csv"

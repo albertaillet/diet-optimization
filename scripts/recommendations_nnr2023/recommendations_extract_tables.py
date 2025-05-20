@@ -5,13 +5,12 @@
 """This script extracts the html tables in the fetched webpage with the Nordic Nutrition Recommendations 2023 to csv."""
 
 import csv
-import os
 import re
 from pathlib import Path
 
 from bs4 import BeautifulSoup
 
-DATA_DIR = Path(os.getenv("DATA_DIR", ""))
+DATA_DIR = Path(__file__).parent.parent.parent / "data"
 
 # Key: number of table in scraped html file
 # Value: goal filename and Table title in the Nordic Nutrition Recommendations 2023.

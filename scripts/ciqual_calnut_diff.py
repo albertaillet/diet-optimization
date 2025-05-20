@@ -2,13 +2,12 @@
 """This script compares the ALIM_CODE values between the ciqual and calnut CSV files."""
 
 import csv
-import os
 from pathlib import Path
 
-DATA_PATH = Path(os.getenv("DATA_DIR", ""))
-CIQUAL_CSV = DATA_PATH / "ciqual2020.csv"
-CALNUT_0_CSV = DATA_PATH / "calnut.0.csv"
-CALNUT_1_CSV = DATA_PATH / "calnut.1.csv"
+DATA_DIR = Path(__file__).parent.parent / "data"
+CIQUAL_CSV = DATA_DIR / "ciqual2020.csv"
+CALNUT_0_CSV = DATA_DIR / "calnut.0.csv"
+CALNUT_1_CSV = DATA_DIR / "calnut.1.csv"
 
 # Read the column alim_code from the ciqual CSV
 ciqual_alim_codes = {row["alim_code"]: row["alim_nom_eng"] for row in csv.DictReader(CIQUAL_CSV.open(), delimiter="\t")}

@@ -2,11 +2,10 @@
 """This script templates a query to get the nutrient values from the products table."""
 
 import csv
-import os
 from pathlib import Path
 
-DATA_PATH = Path(os.getenv("DATA_DIR", ""))
-CSV_FILE = DATA_PATH / "nutrient_map.csv"
+DATA_DIR = Path(__file__).parent.parent / "data"
+CSV_FILE = DATA_DIR / "nutrient_map.csv"
 nutrients = [(row["id"], row["off_id"], row["template"], row["calnut_const_code"]) for row in csv.DictReader(CSV_FILE.open())]
 
 # Build rows as lists of strings (each column as a separate string)
@@ -34,5 +33,5 @@ print(formatted_rows)
 
 # query = "SELECT count(*) as count FROM products p CROSS JOIN LATERAL (VALUES"
 # query += formatted_rows + ") AS v(nutrient_name, nutrient_value, nutrient_unit)"
-# con = duckdb.connect(DATA_PATH / "data.db", read_only=True)
+# con = duckdb.connect(DATA_DIR / "data.db", read_only=True)
 # con.sql(query).show()
