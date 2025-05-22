@@ -37,24 +37,26 @@ CREATE OR REPLACE TABLE step_2_2 AS (
 CREATE OR REPLACE TABLE step_3 AS (
     SELECT
     nm.code,
-    nm.ciqual_food_code,
-    p.nutrient_value,
-    p.nutrient_unit,
-    ciq.lb AS ciqual_lb,
-    ciq.ub AS ciqual_ub,
-    ciq.mean AS ciqual_mean,
-    ciq.code_confiance AS ciqual_code_confiance,
-    ciq.source_code AS ciqual_source_code,
-    cal.lb AS calnut_lb,
-    cal.ub AS calnut_ub,
-    cal.mean AS calnut_mean,
-    cal.combl AS calnut_combl,
     nm.nutrient_id,
-    nm.ciqual_food_code_origin,
-    nm.ciqual_const_code,
-    nm.ciqual_unit,
-    nm.calnut_const_code,
-    nm.calnut_unit,
+    nm.ciqual_food_code,
+    -- DEBUG columns start --
+    -- p.nutrient_value,
+    -- p.nutrient_unit,
+    -- ciq.lb AS ciqual_lb,
+    -- ciq.ub AS ciqual_ub,
+    -- ciq.mean AS ciqual_mean,
+    -- ciq.code_confiance AS ciqual_code_confiance,
+    -- ciq.source_code AS ciqual_source_code,
+    -- cal.lb AS calnut_lb,
+    -- cal.ub AS calnut_ub,
+    -- cal.mean AS calnut_mean,
+    -- cal.combl AS calnut_combl,
+    -- nm.ciqual_food_code_origin, -- TODO: use ciqual_food_code_origin as part of the final_nutrient_origin
+    -- nm.ciqual_const_code,
+    -- nm.ciqual_unit,
+    -- nm.calnut_const_code,
+    -- nm.calnut_unit,
+    -- DEBUG columns end --
     -- TODO: convert product_value to correct unit to be able to use it
     CASE
         WHEN p.product_nutrient_is_valid AND p.nutrient_unit == nm.ciqual_unit THEN p.nutrient_value
@@ -69,7 +71,7 @@ CREATE OR REPLACE TABLE step_3 AS (
         ELSE nm.ciqual_unit
     END AS final_nutrient_unit,
     CASE
-        WHEN p.product_nutrient_is_valid AND p.nutrient_unit == nm.calnut_unit THEN 'product'
+        WHEN p.product_nutrient_is_valid AND p.nutrient_unit == nm.ciqual_unit THEN 'product'
         WHEN ciq.mean IS NOT NULL THEN CONCAT('ciqual_', ciq.code_confiance, '_', ciq.source_code)
         WHEN cal.mean IS NOT NULL THEN CONCAT('calnut', CASE WHEN cal.combl THEN '_combl' ELSE '' END)
         ELSE 'assumed 0'
