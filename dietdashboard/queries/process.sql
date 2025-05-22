@@ -4,11 +4,25 @@ CREATE OR REPLACE TABLE step_1 AS (
     WHERE ciqual_food_code IS NOT NULL
     AND EXISTS ( SELECT 1 FROM prices WHERE products.code = prices.product_code )
 );
-CREATE OR REPLACE TABLE step_2 AS (
+-- step_1 x nutrient_map (table to later be pivoted)
+CREATE OR REPLACE TABLE step_2_1 AS (
+    SELECT
+    prev.code,
+    prev.ciqual_food_code,
+    prev.ciqual_food_code_origin,
+    nm.id AS nutrient_id,
+    nm.off_id,
+    nm.ciqual_const_code, nm.ciqual_unit,
+    nm.calnut_const_code, nm.calnut_unit,
+    FROM step_1 prev
+    JOIN nutrient_map nm ON TRUE
+    WHERE nm.ciqual_const_code IS NOT NULL OR nm.calnut_const_code IS NOT NULL -- TODO: Possibly use disabled here as well
+);
+-- To be LEFT JOIN with step_2_1
+CREATE OR REPLACE TABLE step_2_2 AS (
     SELECT
     p.code,
     p.ciqual_food_code,
-    p.ciqual_food_code_origin,
     n.unnest.name AS off_id,
     n.unnest.unit AS nutrient_unit,
     n.unnest.value AS nutrient_value,
@@ -20,14 +34,10 @@ CREATE OR REPLACE TABLE step_2 AS (
     --     prepared_100g FLOAT, prepared_value FLOAT, prepared_serving FLOAT, prepared_unit VARCHAR
     -- )[]
 );
--- Problem: p.nutriments is missing some nutrients present in nutrient_map.
--- TODO: create a row for each of the nutrients in nutrient_map for each product (with a calnut_const_code).
--- Then ./scripts/template_nutriments_query.py can be removed.
 CREATE OR REPLACE TABLE step_3 AS (
     SELECT
-    p.code,
-    p.ciqual_food_code,
-    p.ciqual_food_code_origin,
+    nm.code,
+    nm.ciqual_food_code,
     p.nutrient_value,
     p.nutrient_unit,
     ciq.lb AS ciqual_lb,
@@ -39,9 +49,11 @@ CREATE OR REPLACE TABLE step_3 AS (
     cal.ub AS calnut_ub,
     cal.mean AS calnut_mean,
     cal.combl AS calnut_combl,
-    nm.id AS nutrient_id,
+    nm.nutrient_id,
+    nm.ciqual_food_code_origin,
     nm.ciqual_const_code,
     nm.ciqual_unit,
+    nm.calnut_const_code,
     nm.calnut_unit,
     -- TODO: convert product_value to correct unit to be able to use it
     CASE
@@ -62,12 +74,13 @@ CREATE OR REPLACE TABLE step_3 AS (
         WHEN cal.mean IS NOT NULL THEN CONCAT('calnut', CASE WHEN cal.combl THEN '_combl' ELSE '' END)
         ELSE 'assumed 0'
     END AS final_nutrient_origin,
-    FROM step_2 p
-    JOIN nutrient_map nm ON p.off_id = nm.off_id
+    FROM step_2_1 nm
     LEFT JOIN ciqual_compo ciq
-    ON p.ciqual_food_code = ciq.alim_code AND ciq.const_code = nm.ciqual_const_code
+    ON nm.ciqual_food_code = ciq.alim_code AND ciq.const_code = nm.ciqual_const_code
     LEFT JOIN calnut_1 cal
-    ON p.ciqual_food_code = cal.ALIM_CODE AND cal.CONST_CODE = nm.calnut_const_code
+    ON nm.ciqual_food_code = cal.ALIM_CODE AND cal.CONST_CODE = nm.calnut_const_code
+    LEFT JOIN step_2_2 p
+    ON nm.code = p.code AND nm.ciqual_food_code = p.ciqual_food_code AND nm.off_id = p.off_id
 );
 CREATE OR REPLACE TABLE step_4 AS (
 SELECT * FROM step_3
