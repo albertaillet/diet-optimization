@@ -21,5 +21,5 @@ for table in tables:
 
 db_con.close()
 
-result_con.sql("""SELECT * FROM result_table ORDER BY n_cells DESC""").show()
+result_con.sql("""SELECT * FROM result_table""").show()
 result_con.close()

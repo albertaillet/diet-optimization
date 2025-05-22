@@ -1,10 +1,10 @@
 -- TODO: Add illustrations of queries.
-CREATE OR REPLACE TABLE products_with_ciqual_and_price AS (
+CREATE OR REPLACE TABLE step_1 AS (
     SELECT * FROM products
     WHERE ciqual_food_code IS NOT NULL
     AND EXISTS ( SELECT 1 FROM prices WHERE products.code = prices.product_code )
 );
-CREATE OR REPLACE TABLE products_nutriments AS (
+CREATE OR REPLACE TABLE step_2 AS (
     SELECT
     p.code,
     p.ciqual_food_code,
@@ -13,7 +13,7 @@ CREATE OR REPLACE TABLE products_nutriments AS (
     n.unnest.unit AS nutrient_unit,
     n.unnest.value AS nutrient_value,
     nutrient_value IS NOT NULL AND nutrient_unit IS NOT NULL AS product_nutrient_is_valid,
-    FROM products_with_ciqual_and_price p,
+    FROM step_1 p,
     UNNEST(p.nutriments) AS n
     -- nutriments: STRUCT(
     --     name VARCHAR, unit VARCHAR, value FLOAT, 100g FLOAT, serving FLOAT,
@@ -23,7 +23,7 @@ CREATE OR REPLACE TABLE products_nutriments AS (
 -- Problem: p.nutriments is missing some nutrients present in nutrient_map.
 -- TODO: create a row for each of the nutrients in nutrient_map for each product (with a calnut_const_code).
 -- Then ./scripts/template_nutriments_query.py can be removed.
-CREATE OR REPLACE TABLE products_nutriments_selected AS (
+CREATE OR REPLACE TABLE step_3 AS (
     SELECT
     p.code,
     p.ciqual_food_code,
@@ -62,15 +62,15 @@ CREATE OR REPLACE TABLE products_nutriments_selected AS (
         WHEN cal.mean IS NOT NULL THEN CONCAT('calnut', CASE WHEN cal.combl THEN '_combl' ELSE '' END)
         ELSE 'assumed 0'
     END AS final_nutrient_origin,
-    FROM products_nutriments p
+    FROM step_2 p
     JOIN nutrient_map nm ON p.off_id = nm.off_id
     LEFT JOIN ciqual_compo ciq
     ON p.ciqual_food_code = ciq.alim_code AND ciq.const_code = nm.ciqual_const_code
     LEFT JOIN calnut_1 cal
     ON p.ciqual_food_code = cal.ALIM_CODE AND cal.CONST_CODE = nm.calnut_const_code
 );
-CREATE OR REPLACE TABLE final_nutrient_table AS (
-SELECT * FROM products_nutriments_selected
+CREATE OR REPLACE TABLE step_4 AS (
+SELECT * FROM step_3
 PIVOT (
     first(final_nutrient_value) AS value,
     first(final_nutrient_unit) AS unit,
@@ -87,7 +87,7 @@ PIVOT (
     GROUP BY code, ciqual_food_code
 )
 );
-CREATE OR REPLACE TABLE final_table AS (
+CREATE OR REPLACE TABLE step_5 AS (
     SELECT
     -- Product columns
     p.code AS product_code,
@@ -133,25 +133,11 @@ CREATE OR REPLACE TABLE final_table AS (
     -- Price per quantity
     1000 * pr.price / p.product_quantity AS price_per_quantity,  -- TODO: this assumes that the quantity is in grams
     -- Nutrient columns
-    fnt.*,
+    prev.*,
     FROM prices pr
-    JOIN final_nutrient_table fnt ON pr.product_code = fnt.code
-    JOIN products_with_ciqual_and_price p ON pr.product_code = p.code
+    JOIN step_4 prev ON pr.product_code = prev.code
+    JOIN step_1 p ON pr.product_code = p.code
     -- TODO: may filter out a few codes available in calnut and not in ciqual
-    JOIN ciqual_alim ciq ON fnt.ciqual_food_code = ciq.alim_code
+    JOIN ciqual_alim ciq ON prev.ciqual_food_code = ciq.alim_code
 );
--- Recommendations
-CREATE OR REPLACE TABLE recommendations AS (
-    SELECT
-    nm.id, nm.name, nm.nutrient_type,
-    COALESCE(rec_macro.value_males, rec_micro.value_males) AS value_males,
-    COALESCE(rec_macro.value_females, rec_micro.value_females) AS value_females,
-    COALESCE(rec_macro.value_upper_intake, rec_micro.value_upper_intake) AS value_upper_intake,
-    COALESCE(rec_macro.unit, rec_micro.unit) AS rec_unit,
-    FROM nutrient_map nm
-    LEFT JOIN recommendations_macro rec_macro ON rec_macro.id = nm.id
-    LEFT JOIN recommendations_nnr2023 rec_micro ON rec_micro.nutrient = nm.nnr2023_id
-    WHERE nm.disabled IS NULL
-    AND (rec_macro.value_males IS NOT NULL OR rec_micro.value_males IS NOT NULL)
-    AND rec_unit = ciqual_unit
-);
+CREATE OR REPLACE TABLE final_table AS ( SELECT * FROM step_5 );

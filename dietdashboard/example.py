@@ -36,8 +36,8 @@ WHERE CONST_CODE in ('10110', '25000') -- Same as CONST_LABEL in ('sodium_mg', '
 AND ALIM_CODE IN ('20516', '20904');
 
 CREATE OR REPLACE TABLE prices AS
-SELECT id, product_code, price, currency, date, owner, location_osm_display_name, location_osm_id
-FROM full_tables.prices WHERE product_code IN ('3111950001928', '4099200179193');
+SELECT * FROM full_tables.prices
+WHERE product_code IN ('3111950001928', '4099200179193');
 
 CREATE OR REPLACE TABLE products AS
 SELECT code, product_quantity, product_name, product_quantity_unit, product_quantity,
@@ -56,10 +56,7 @@ print_tables("nutrient_map", "ciqual_alim", "ciqual_compo", "calnut_1", "product
 
 process_query_path = Path(__file__).parent / "queries/process.sql"
 process_query = process_query_path.read_text()
-process_query = re.sub(r"^\s*\('(?!sodium|protein)[^']*',.*?\),?$\n", "", process_query, flags=re.MULTILINE)
 process_query = re.sub(r"\('\w+'(?:,\s+'\w+'\s?)+\)", "('sodium', 'protein')", process_query)
 con.execute(process_query)
 
-print_tables(
-    "products_with_ciqual_and_price", "products_nutriments", "products_nutriments_selected", "final_nutrient_table", "final_table"
-)
+print_tables(*[f"step_{i}" for i in range(1, 6)])
