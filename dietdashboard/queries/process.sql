@@ -5,7 +5,7 @@ CREATE OR REPLACE TABLE step_1 AS (
     AND EXISTS ( SELECT 1 FROM prices WHERE products.code = prices.product_code )
 );
 -- step_1 x nutrient_map (table to later be pivoted)
-CREATE OR REPLACE TABLE step_2_1 AS (
+CREATE OR REPLACE TABLE step_2 AS (
     SELECT
     prev.code,
     prev.ciqual_food_code,
@@ -18,8 +18,8 @@ CREATE OR REPLACE TABLE step_2_1 AS (
     JOIN nutrient_map nm ON TRUE
     WHERE nm.ciqual_const_code IS NOT NULL OR nm.calnut_const_code IS NOT NULL -- TODO: Possibly use disabled here as well
 );
--- To be LEFT JOIN with step_2_1
-CREATE OR REPLACE TABLE step_2_2 AS (
+-- To be LEFT JOIN with step_2
+CREATE OR REPLACE TABLE step_3 AS (
     SELECT
     p.code,
     p.ciqual_food_code,
@@ -34,7 +34,7 @@ CREATE OR REPLACE TABLE step_2_2 AS (
     --     prepared_100g FLOAT, prepared_value FLOAT, prepared_serving FLOAT, prepared_unit VARCHAR
     -- )[]
 );
-CREATE OR REPLACE TABLE step_3 AS (
+CREATE OR REPLACE TABLE step_4 AS (
     SELECT
     nm.code,
     nm.nutrient_id,
@@ -76,16 +76,16 @@ CREATE OR REPLACE TABLE step_3 AS (
         WHEN cal.mean IS NOT NULL THEN CONCAT('calnut', CASE WHEN cal.combl THEN '_combl' ELSE '' END)
         ELSE 'assumed 0'
     END AS final_nutrient_origin,
-    FROM step_2_1 nm
+    FROM step_2 nm
     LEFT JOIN ciqual_compo ciq
     ON nm.ciqual_food_code = ciq.alim_code AND ciq.const_code = nm.ciqual_const_code
     LEFT JOIN calnut_1 cal
     ON nm.ciqual_food_code = cal.ALIM_CODE AND cal.CONST_CODE = nm.calnut_const_code
-    LEFT JOIN step_2_2 p
+    LEFT JOIN step_3 p
     ON nm.code = p.code AND nm.ciqual_food_code = p.ciqual_food_code AND nm.off_id = p.off_id
 );
-CREATE OR REPLACE TABLE step_4 AS (
-SELECT * FROM step_3
+CREATE OR REPLACE TABLE step_5 AS (
+SELECT * FROM step_4
 PIVOT (
     first(final_nutrient_value) AS value,
     first(final_nutrient_unit) AS unit,
@@ -102,7 +102,7 @@ PIVOT (
     GROUP BY code, ciqual_food_code
 )
 );
-CREATE OR REPLACE TABLE step_5 AS (
+CREATE OR REPLACE TABLE step_6 AS (
     SELECT
     -- Product columns
     p.code AS product_code,
@@ -150,9 +150,9 @@ CREATE OR REPLACE TABLE step_5 AS (
     -- Nutrient columns
     prev.*,
     FROM prices pr
-    JOIN step_4 prev ON pr.product_code = prev.code
+    JOIN step_5 prev ON pr.product_code = prev.code
     JOIN step_1 p ON pr.product_code = p.code
     -- TODO: may filter out a few codes available in calnut and not in ciqual
     JOIN ciqual_alim ciq ON prev.ciqual_food_code = ciq.alim_code
 );
-CREATE OR REPLACE TABLE final_table AS ( SELECT * FROM step_5 );
+CREATE OR REPLACE TABLE final_table AS ( SELECT * FROM step_6 );
