@@ -43,6 +43,11 @@ $(PRICES_PARQUET):
 PRODUCTS_PARQUET := data/products.parquet
 $(PRODUCTS_PARQUET):
 	wget -O $(PRODUCTS_PARQUET) https://huggingface.co/datasets/openfoodfacts/product-database/resolve/main/food.parquet
+# Possible to use DuckDB, but queries the Hugging Face API too much and gets (HTTP 429 Too Many Requests)
+# COPY (
+# SELECT code, nutriments, nutriscore_score, product_name, product_quantity, product_quantity_unit, quantity, categories_properties,
+# FROM read_parquet('hf://datasets/openfoodfacts/product-database/food.parquet')  -- (https link above also works)
+# ) TO 'data/products.parquet' WITH (FORMAT PARQUET);
 
 PRODUCT_JSONL_GZ := data/openfoodfacts-products.jsonl.gz
 $(PRODUCT_JSONL_GZ):
@@ -50,7 +55,7 @@ $(PRODUCT_JSONL_GZ):
 
 # ---------- Fetch all. ----------
 
-fetch-all: $(CIQUAL_XML_ZIP) $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(NUTRIENT_MAP_RE) $(PRICES_PARQUET) $(PRODUCT_JSONL_GZ)
+fetch-all: $(CIQUAL_XML_ZIP) $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(PRICES_PARQUET) $(PRODUCTS_PARQUET)
 
 # ---------- Unzip and convert the Ciqual data to csv. ----------
 
@@ -84,14 +89,20 @@ $(NNR_SUMMARY_CSV): $(NNR_EXTRACTED_TABLES)
 
 # ---------- Load the data into the database. ----------
 
-load: $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(PRICES_PARQUET) $(PRODUCT_JSONL_GZ)
+load: $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(PRICES_PARQUET) $(PRODUCTS_PARQUET)
 	duckdb data/data.db < ./dietdashboard/queries/load.sql
+
+load-products:
+	duckdb data/data.db < ./dietdashboard/queries/load_products.sql
 
 process:
 	duckdb data/data.db < ./dietdashboard/queries/process.sql
 
 drop:
 	duckdb data/data.db < ./dietdashboard/queries/drop.sql
+
+data-info:
+	./scripts/db_info.py
 
 # ---------- Run the optmization dashboard. ----------
 

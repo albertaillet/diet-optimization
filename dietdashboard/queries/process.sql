@@ -3,86 +3,26 @@ CREATE OR REPLACE TABLE products_with_ciqual_and_price AS (
     SELECT * FROM products
     WHERE ciqual_food_code IS NOT NULL
     AND EXISTS ( SELECT 1 FROM prices WHERE products.code = prices.product_code )
-    -- products with ciqual: 1 027 480
-    -- products with prices: 32 892
-    -- products with prices and ciqual: 23 650
 );
 CREATE OR REPLACE TABLE products_nutriments AS (
     SELECT
     p.code,
     p.ciqual_food_code,
     p.ciqual_food_code_origin,
-    v.nutrient_id,
-    v.nutrient_value,
-    v.nutrient_unit,
-    v.nutrient_value IS NOT NULL AND v.nutrient_unit IS NOT NULL AS product_nutrient_is_valid,
-    FROM products_with_ciqual_and_price p
-    CROSS JOIN LATERAL (
-    VALUES
-('energy_fibre_kj',    p.nutriments."energy-kj_value",          p.nutriments."energy-kj_unit"          ),
-('energy_fibre_kcal',  p.nutriments."energy-kcal_value",        p.nutriments."energy-kcal_unit"        ),
-('water',              NULL,                                    NULL,                                  ),
-('protein',            p.nutriments."proteins_value",           p.nutriments."proteins_unit"           ),
-('carbohydrate',       p.nutriments."carbohydrates_value",      p.nutriments."carbohydrates_unit"      ),
-('fat',                p.nutriments."fat_value",                p.nutriments."fat_unit"                ),
-('sugars',             p.nutriments."sugars_value",             p.nutriments."sugars_unit"             ),
-('fructose',           NULL,                                    NULL,                                  ),
-('galactose',          NULL,                                    NULL,                                  ),
-('glucose',            NULL,                                    NULL,                                  ),
-('lactose',            p.nutriments."lactose_value",            p.nutriments."lactose_unit"            ),
-('maltose',            NULL,                                    NULL,                                  ),
-('sucrose',            NULL,                                    NULL,                                  ),
-('starch',             p.nutriments."starch_value",             p.nutriments."starch_unit"             ),
-('fiber',              p.nutriments."fiber_value",              p.nutriments."fiber_unit"              ),
-('polyols',            p.nutriments."polyols_value",            p.nutriments."polyols_unit"            ),
-('alcohol',            p.nutriments."alcohol_value",            p.nutriments."alcohol_unit"            ),
-('organic_acids',      NULL,                                    NULL,                                  ),
-('saturated_fat',      p.nutriments."saturated-fat_value",      p.nutriments."saturated-fat_unit"      ),
-('monounsaturated_fat',p.nutriments."monounsaturated-fat_value",p.nutriments."monounsaturated-fat_unit"),
-('polyunsaturated_fat',p.nutriments."polyunsaturated-fat_value",p.nutriments."polyunsaturated-fat_unit"),
-('fa_04_0',            NULL,                                    NULL,                                  ),
-('fa_06_0',            NULL,                                    NULL,                                  ),
-('fa_08_0',            NULL,                                    NULL,                                  ),
-('fa_10_0',            NULL,                                    NULL,                                  ),
-('fa_12_0',            NULL,                                    NULL,                                  ),
-('fa_14_0',            NULL,                                    NULL,                                  ),
-('fa_16_0',            NULL,                                    NULL,                                  ),
-('fa_18_0',            NULL,                                    NULL,                                  ),
-('fa_18_1_ole',        NULL,                                    NULL,                                  ),
-('fa_18_2_lino',       NULL,                                    NULL,                                  ),
-('fa_18_3_a_lino',     NULL,                                    NULL,                                  ),
-('fa_20_4_ara',        NULL,                                    NULL,                                  ),
-('fa_20_5_epa',        NULL,                                    NULL,                                  ),
-('fa_20_6_dha',        NULL,                                    NULL,                                  ),
-('cholesterol',        p.nutriments."cholesterol_value",        p.nutriments."cholesterol_unit"        ),
-('salt',               p.nutriments."salt_value",               p.nutriments."salt_unit"               ),
-('calcium',            p.nutriments."calcium_value",            p.nutriments."calcium_unit"            ),
-('copper',             p.nutriments."copper_value",             p.nutriments."copper_unit"             ),
-('iron',               p.nutriments."iron_value",               p.nutriments."iron_unit"               ),
-('iodine',             p.nutriments."iodine_value",             p.nutriments."iodine_unit"             ),
-('magnesium',          p.nutriments."magnesium_value",          p.nutriments."magnesium_unit"          ),
-('manganese',          p.nutriments."manganese_value",          p.nutriments."manganese_unit"          ),
-('phosphorus',         p.nutriments."phosphorus_value",         p.nutriments."phosphorus_unit"         ),
-('potassium',          p.nutriments."potassium_value",          p.nutriments."potassium_unit"          ),
-('selenium',           p.nutriments."selenium_value",           p.nutriments."selenium_unit"           ),
-('sodium',             p.nutriments."sodium_value",             p.nutriments."sodium_unit"             ),
-('zinc',               p.nutriments."zinc_value",               p.nutriments."zinc_unit"               ),
-('retinol',            NULL,                                    NULL,                                  ),
-('beta_carotene',      NULL,                                    NULL,                                  ),
-('vitamin_d',          p.nutriments."vitamin-d_value",          p.nutriments."vitamin-d_unit"          ),
-('vitamin_e',          p.nutriments."vitamin-e_value",          p.nutriments."vitamin-e_unit"          ),
-('vitamin_k1',         NULL,                                    NULL,                                  ),
-('vitamin_k2',         NULL,                                    NULL,                                  ),
-('vitamin_c',          p.nutriments."vitamin-c_value",          p.nutriments."vitamin-c_unit"          ),
-('vitamin_b1',         p.nutriments."vitamin-b1_value",         p.nutriments."vitamin-b1_unit"         ),
-('vitamin_b2',         p.nutriments."vitamin-b2_value",         p.nutriments."vitamin-b2_unit"         ),
-('vitamin_pp',         p.nutriments."vitamin-pp_value",         p.nutriments."vitamin-pp_unit"         ),
-('pantothenic_acid',   p.nutriments."pantothenic-acid_value",   p.nutriments."pantothenic-acid_unit"   ),
-('vitamin_b6',         p.nutriments."vitamin-b6_value",         p.nutriments."vitamin-b6_unit"         ),
-('vitamin_b9',         p.nutriments."vitamin-b9_value",         p.nutriments."vitamin-b9_unit"         ),
-('vitamin_b12',        p.nutriments."vitamin-b12_value",        p.nutriments."vitamin-b12_unit"        ),
-) AS v(nutrient_id, nutrient_value, nutrient_unit)
+    n.unnest.name AS off_id,
+    n.unnest.unit AS nutrient_unit,
+    n.unnest.value AS nutrient_value,
+    nutrient_value IS NOT NULL AND nutrient_unit IS NOT NULL AS product_nutrient_is_valid,
+    FROM products_with_ciqual_and_price p,
+    UNNEST(p.nutriments) AS n
+    -- nutriments: STRUCT(
+    --     name VARCHAR, unit VARCHAR, value FLOAT, 100g FLOAT, serving FLOAT,
+    --     prepared_100g FLOAT, prepared_value FLOAT, prepared_serving FLOAT, prepared_unit VARCHAR
+    -- )[]
 );
+-- Problem: p.nutriments is missing some nutrients present in nutrient_map.
+-- TODO: create a row for each of the nutrients in nutrient_map for each product (with a calnut_const_code).
+-- Then ./scripts/template_nutriments_query.py can be removed.
 CREATE OR REPLACE TABLE products_nutriments_selected AS (
     SELECT
     p.code,
@@ -123,7 +63,7 @@ CREATE OR REPLACE TABLE products_nutriments_selected AS (
         ELSE 'assumed 0'
     END AS final_nutrient_origin,
     FROM products_nutriments p
-    JOIN nutrient_map nm ON p.nutrient_id = nm.id
+    JOIN nutrient_map nm ON p.off_id = nm.off_id
     LEFT JOIN ciqual_compo ciq
     ON p.ciqual_food_code = ciq.alim_code AND ciq.const_code = nm.ciqual_const_code
     LEFT JOIN calnut_1 cal
@@ -146,7 +86,6 @@ PIVOT (
     'pantothenic_acid', 'vitamin_b6', 'vitamin_b9', 'folates', 'vitamin_b12')
     GROUP BY code, ciqual_food_code
 )
--- Final nutrient table count: 19 369
 );
 CREATE OR REPLACE TABLE final_table AS (
     SELECT
@@ -200,7 +139,6 @@ CREATE OR REPLACE TABLE final_table AS (
     JOIN products_with_ciqual_and_price p ON pr.product_code = p.code
     -- TODO: may filter out a few codes available in calnut and not in ciqual
     JOIN ciqual_alim ciq ON fnt.ciqual_food_code = ciq.alim_code
-    -- final table count: 36 904
 );
 -- Recommendations
 CREATE OR REPLACE TABLE recommendations AS (

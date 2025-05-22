@@ -75,28 +75,27 @@ Number of rows as of 17/02/2025: 3 667 647
 */
 CREATE OR REPLACE TABLE products AS (
     SELECT
-    p._id,
-    p.code,
-    p.countries_tags,
-    p.ecoscore_score,
-    p.nova_group,
-    p.nutriments,
-    p.nutriscore_score,
-    p.product_name,
-    p.product_quantity_unit,
-    CAST(p.product_quantity AS FLOAT) AS product_quantity,
-    p.quantity AS quantity_str,
-    p.categories_properties,
+    code,
+    countries_tags,
+    ecoscore_score,
+    nova_group,
+    nutriments,
+    nutriscore_score,
+    product_name,
+    product_quantity_unit,
+    CAST(product_quantity AS FLOAT) AS product_quantity,
+    quantity AS quantity_str,
+    categories_properties,
     COALESCE(
-        p.categories_properties['ciqual_food_code:en'],
-        p.categories_properties['agribalyse_food_code:en'],
-        p.categories_properties['agribalyse_proxy_food_code:en']
+        categories_properties.ciqual_food_code,
+        categories_properties.agribalyse_food_code,
+        categories_properties.agribalyse_proxy_food_code
     ) AS ciqual_food_code,
     CASE
-        WHEN p.categories_properties['ciqual_food_code:en'] IS NOT NULL THEN 'ciqual'
-        WHEN p.categories_properties['agribalyse_food_code:en'] IS NOT NULL THEN 'agribalyse'
-        WHEN p.categories_properties['agribalyse_proxy_food_code:en'] IS NOT NULL THEN 'agribalyse_proxy'
+        WHEN categories_properties.ciqual_food_code IS NOT NULL THEN 'ciqual'
+        WHEN categories_properties.agribalyse_food_code IS NOT NULL THEN 'agribalyse'
+        WHEN categories_properties.agribalyse_proxy_food_code IS NOT NULL THEN 'agribalyse_proxy'
         ELSE 'unknown'
     END AS ciqual_food_code_origin,
-    FROM read_ndjson('data/openfoodfacts-products.jsonl.gz') AS p
+    FROM read_parquet('data/products.parquet')
 );
