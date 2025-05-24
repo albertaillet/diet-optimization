@@ -1,11 +1,13 @@
 -- TODO: Add illustrations of queries.
-CREATE OR REPLACE TABLE step_1 AS (
+CREATE OR REPLACE TABLE final_table AS (
+WITH
+step_1 AS (
     SELECT * FROM products
     WHERE ciqual_food_code IS NOT NULL
     AND EXISTS ( SELECT 1 FROM prices WHERE products.code = prices.product_code )
-);
+),
 -- step_1 x nutrient_map (table to later be pivoted)
-CREATE OR REPLACE TABLE step_2 AS (
+step_2 AS (
     SELECT
     prev.code,
     prev.ciqual_food_code,
@@ -17,9 +19,9 @@ CREATE OR REPLACE TABLE step_2 AS (
     FROM step_1 prev
     JOIN nutrient_map nm ON TRUE
     WHERE nm.ciqual_const_code IS NOT NULL OR nm.calnut_const_code IS NOT NULL -- TODO: Possibly use disabled here as well
-);
+),
 -- To be LEFT JOIN with step_2
-CREATE OR REPLACE TABLE step_3 AS (
+step_3 AS (
     SELECT
     p.code,
     p.ciqual_food_code,
@@ -33,8 +35,8 @@ CREATE OR REPLACE TABLE step_3 AS (
     --     name VARCHAR, unit VARCHAR, value FLOAT, 100g FLOAT, serving FLOAT,
     --     prepared_100g FLOAT, prepared_value FLOAT, prepared_serving FLOAT, prepared_unit VARCHAR
     -- )[]
-);
-CREATE OR REPLACE TABLE step_4 AS (
+),
+step_4 AS (
     SELECT
     nm.code,
     nm.nutrient_id,
@@ -83,8 +85,8 @@ CREATE OR REPLACE TABLE step_4 AS (
     ON nm.ciqual_food_code = cal.ALIM_CODE AND cal.CONST_CODE = nm.calnut_const_code
     LEFT JOIN step_3 p
     ON nm.code = p.code AND nm.ciqual_food_code = p.ciqual_food_code AND nm.off_id = p.off_id
-);
-CREATE OR REPLACE TABLE step_5 AS (
+),
+step_5 AS (
 SELECT * FROM step_4
 PIVOT (
     first(final_nutrient_value) AS value,
@@ -101,8 +103,8 @@ PIVOT (
     'pantothenic_acid', 'vitamin_b6', 'vitamin_b9', 'folates', 'vitamin_b12')
     GROUP BY code, ciqual_food_code
 )
-);
-CREATE OR REPLACE TABLE step_6 AS (
+),
+step_6 AS (
     SELECT
     -- Product columns
     p.code AS product_code,
@@ -154,5 +156,6 @@ CREATE OR REPLACE TABLE step_6 AS (
     JOIN step_1 p ON pr.product_code = p.code
     -- TODO: may filter out a few codes available in calnut and not in ciqual
     JOIN ciqual_alim ciq ON prev.ciqual_food_code = ciq.alim_code
+)
+SELECT * FROM step_6
 );
-CREATE OR REPLACE TABLE final_table AS ( SELECT * FROM step_6 );

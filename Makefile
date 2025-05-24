@@ -90,16 +90,13 @@ $(NNR_SUMMARY_CSV): $(NNR_EXTRACTED_TABLES)
 # ---------- Load the data into the database. ----------
 
 load: $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(PRICES_PARQUET) $(PRODUCTS_PARQUET)
-	duckdb data/data.db < ./dietdashboard/queries/load.sql
-
-load-products:
-	duckdb data/data.db < ./dietdashboard/queries/load_products.sql
+	time duckdb data/data.db < ./dietdashboard/queries/load.sql
 
 process:
-	duckdb data/data.db < ./dietdashboard/queries/process.sql
+	time duckdb data/data.db < ./dietdashboard/queries/process.sql
 
 drop:
-	duckdb data/data.db < ./dietdashboard/queries/drop.sql
+	time duckdb data/data.db < ./dietdashboard/queries/drop.sql
 
 data-info:
 	./scripts/db_info.py

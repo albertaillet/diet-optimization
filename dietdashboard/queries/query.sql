@@ -74,7 +74,7 @@ vitamin_b6_value,
 vitamin_b9_value,
 vitamin_b12_value,
 FROM final_table
-WHERE currency IN ('EUR', 'CHF')  -- Hardcoded currencies for now
+WHERE currency IN ('EUR', 'CHF')  -- TODO: Hardcoded currencies for now
 AND price_per_quantity IS NOT NULL
 AND location_id IN (SELECT UNNEST($locations))
 AND price_per_quantity > 0
