@@ -197,9 +197,9 @@ step_6 AS (
     p.product_name,
     p.product_quantity,
     p.product_quantity_unit,
-    -- Calnut 0 columns
-    ciq.alim_nom_eng AS ciqual_name,
+    -- Ciqual columns
     ciq.alim_code AS ciqual_code,
+    ciq.alim_nom_eng AS ciqual_name,
     ciq.alim_grp_code AS ciqual_group_code,
     ciq.alim_ssgrp_code AS ciqual_subgroup_code,
     ciq.alim_ssssgrp_code AS ciqual_subsubgroup_code,
@@ -244,8 +244,7 @@ step_6 AS (
     ON pr.product_code = prev.code
   JOIN step_1 AS p
     ON pr.product_code = p.code
-  -- TODO: may filter out a few codes available in calnut and not in ciqual
-  JOIN ciqual_alim AS ciq
+  LEFT JOIN ciqual_alim AS ciq
     ON prev.ciqual_food_code = ciq.alim_code
 )
 SELECT * FROM step_6
