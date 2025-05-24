@@ -1,4 +1,4 @@
-SHELL := /bin/bash
+SHELL := /bin/sh
 
 # ---------- Fetch Ciqual and Calnut tables. ----------
 
@@ -95,6 +95,9 @@ load: $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(PRICES_PARQUET) $(PRODUCTS_PARQUET)
 process:
 	time duckdb data/data.db < ./dietdashboard/queries/process.sql
 
+recommendations:
+	time duckdb data/data.db < ./dietdashboard/queries/recommendations.sql
+
 drop:
 	time duckdb data/data.db < ./dietdashboard/queries/drop.sql
 
@@ -103,10 +106,13 @@ data-info:
 
 # ---------- Run the optmization dashboard. ----------
 
-opt:
-	./dietdashboard/app.py
+run-dev:
+	@trap "kill 0" EXIT; \
+		make frontend-watch & \
+		./dietdashboard/app.py & \
+	wait
 
-run-gunicorn:
+run-gunicorn: frontend-install frontend-bundle
 	nohup uv run gunicorn -w 4 -b 0.0.0.0:8000 dietdashboard.app:app >> gunicorn.log 2>&1 &
 
 list-gunicorn:
@@ -118,7 +124,7 @@ kill-gunicorn:
 # ---------- Frontend utilities. ----------
 
 frontend-install:
-	cd dietdashboard/frontend && pnpm install
+	cd dietdashboard/frontend/js && pnpm install
 
 frontend-bundle:
 	cd dietdashboard/frontend && ./bundle.sh
