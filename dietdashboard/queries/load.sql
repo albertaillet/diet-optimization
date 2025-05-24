@@ -121,8 +121,8 @@ Illustration of products:
 │     code      │ product_quantity │     product_name     │ product_quantity_u…  │ … │ ciqual_food_code │ ciqual_food_code_o…  │      nutriments      │
 │    varchar    │      float       │ struct(lang varcha…  │       varchar        │   │      int32       │       varchar        │ struct("name" varc…  │
 ├───────────────┼──────────────────┼──────────────────────┼──────────────────────┼───┼──────────────────┼──────────────────────┼──────────────────────┤
-│ 3111950001928 │           1000.0 │ [{'lang': main, 't…  │ g                    │ … │            20516 │ ciqual               │ [{'name': energy, …  │
-│ 4099200179193 │            350.0 │ [{'lang': main, 't…  │ g                    │ … │            20904 │ ciqual               │ [{'name': energy, …  │
+│ 3111950001928 │           1000.0 │ [{'lang': main, 't…  │ g                    │ … │            20516 │                      │ [{'name': energy, …  │
+│ 4099200179193 │            350.0 │ [{'lang': main, 't…  │ g                    │ … │            20904 │                      │ [{'name': energy, …  │
 ├───────────────┴──────────────────┴──────────────────────┴──────────────────────┴───┴──────────────────┴──────────────────────┴──────────────────────┤
 │ 2 rows                                                                                                                          8 columns (7 shown) │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
@@ -146,9 +146,9 @@ CREATE OR REPLACE TABLE products AS (
       categories_properties.agribalyse_proxy_food_code
   ) AS ciqual_food_code,
   CASE
-      WHEN categories_properties.ciqual_food_code IS NOT NULL THEN 'ciqual'
-      WHEN categories_properties.agribalyse_food_code IS NOT NULL THEN 'agribalyse'
-      WHEN categories_properties.agribalyse_proxy_food_code IS NOT NULL THEN 'agribalyse_proxy'
+      WHEN categories_properties.ciqual_food_code IS NOT NULL THEN ''
+      WHEN categories_properties.agribalyse_food_code IS NOT NULL THEN 'agribalyse_'
+      WHEN categories_properties.agribalyse_proxy_food_code IS NOT NULL THEN 'agribalyse_proxy_'
       ELSE 'unknown'
   END AS ciqual_food_code_origin,
   FROM read_parquet('data/products.parquet')

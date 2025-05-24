@@ -5,8 +5,8 @@ WITH
 │ product_name │     code      │ product_quantity │ … │ product_quantity_1 │ ciqual_food_code │ ciqual_food_code_o…  │      nutriments      │
 │   varchar    │    varchar    │      float       │   │       float        │      int32       │       varchar        │ struct("name" varc…  │
 ├──────────────┼───────────────┼──────────────────┼───┼────────────────────┼──────────────────┼──────────────────────┼──────────────────────┤
-│ Pois chiches │ 3111950001928 │           1000.0 │ … │             1000.0 │            20516 │ ciqual               │ [{'name': energy, …  │
-│ Tofu natur   │ 4099200179193 │            350.0 │ … │              350.0 │            20904 │ ciqual               │ [{'name': energy, …  │
+│ Pois chiches │ 3111950001928 │           1000.0 │ … │             1000.0 │            20516 │                      │ [{'name': energy, …  │
+│ Tofu natur   │ 4099200179193 │            350.0 │ … │              350.0 │            20904 │                      │ [{'name': energy, …  │
 ├──────────────┴───────────────┴──────────────────┴───┴────────────────────┴──────────────────┴──────────────────────┴──────────────────────┤
 │ 2 rows                                                                                                                9 columns (7 shown) │
 └───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
@@ -23,10 +23,10 @@ Illustration of step_2:
 │     code      │ ciqual_food_code │ ciqual_food_code_o…  │ nutrient_id │  off_id  │ ciqual_const_code │ ciqual_unit │ calnut_const_code │ calnut_unit │
 │    varchar    │      int32       │       varchar        │   varchar   │ varchar  │       int64       │   varchar   │       int64       │   varchar   │
 ├───────────────┼──────────────────┼──────────────────────┼─────────────┼──────────┼───────────────────┼─────────────┼───────────────────┼─────────────┤
-│ 3111950001928 │            20516 │ ciqual               │ protein     │ proteins │             25000 │ g           │             25000 │ g           │
-│ 3111950001928 │            20516 │ ciqual               │ sodium      │ sodium   │             10110 │ mg          │             10110 │ mg          │
-│ 4099200179193 │            20904 │ ciqual               │ protein     │ proteins │             25000 │ g           │             25000 │ g           │
-│ 4099200179193 │            20904 │ ciqual               │ sodium      │ sodium   │             10110 │ mg          │             10110 │ mg          │
+│ 3111950001928 │            20516 │                      │ protein     │ proteins │             25000 │ g           │             25000 │ g           │
+│ 3111950001928 │            20516 │                      │ sodium      │ sodium   │             10110 │ mg          │             10110 │ mg          │
+│ 4099200179193 │            20904 │                      │ protein     │ proteins │             25000 │ g           │             25000 │ g           │
+│ 4099200179193 │            20904 │                      │ sodium      │ sodium   │             10110 │ mg          │             10110 │ mg          │
 └───────────────┴──────────────────┴──────────────────────┴─────────────┴──────────┴───────────────────┴─────────────┴───────────────────┴─────────────┘
 */
 step_2 AS (
@@ -40,7 +40,7 @@ step_2 AS (
     nm.calnut_const_code, nm.calnut_unit,
   FROM step_1 AS prev
   JOIN nutrient_map AS nm ON TRUE
-  WHERE nm.ciqual_const_code IS NOT NULL OR nm.calnut_const_code IS NOT NULL -- TODO: Possibly use disabled here as well
+  WHERE nm.ciqual_const_code IS NOT NULL OR nm.calnut_const_code IS NOT NULL
 ),
 /* To be LEFT JOIN with step_2
 nutriments: STRUCT(
@@ -118,7 +118,7 @@ step_4 AS (
     -- cal.ub AS calnut_ub,
     -- cal.mean AS calnut_mean,
     -- cal.combl AS calnut_combl,
-    -- nm.ciqual_food_code_origin, -- TODO: use ciqual_food_code_origin as part of the final_nutrient_origin
+    -- nm.ciqual_food_code_origin,
     -- nm.ciqual_const_code,
     -- nm.ciqual_unit,
     -- nm.calnut_const_code,
@@ -139,8 +139,8 @@ step_4 AS (
     END AS final_nutrient_unit,
     CASE
       WHEN p.product_nutrient_is_valid AND p.nutrient_unit = nm.ciqual_unit THEN 'product'
-      WHEN ciq.mean IS NOT NULL THEN CONCAT('ciqual_', ciq.code_confiance, '_', ciq.source_code)
-      WHEN cal.mean IS NOT NULL THEN CONCAT('calnut', CASE WHEN cal.combl THEN '_combl' ELSE '' END)
+      WHEN ciq.mean IS NOT NULL THEN CONCAT('ciqual_', nm.ciqual_food_code_origin, ciq.code_confiance, '_', ciq.source_code)
+      WHEN cal.mean IS NOT NULL THEN CONCAT('calnut_', nm.ciqual_food_code_origin, CASE WHEN cal.combl THEN '_combl' ELSE '' END)
       ELSE 'assumed 0'
     END AS final_nutrient_origin,
   FROM step_2 AS nm
