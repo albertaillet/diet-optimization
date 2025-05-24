@@ -1,35 +1,69 @@
+import { select } from "../d3";
 import { handleStateChange } from "../index";
 
 /**
+ * @param {d3,Selection} parent
  * @param {object} state
- * @param {HTMLElement} button
- * @param {boolean} checked
  */
-function handleAllButton(state, button, checked) {
-  button.addEventListener("click", event => {
-    document.querySelectorAll(`.nutrient-checkbox[data-category="${event.target.dataset.category}"]`).forEach(checkbox => {
-      checkbox.checked = checked;
-      state.sliders.find(n => n.id === checkbox.value).active = checked;
+export function NutrientCheckboxes(parent, state) {
+  parent
+    .append("details")
+    .call(details => details.append("summary").text("Select Nutrients"))
+    .append("form")
+    .attr("method", "dialog")
+    .attr("class", "nutrient-selector-form")
+    .append("ul")
+    .selectAll("li")
+    .data([
+      { id: "macro", name: "Macronutrients" },
+      { id: "micro", name: "Micronutrients" }
+    ])
+    .join("li")
+    .each(function (nutrientType) {
+      NurtienCatergoryCheckboxes(
+        select(this),
+        nutrientType,
+        state.sliders.filter(nutrient => nutrient.nutrient_type === nutrientType.id)
+      );
     });
-    handleStateChange();
-  });
 }
 
 /**
+ * @param {d3,Selection} parent
  * @param {object} state
  */
-export function registerCheckBoxes(state) {
-  // Set up nutrient checkbox listeners
-  document.querySelectorAll(".nutrient-checkbox").forEach(checkbox =>
-    checkbox.addEventListener("change", () => {
-      state.sliders.find(n => n.id === checkbox.value).active = checkbox.checked;
-      handleStateChange();
-    })
-  );
-  document.querySelectorAll(".select-all-btn").forEach(btn => handleAllButton(state, btn, true)); // Set up select all button
-  document.querySelectorAll(".deselect-all-btn").forEach(btn => handleAllButton(state, btn, false)); // Set up deselect all button
-  state.sliders.forEach(nutrient => {
-    const checkbox = document.querySelector(`.nutrient-checkbox[value="${nutrient.id}"]`);
-    checkbox ? (checkbox.checked = nutrient.active) : null;
-  });
+export function NurtienCatergoryCheckboxes(parent, category, nutrients) {
+  const setAll = checked => {
+    parent
+      .selectAll("input[type='checkbox']")
+      .property("checked", checked)
+      .each(nutrient => (nutrient.active = checked));
+    handleStateChange();
+  };
+  const selectAll = () => setAll(true);
+  const deselectAll = () => setAll(false);
+
+  parent
+    .append("li")
+    .html(`<div style="display: flex; justify-content: space-between; align-items: center">`)
+    .call(div => div.append("h3").text(category.name))
+    .call(div => div.append("button").text("Select All").on("click", selectAll))
+    .call(div => div.append("button").text("Deselect All").on("click", deselectAll))
+    .append("ul")
+    .selectAll("li")
+    .data(nutrients)
+    .join("li")
+    .append("label")
+    .call(label =>
+      label
+        .append("input")
+        .attr("type", "checkbox")
+        .property("checked", nutrient => nutrient.active)
+        .on("click", (event, nutrient) => {
+          nutrient.active = event.target.checked;
+          handleStateChange();
+        })
+    )
+    .append("span")
+    .text(nutrient => nutrient.name);
 }

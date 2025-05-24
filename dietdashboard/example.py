@@ -54,7 +54,7 @@ FROM full_tables.products WHERE code IN ('3111950001928', '4099200179193');
 
 
 def add_table_illustration(table: str, query_path: Path) -> None:
-    """Print the contents of a table."""
+    """Generate an illustration of the table and write it to the query file."""
     with redirect_stdout(StringIO()) as stdout:
         con.table(table).order("1").show(max_width=152)  # Order by the first column for consistency to avoid random order
     table_illustration = f"Illustration of {table}:\n{stdout.getvalue().strip()}"

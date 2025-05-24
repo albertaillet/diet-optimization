@@ -1,4 +1,4 @@
-import { registerCheckBoxes } from "./components/checkboxes";
+import { NutrientCheckboxes } from "./components/checkboxes";
 import { registerCurrencySelect } from "./components/currency";
 import { Locations } from "./components/locations";
 import { Result } from "./components/result";
@@ -48,7 +48,6 @@ var state = {
   brushMode: null
 };
 state = { ...state, ...restoreState() };
-registerCheckBoxes(state);
 registerCurrencySelect(state);
 
 const locationData = await csv("/locations.csv", autoType);
@@ -59,6 +58,7 @@ const tabs = [
 ];
 
 function App(state) {
+  NutrientCheckboxes(select("#nutrient-checkboxes"), state);
   Tabs(select("#input-tabs"), tabs, state.inputTabs);
   Result(select("#result"), state);
 }

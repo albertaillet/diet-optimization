@@ -85,9 +85,6 @@ def create_rangeslider(data: dict[str, str]) -> dict[str, float | str]:
     max_value = 4 * lower if upper is None else math.ceil(upper + lower - min_value)
     max_value = min_value + 100 if max_value == min_value else max_value
     return {
-        "id": data["id"],
-        "name": data["name"],
-        "unit": data["rec_unit"],
         "min": min_value,
         "max": max_value,
         "lower": lower,
@@ -112,20 +109,13 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
     app.template_folder = TEMPLATE_FOLDER
 
     nutrient_ids = [row["id"] for row in query_dicts(con, """SELECT id FROM data.nutrient_map WHERE disabled IS NULL""")]
-    macro_recommendations = query_dicts(con, """SELECT * FROM data.recommendations WHERE nutrient_type = 'macro'""")
-    micro_recommendations = query_dicts(con, """SELECT * FROM data.recommendations WHERE nutrient_type = 'micro'""")
+    recommendations = query_dicts(con, """SELECT * FROM data.recommendations""")
+    sliders = [{k: rec[k] for k in ("id", "name", "unit", "nutrient_type")} | create_rangeslider(rec) for rec in recommendations]
+    slider_csv = create_csv(["id", "name", "unit", "nutrient_type", "min", "max", "lower", "upper", "active"], sliders)  # type: ignore[reportArgumentType]
 
     @app.route("/")
     def index():
-        nutrient_groups = [
-            {"name": "Macronutrients", "id": "macro", "nutrients": macro_recommendations},
-            {"name": "Micronutrients", "id": "micro", "nutrients": micro_recommendations},
-        ]
-        sliders = [create_rangeslider(rec) for rec in [*macro_recommendations, *micro_recommendations]]
-        slider_csv = create_csv(["id", "name", "unit", "min", "max", "lower", "upper", "active"], sliders)  # type: ignore
-        return render_template(
-            "dashboard.html", currencies=POSSIBLE_CURRENCIES, slider_csv=slider_csv, nutrient_groups=nutrient_groups
-        )
+        return render_template("dashboard.html", slider_csv=slider_csv, currencies=POSSIBLE_CURRENCIES)
 
     @app.route("/optimize.csv", methods=["POST"])
     def optimize():
