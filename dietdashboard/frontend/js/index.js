@@ -30,7 +30,7 @@ function optimize(state) {
     .then(text => csvParse(text, autoType))
     .then(data => {
       state.resultData = data;
-      Result(select("#result"), state.resultData, state.currency);
+      Result(select("#result"), state);
       if (state.inputTabs.current === "sliders-tab") {
         SlidersTableBody(select("#slider-table-body"), state.resultData, state.sliders);
       }
@@ -60,7 +60,7 @@ const tabs = [
 
 function App(state) {
   Tabs(select("#input-tabs"), tabs, state.inputTabs);
-  Result(select("#result"), state.resultData, state.currency);
+  Result(select("#result"), state);
 }
 
 App(state);
