@@ -12,9 +12,9 @@ WITH
 └───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 step_1 AS (
-    SELECT product_name[1].text as product_name, *
-    FROM products
-    WHERE ciqual_food_code IS NOT NULL
+  SELECT product_name[1].text AS product_name, *
+  FROM products
+  WHERE ciqual_food_code IS NOT NULL
     AND EXISTS ( SELECT 1 FROM prices WHERE products.code = prices.product_code )
 ),
 /* step_1 x nutrient_map (table to later be pivoted)
@@ -30,7 +30,7 @@ Illustration of step_2:
 └───────────────┴──────────────────┴──────────────────────┴─────────────┴──────────┴───────────────────┴─────────────┴───────────────────┴─────────────┘
 */
 step_2 AS (
-    SELECT
+  SELECT
     prev.code,
     prev.ciqual_food_code,
     prev.ciqual_food_code_origin,
@@ -38,11 +38,15 @@ step_2 AS (
     nm.off_id,
     nm.ciqual_const_code, nm.ciqual_unit,
     nm.calnut_const_code, nm.calnut_unit,
-    FROM step_1 prev
-    JOIN nutrient_map nm ON TRUE
-    WHERE nm.ciqual_const_code IS NOT NULL OR nm.calnut_const_code IS NOT NULL -- TODO: Possibly use disabled here as well
+  FROM step_1 AS prev
+  JOIN nutrient_map AS nm ON TRUE
+  WHERE nm.ciqual_const_code IS NOT NULL OR nm.calnut_const_code IS NOT NULL -- TODO: Possibly use disabled here as well
 ),
 /* To be LEFT JOIN with step_2
+nutriments: STRUCT(
+    name VARCHAR, unit VARCHAR, value FLOAT, 100g FLOAT, serving FLOAT,
+    prepared_100g FLOAT, prepared_value FLOAT, prepared_serving FLOAT, prepared_unit VARCHAR
+)[]
 Illustration of step_3:
 ┌───────────────┬──────────────────┬────────────────────┬───────────────┬────────────────┬───────────────────────────┐
 │     code      │ ciqual_food_code │       off_id       │ nutrient_unit │ nutrient_value │ product_nutrient_is_valid │
@@ -76,19 +80,15 @@ Illustration of step_3:
 └────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 step_3 AS (
-    SELECT
+  SELECT
     p.code,
     p.ciqual_food_code,
     n.unnest.name AS off_id,
     n.unnest.unit AS nutrient_unit,
     n.unnest.value AS nutrient_value,
     nutrient_value IS NOT NULL AND nutrient_unit IS NOT NULL AS product_nutrient_is_valid,
-    FROM step_1 p,
-    UNNEST(p.nutriments) AS n
-    -- nutriments: STRUCT(
-    --     name VARCHAR, unit VARCHAR, value FLOAT, 100g FLOAT, serving FLOAT,
-    --     prepared_100g FLOAT, prepared_value FLOAT, prepared_serving FLOAT, prepared_unit VARCHAR
-    -- )[]
+  FROM step_1 AS p,
+  UNNEST(p.nutriments) AS n
 ),
 /* Illustration of step_4:
 ┌───────────────┬─────────────┬──────────────────┬──────────────────────┬─────────────────────┬───────────────────────┐
@@ -102,7 +102,7 @@ step_3 AS (
 └───────────────┴─────────────┴──────────────────┴──────────────────────┴─────────────────────┴───────────────────────┘
 */
 step_4 AS (
-    SELECT
+  SELECT
     nm.code,
     nm.nutrient_id,
     nm.ciqual_food_code,
@@ -126,29 +126,29 @@ step_4 AS (
     -- DEBUG columns end --
     -- TODO: convert product_value to correct unit to be able to use it
     CASE
-        WHEN p.product_nutrient_is_valid AND p.nutrient_unit == nm.ciqual_unit THEN p.nutrient_value
-        WHEN ciq.mean IS NOT NULL THEN ciq.mean
-        WHEN cal.mean IS NOT NULL THEN cal.mean
-        ELSE 0  -- When unknown, assume 0
+      WHEN p.product_nutrient_is_valid AND p.nutrient_unit = nm.ciqual_unit THEN p.nutrient_value
+      WHEN ciq.mean IS NOT NULL THEN ciq.mean
+      WHEN cal.mean IS NOT NULL THEN cal.mean
+      ELSE 0  -- When unknown, assume 0
     END AS final_nutrient_value,
     CASE
-        WHEN p.product_nutrient_is_valid AND p.nutrient_unit == nm.ciqual_unit THEN p.nutrient_unit
-        WHEN ciq.mean IS NOT NULL THEN nm.ciqual_unit
-        WHEN cal.mean IS NOT NULL THEN nm.calnut_unit
-        ELSE nm.ciqual_unit
+      WHEN p.product_nutrient_is_valid AND p.nutrient_unit = nm.ciqual_unit THEN p.nutrient_unit
+      WHEN ciq.mean IS NOT NULL THEN nm.ciqual_unit
+      WHEN cal.mean IS NOT NULL THEN nm.calnut_unit
+      ELSE nm.ciqual_unit
     END AS final_nutrient_unit,
     CASE
-        WHEN p.product_nutrient_is_valid AND p.nutrient_unit == nm.ciqual_unit THEN 'product'
-        WHEN ciq.mean IS NOT NULL THEN CONCAT('ciqual_', ciq.code_confiance, '_', ciq.source_code)
-        WHEN cal.mean IS NOT NULL THEN CONCAT('calnut', CASE WHEN cal.combl THEN '_combl' ELSE '' END)
-        ELSE 'assumed 0'
+      WHEN p.product_nutrient_is_valid AND p.nutrient_unit = nm.ciqual_unit THEN 'product'
+      WHEN ciq.mean IS NOT NULL THEN CONCAT('ciqual_', ciq.code_confiance, '_', ciq.source_code)
+      WHEN cal.mean IS NOT NULL THEN CONCAT('calnut', CASE WHEN cal.combl THEN '_combl' ELSE '' END)
+      ELSE 'assumed 0'
     END AS final_nutrient_origin,
-    FROM step_2 nm
-    LEFT JOIN ciqual_compo ciq
+  FROM step_2 AS nm
+  LEFT JOIN ciqual_compo AS ciq
     ON nm.ciqual_food_code = ciq.alim_code AND ciq.const_code = nm.ciqual_const_code
-    LEFT JOIN calnut_1 cal
+  LEFT JOIN calnut_1 AS cal
     ON nm.ciqual_food_code = cal.ALIM_CODE AND cal.CONST_CODE = nm.calnut_const_code
-    LEFT JOIN step_3 p
+  LEFT JOIN step_3 AS p
     ON nm.code = p.code AND nm.ciqual_food_code = p.ciqual_food_code AND nm.off_id = p.off_id
 ),
 /* Illustration of step_5:
@@ -163,19 +163,19 @@ step_4 AS (
 step_5 AS (
 SELECT * FROM step_4
 PIVOT (
-    first(final_nutrient_value) AS value,
-    first(final_nutrient_unit) AS unit,
-    first(final_nutrient_origin) AS origin,
-    FOR nutrient_id IN
-    ('energy_fibre_kj', 'energy_fibre_kcal', 'water', 'protein', 'carbohydrate', 'fat',
-    'sugars', 'fructose', 'galactose', 'glucose', 'lactose', 'maltose', 'sucrose', 'starch', 'fiber', 'polyols',
-    'alcohol', 'organic_acids', 'saturated_fat', 'monounsaturated_fat', 'polyunsaturated_fat',
-    'fa_04_0', 'fa_06_0', 'fa_08_0', 'fa_10_0', 'fa_12_0', 'fa_14_0', 'fa_16_0', 'fa_18_0', 'fa_18_1_ole', 'fa_18_2_lino',
-    'fa_18_3_a_lino', 'fa_20_4_ara', 'fa_20_5_epa', 'fa_20_6_dha', 'cholesterol', 'salt', 'calcium', 'copper', 'iron', 'iodine',
-    'magnesium', 'manganese', 'phosphorus', 'potassium', 'selenium', 'sodium', 'zinc', 'retinol', 'beta_carotene',
-    'vitamin_d', 'vitamin_e', 'vitamin_k1', 'vitamin_k2', 'vitamin_c', 'vitamin_b1', 'vitamin_b2', 'vitamin_pp',
-    'pantothenic_acid', 'vitamin_b6', 'vitamin_b9', 'folates', 'vitamin_b12')
-    GROUP BY code, ciqual_food_code
+  first(final_nutrient_value) AS value,
+  first(final_nutrient_unit) AS unit,
+  first(final_nutrient_origin) AS origin,
+  FOR nutrient_id IN
+  ('energy_fibre_kj', 'energy_fibre_kcal', 'water', 'protein', 'carbohydrate', 'fat',
+  'sugars', 'fructose', 'galactose', 'glucose', 'lactose', 'maltose', 'sucrose', 'starch', 'fiber', 'polyols',
+  'alcohol', 'organic_acids', 'saturated_fat', 'monounsaturated_fat', 'polyunsaturated_fat',
+  'fa_04_0', 'fa_06_0', 'fa_08_0', 'fa_10_0', 'fa_12_0', 'fa_14_0', 'fa_16_0', 'fa_18_0', 'fa_18_1_ole', 'fa_18_2_lino',
+  'fa_18_3_a_lino', 'fa_20_4_ara', 'fa_20_5_epa', 'fa_20_6_dha', 'cholesterol', 'salt', 'calcium', 'copper', 'iron', 'iodine',
+  'magnesium', 'manganese', 'phosphorus', 'potassium', 'selenium', 'sodium', 'zinc', 'retinol', 'beta_carotene',
+  'vitamin_d', 'vitamin_e', 'vitamin_k1', 'vitamin_k2', 'vitamin_c', 'vitamin_b1', 'vitamin_b2', 'vitamin_pp',
+  'pantothenic_acid', 'vitamin_b6', 'vitamin_b9', 'folates', 'vitamin_b12')
+  GROUP BY code, ciqual_food_code
 )
 ),
 /* Illustration of step_6:
@@ -191,7 +191,7 @@ PIVOT (
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 step_6 AS (
-    SELECT
+  SELECT
     -- Product columns
     p.code AS product_code,
     p.product_name,
@@ -239,11 +239,14 @@ step_6 AS (
     1000 * pr.price / p.product_quantity AS price_per_quantity,  -- TODO: this assumes that the quantity is in grams
     -- Nutrient columns
     prev.*,
-    FROM prices pr
-    JOIN step_5 prev ON pr.product_code = prev.code
-    JOIN step_1 p ON pr.product_code = p.code
-    -- TODO: may filter out a few codes available in calnut and not in ciqual
-    JOIN ciqual_alim ciq ON prev.ciqual_food_code = ciq.alim_code
+  FROM prices AS pr
+  JOIN step_5 AS prev
+    ON pr.product_code = prev.code
+  JOIN step_1 AS p
+    ON pr.product_code = p.code
+  -- TODO: may filter out a few codes available in calnut and not in ciqual
+  JOIN ciqual_alim AS ciq
+    ON prev.ciqual_food_code = ciq.alim_code
 )
 SELECT * FROM step_6
 );
