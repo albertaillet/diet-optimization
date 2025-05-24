@@ -30,11 +30,7 @@ export function Brush(parent, d, x, height, width) {
   const brushGroup = parent
     .selectAll("g.brush")
     .data([d], d => d.id)
-    .join(
-      enter => enter.append("g").attr("class", "brush"),
-      update => update,
-      exit => exit.remove()
-    )
+    .join(enter => enter.append("g").attr("class", "brush"))
     .call(brushSelection)
     .raise(); // Raise the brush above the segments
 

@@ -11,15 +11,12 @@ export function Tabs(parent, tabs, tabState) {
     .attr("class", "tabs-buttons")
     .selectAll("button")
     .data(tabs)
-    .join(
-      enter =>
-        enter
-          .append("button")
-          .attr("class", "tab-button")
-          .classed("active", d => d.id === tabState.currentTab)
-          .text(d => d.name),
-      update => update,
-      exit => exit.remove()
+    .join(enter =>
+      enter
+        .append("button")
+        .attr("class", "tab-button")
+        .classed("active", d => d.id === tabState.currentTab)
+        .text(d => d.name)
     );
   const tabContent = parent.append("div").attr("class", "tab-content");
   tabSelection.on("click", (event, d) => {

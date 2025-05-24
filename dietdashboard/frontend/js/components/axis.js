@@ -12,11 +12,7 @@ export function Axis(parent, x, height) {
   parent
     .selectAll("g.axis")
     .data([x], x => x.domain())
-    .join(
-      enter => enter.append("g").attr("class", "axis"),
-      update => update,
-      exit => exit.remove()
-    )
+    .join(enter => enter.append("g").attr("class", "axis"))
     .attr("transform", `translate(0,${height})`)
     .call(axisBottom(x).ticks(nTicks).tickSize(tickSize).tickPadding(tickPadding));
 }
