@@ -1,11 +1,13 @@
-#!/usr/bin/env -S uv run
+#!/usr/bin/env -S uv run --extra sql
 """This script creates a subset of the data and prints the intermediate tables for debugging."""
 
-import re
 from pathlib import Path
 
 import duckdb
+import sqlglot
+import sqlglot.expressions as exp
 
+# sqlglot.pretty = True  # Enable pretty printing
 DATA_DIR = Path(__file__).parent.parent / "data"
 
 con = duckdb.connect(":memory:")
@@ -49,14 +51,20 @@ FROM full_tables.products WHERE code IN ('3111950001928', '4099200179193');
 def print_tables(*tables: str):
     for table in tables:
         print(f'Table "{table}"')
-        con.table(table).show(max_width=350)  # type: ignore
+        con.table(table).show()
 
 
 print_tables("nutrient_map", "ciqual_alim", "ciqual_compo", "calnut_1", "products", "prices")
 
 process_query_path = Path(__file__).parent / "queries/process.sql"
 process_query = process_query_path.read_text()
-process_query = re.sub(r"\('\w+'(?:,\s+'\w+'\s?)+\)", "('sodium', 'protein')", process_query)
-con.execute(process_query)
-
-print_tables(*[f"step_{i}" for i in range(1, 6)])
+expression = sqlglot.parse_one(process_query)
+# --- Replace the chosen nutrients in the pivot expression ---
+expression.find(exp.Pivot).find(exp.In).args["expressions"] = ["sodium", "protein"]  # type: ignore[reportOptionalMemberAccess]
+# --- Run each CTE as a CREATE TABLE statement ---
+for cte_expression in expression.find(exp.With).expressions:  # type: ignore[reportOptionalMemberAccess]
+    table = exp.Table(this=exp.Identifier(this=cte_expression.alias))
+    create_table = exp.Create(this=table, kind="TABLE", expression=cte_expression.this)
+    con.execute(create_table.sql())
+    print(f'Table "{table.name}"')
+    con.table(table.name).show()
