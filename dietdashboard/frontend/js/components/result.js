@@ -2,6 +2,53 @@ import * as d3 from "../d3";
 import { MacroPie } from "./pie";
 import { Table } from "./table";
 
+const template = `<p>The recommended food items and quantities to meet your nutrient targets.</p>
+<h3>Total price per day: <span id="result-price"></span></h3>
+<div style="display: flex; flex-direction: row; justify-content: center; align-items: center">
+  <div id="macro-pie" style="flex: 1"></div>
+  <div style="flex: 1; margin: 30px; width: 60%">
+    <h3>Macronutrient breakdown</h3>
+    <table>
+      <colgroup>
+        <col style="width: 25%" />
+        <col style="width: 25%" />
+        <col style="width: 25%" />
+        <col style="width: 25%" />
+      </colgroup>
+      <thead>
+        <tr>
+          <th></th>
+          <th>Protein</th>
+          <th>Carbs</th>
+          <th>Fat</th>
+        </tr>
+      </thead>
+      <tbody id="macro-table-body"></tbody>
+    </table>
+  </div>
+</div>
+<div>
+  <table>
+    <colgroup>
+      <col style="width: 25%" />
+      <col style="width: 25%" />
+      <col style="width: 20%" />
+      <col style="width: 15%" />
+      <col style="width: 15%" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th>Product name</th>
+        <th>Ciqual Name</th>
+        <th>Location</th>
+        <th>Quantity (g)</th>
+        <th>Price</th>
+      </tr>
+    </thead>
+    <tbody id="result-table"></tbody>
+  </table>
+</div>`;
+
 /**
  * @param {d3.Selection} parent
  * @param {Array} data
@@ -46,21 +93,15 @@ function MacroSummary(tableContainer, pieContainer, data) {
   );
 }
 
-const resultTable = d3.select("#result-table");
-const macroTable = d3.select("#macro-table-body");
-const macroPie = d3.select("#macro-pie");
-if (!resultTable || !macroTable || !macroPie) {
-  alert("Missing result table or macro table or macro pie");
-}
-
 /**
+ * @param {d3.Selection} parent
  * @param {Array} products
  * @param {string} currency
  */
-export function Result(products, currency) {
+export function Result(parent, products, currency) {
+  parent.html(template);
   const totalPrice = d3.sum(products, d => +d.price || 0).toFixed(2);
-  document.getElementById("result-price").innerHTML = `${totalPrice} ${currency}`;
-
-  ResultTable(resultTable, products);
-  MacroSummary(macroTable, macroPie, products);
+  parent.select("#result-price").text(`${totalPrice} ${currency}`);
+  ResultTable(parent.select("#result-table"), products);
+  MacroSummary(parent.select("#macro-table-body"), parent.select("#macro-pie"), products);
 }
