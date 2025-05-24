@@ -1,12 +1,11 @@
 import { select } from "../d3";
 import { handleStateChange } from "../index";
 import { Map } from "./map";
-import { Markers } from "./markers";
 import { Table } from "./table";
 
 const template = `<p style="margin: 0 0 0.5rem; font-size: 0.85rem">A map-based approach to selecting items or regions.</p>
   <div id="location-controls"></div>
-  <div id="map"></div>
+  <div id="map" style="margin-top: 0.5rem"></div>
   <table>
     <colgroup>
       <col style="width: 90%" />
@@ -38,7 +37,7 @@ function LocationTable(parent, data, state) {
  */
 export function locationStateChange(data, state) {
   LocationTable(select("#location-table-body"), data, state);
-  Markers(select("g.markers"), data, state);
+  Map(select("#map svg"), data, state);
   handleStateChange();
 }
 
@@ -49,7 +48,8 @@ export function locationStateChange(data, state) {
  */
 export function Locations(parent, data, state) {
   parent.html(template);
-  Map(parent.select("#map"), data, state);
+  const svg = parent.select("#map").append("svg");
+  Map(svg, data, state);
   LocationTable(parent.select("#location-table-body"), data, state);
   LocationControls(parent.select("#location-controls"), data, state);
 }
@@ -62,18 +62,25 @@ export function Locations(parent, data, state) {
 function LocationControls(parent, data, state) {
   const selectAll = () => {
     data.forEach(location => (state.locations[location.id] = true));
+    state.brushMode = null; // Disable brush mode
     locationStateChange(data, state);
   };
   const clearAll = () => {
     state.locations = {};
+    state.brushMode = null; // Disable brush mode
+    locationStateChange(data, state);
+  };
+
+  const setBrushMode = mode => {
+    state.brushMode === mode ? (state.brushMode = null) : (state.brushMode = mode);
     locationStateChange(data, state);
   };
 
   parent
     .selectAll("button")
     .data([
-      // { label: "Brush Selection", click: () => {} },
-      // { label: "Clear Brush", click: () => {} },
+      { label: "Bush Selection", click: () => setBrushMode("select") },
+      { label: "Clear Brush", click: () => setBrushMode("deselect") },
       { label: "Select All Locations", click: selectAll },
       { label: "Clear All Locations", click: clearAll }
     ])

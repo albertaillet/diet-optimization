@@ -22,9 +22,44 @@ const width = 960,
  * @param {d3.Selection} parent
  * @param {Array} data
  * @param {object} state
+ * @param {Array} extent - [[x0, y0], [x1, y1]] defining the brush area
+ */
+function Brush(parent, data, state, extent) {
+  parent.selectAll("g.map-brush").remove(); // Remove any existing brush group
+  if (!state.brushMode) return; // Do not create a brush if no mode is set
+  const brush = d3.brush().extent(extent).on("end", brushed);
+  parent.append("g").attr("class", "map-brush").style("pointer-events", "none").call(brush);
+  /**
+   * @param {d3.D3BrushEvent} event
+   */
+  function brushed(event) {
+    const currentTransform = d3.zoomTransform(parent.node()); // Get current map transform
+    if (!event.selection || !state.brushMode) return;
+    const [[x0, y0], [x1, y1]] = event.selection;
+    data.forEach(d => {
+      // d.x and d.y are base projected coordinates (from lon/lat)
+      const cx = currentTransform.applyX(d.x);
+      const cy = currentTransform.applyY(d.y);
+      if (cx >= x0 && cx <= x1 && cy >= y0 && cy <= y1) {
+        if (state.brushMode === "select") {
+          state.locations[d.id] = true;
+        } else if (state.brushMode === "deselect") {
+          delete state.locations[d.id];
+        }
+      }
+    });
+    state.brushMode = null; // Reset brush mode after selection
+    locationStateChange(data, state); // Update table, markers, controls, and brush activation state
+  }
+}
+
+/**
+ * @param {d3.Selection} parent
+ * @param {Array} data
+ * @param {object} state
  */
 export function Map(parent, data, state) {
-  const svg = parent.append("svg").attr("viewBox", [0, 0, width, height]);
+  parent.attr("viewBox", [0, 0, width, height]);
 
   const extent = [
     [0, 0],
@@ -38,24 +73,18 @@ export function Map(parent, data, state) {
     .extent(extent)
     .on("zoom", event => zoomed(event.transform));
 
-  const levels = svg.append("g").attr("pointer-events", "none").selectAll("g").data(deltas).join("g").style("opacity", null);
+  const levels = parent.selectAll("g.levels").data(deltas).join("g").attr("class", "levels").attr("pointer-events", "none");
 
-  const markerGroup = svg.append("g").attr("class", "markers");
-
-  const transform = d3.zoomIdentity.translate(state.mapTransform.x, state.mapTransform.y).scale(state.mapTransform.k);
-
-  // Brush overlay for rectangular selection (uncomment to enable)
-  // const brush = d3.brush().extent(extent).on("end", brushed);
-  // svg.append("g").attr("class", "brush").call(brush);
-
+  const markerGroup = parent.selectAll("g.markers").data([null]).join("g").attr("class", "markers");
   Markers(markerGroup, data, state);
 
-  svg
+  parent
     .call(zoom)
-    // .on("dblclick.zoom", null)
-    // .on("mousedown.zoom", null)
-    // .on("touchstart.zoom", null)
-    .call(zoom.transform, transform);
+    .call(zoom.transform, d3.zoomIdentity.translate(state.mapTransform.x, state.mapTransform.y).scale(state.mapTransform.k));
+
+  parent.on(".zoom", state.brushMode ? null : zoom); // Disable zooming when brush mode is active
+
+  Brush(parent, data, state, extent);
 
   function zoomed(transform) {
     // Update all tile levels based on the current transform
@@ -79,24 +108,5 @@ export function Map(parent, data, state) {
       .attr("cy", d => transform.applyY(d.y));
     state.mapTransform = { k: transform.k, x: transform.x, y: transform.y };
     persistState();
-  }
-
-  /**
-   * @param {d3.Event}
-   */
-  function brushed(event) {
-    if (!event.selection) return;
-    const [[x0, y0], [x1, y1]] = event.selection;
-
-    data.forEach(d => {
-      const cx = transform.applyX(d.x);
-      const cy = transform.applyY(d.y);
-      if (cx >= x0 && cx <= x1 && cy >= y0 && cy <= y1) {
-        state.locations[d.id] = null;
-      }
-    });
-
-    locationStateChange(data, state);
-    svg.select(".brush").call(brush.move, null);
   }
 }

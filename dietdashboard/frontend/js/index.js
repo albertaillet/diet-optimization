@@ -44,7 +44,8 @@ var state = {
   mapTransform: { k: 4096, x: 480, y: 250 },
   locations: {},
   resultData: [],
-  inputTabs: { current: "sliders-tab" }
+  inputTabs: { current: "sliders-tab" },
+  brushMode: null
 };
 state = { ...state, ...restoreState() };
 registerCheckBoxes(state);

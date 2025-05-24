@@ -150,7 +150,7 @@ g.markers circle {
   stroke-width: 0.5px;
 }
 g.markers circle {
-  fill: red;
+  fill: rgb(253, 73, 73);
 }
 g.markers circle.selected {
   fill: var(--light-green);
@@ -267,4 +267,9 @@ button.tab-button {
 }
 button.tab-button.active {
   font-weight: bold;
+}
+
+g.map-brush .selection {
+  /* Style for the brush selection rectangle */
+  fill: rgba(100, 100, 100, 0.3);
 }
