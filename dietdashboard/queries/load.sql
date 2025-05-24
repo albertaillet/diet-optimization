@@ -27,9 +27,23 @@ Tables:
 - const: information about the nutrients (67 rows) (already in nutrient_map)
 - sources: information about the sources of the data (207 896 rows)
 Illustration of ciqual_alim:
-┌┘
+┌───────────┬──────────────────┬───────────────┬─────────────────┬───────────────────┐
+│ alim_code │   alim_nom_eng   │ alim_grp_code │ alim_ssgrp_code │ alim_ssssgrp_code │
+│   int64   │     varchar      │    varchar    │     varchar     │      varchar      │
+├───────────┼──────────────────┼───────────────┼─────────────────┼───────────────────┤
+│     20516 │ Chick pea, dried │ 02            │ 0203            │ 020303            │
+│     20904 │ Tofu, plain      │ 04            │ 0411            │ 000000            │
+└───────────┴──────────────────┴───────────────┴─────────────────┴───────────────────┘
 Illustration of ciqual_compo:
-┌┘
+┌───────────┬────────────┬────────────────┬─────────────┬───────┬───────┬───────┐
+│ alim_code │ const_code │ code_confiance │ source_code │  lb   │  ub   │ mean  │
+│   int64   │   int64    │    varchar     │    int64    │ float │ float │ float │
+├───────────┼────────────┼────────────────┼─────────────┼───────┼───────┼───────┤
+│     20516 │      25000 │ C              │       81271 │  20.0 │  25.8 │  20.5 │
+│     20516 │      10110 │ C              │       81259 │   5.5 │  40.0 │  23.2 │
+│     20904 │      10110 │ A              │       83096 │   7.0 │ 158.0 │  10.0 │
+│     20904 │      25000 │ A              │       83108 │  6.84 │  NULL │  13.4 │
+└───────────┴────────────┴────────────────┴─────────────┴───────┴───────┴───────┘
 */
 CREATE OR REPLACE TABLE ciqual_alim AS (
     SELECT alim_code, alim_nom_eng, alim_grp_code, alim_ssgrp_code, alim_ssssgrp_code
@@ -43,7 +57,7 @@ CREATE OR REPLACE TABLE ciqual_compo AS (
     FROM read_csv('data/ciqual2020/compo.csv')
 );
 CREATE OR REPLACE TABLE ciqual_sources AS (
-    SELECT source_code,ref_citation FROM read_csv('data/ciqual2020/sources.csv')
+    SELECT source_code, ref_citation FROM read_csv('data/ciqual2020/sources.csv')
 );
 /* Documentation: https://ciqual.anses.fr/cms/sites/default/files/inline-files/Table%20CALNUT%202020_doc_FR_2020%2007%2007.pdf
 Table 0 contains food group information (2 119 rows)
@@ -51,9 +65,22 @@ Table 1 contains nutrient information for each food and nutrient (131 378 rows)
 Both tables are joined on the ALIM_CODE and FOOD_LABEL columns
 Fetched from https://github.com/openfoodfacts/openfoodfacts-server/tree/main/external-data/ciqual/calnut
 Illustration of calnut_0:
-┌┘
+┌───────────┬──────────────────────┬───────────────┬─────────────────┬───┬──────────────────────┬──────────────────────┬─────────────────────┐
+│ alim_code │      FOOD_LABEL      │ alim_grp_code │ alim_ssgrp_code │ … │   alim_grp_nom_fr    │  alim_ssgrp_nom_fr   │ alim_ssssgrp_nom_fr │
+│   int64   │       varchar        │    varchar    │     varchar     │   │       varchar        │       varchar        │       varchar       │
+├───────────┼──────────────────────┼───────────────┼─────────────────┼───┼──────────────────────┼──────────────────────┼─────────────────────┤
+│     20904 │ Tofu nature, préem…  │ 04            │ 0411            │ … │ viandes, œufs, poi…  │ substitus de produ…  │ -                   │
+├───────────┴──────────────────────┴───────────────┴─────────────────┴───┴──────────────────────┴──────────────────────┴─────────────────────┤
+│ 1 rows                                                                                                                 8 columns (7 shown) │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 Illustration of calnut_1:
-┌┘
+┌───────────┬─────────────────────────┬─────────────┬────────────┬─────────┬───────┬───────┬───────┐
+│ ALIM_CODE │       FOOD_LABEL        │ CONST_LABEL │ CONST_CODE │  combl  │  lb   │  ub   │ mean  │
+│   int64   │         varchar         │   varchar   │   int64    │ boolean │ float │ float │ float │
+├───────────┼─────────────────────────┼─────────────┼────────────┼─────────┼───────┼───────┼───────┤
+│     20904 │ Tofu nature, préemballé │ sodium_mg   │      10110 │ false   │  10.0 │  10.0 │  10.0 │
+│     20904 │ Tofu nature, préemballé │ proteines_g │      25000 │ false   │  13.4 │  13.4 │  13.4 │
+└───────────┴─────────────────────────┴─────────────┴────────────┴─────────┴───────┴───────┴───────┘
 */
 CREATE OR REPLACE TABLE calnut_0 AS (
     SELECT ALIM_CODE, FOOD_LABEL,
@@ -72,7 +99,16 @@ CREATE OR REPLACE TABLE calnut_1 AS (
 );
 /* Huggingface Documentation for open-prices data: https://huggingface.co/datasets/openfoodfacts/open-prices
 Illustration of prices:
-┌┘
+┌───────┬─────────┬───────────────┬──────────────────────┬───┬──────────────────────┬─────────────────┬──────────────────────┬──────────────────────┐
+│  id   │  type   │ product_code  │     product_name     │ … │ location_website_url │ location_source │   location_created   │   location_updated   │
+│ int64 │ varchar │    varchar    │       varchar        │   │       varchar        │     varchar     │ timestamp with tim…  │ timestamp with tim…  │
+├───────┼─────────┼───────────────┼──────────────────────┼───┼──────────────────────┼─────────────────┼──────────────────────┼──────────────────────┤
+│ 29904 │ PRODUCT │ 4099200179193 │ NULL                 │ … │ NULL                 │ NULL            │ 2024-07-06 14:35:3…  │ 2024-07-07 15:35:3…  │
+│ 29955 │ PRODUCT │ 3111950001928 │ NULL                 │ … │ NULL                 │ NULL            │ 2024-07-06 19:59:0…  │ 2024-07-07 09:55:1…  │
+│ 77758 │ PRODUCT │ 4099200179193 │ Tofu bio nature fu…  │ … │ NULL                 │ NULL            │ 2024-07-06 14:35:3…  │ 2024-07-07 15:35:3…  │
+├───────┴─────────┴───────────────┴──────────────────────┴───┴──────────────────────┴─────────────────┴──────────────────────┴──────────────────────┤
+│ 3 rows                                                                                                                       48 columns (8 shown) │
+└───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 CREATE OR REPLACE TABLE prices AS (
     SELECT * FROM read_parquet('data/prices.parquet')
@@ -81,7 +117,15 @@ CREATE OR REPLACE TABLE prices AS (
 Huggingface dataset: https://huggingface.co/datasets/openfoodfacts/product-database
 Note: there are duplicates of the code, it is not a unique key
 Illustration of products:
-┌┘
+┌───────────────┬──────────────────┬──────────────────────┬──────────────────────┬───┬──────────────────┬──────────────────────┬──────────────────────┐
+│     code      │ product_quantity │     product_name     │ product_quantity_u…  │ … │ ciqual_food_code │ ciqual_food_code_o…  │      nutriments      │
+│    varchar    │      float       │ struct(lang varcha…  │       varchar        │   │      int32       │       varchar        │ struct("name" varc…  │
+├───────────────┼──────────────────┼──────────────────────┼──────────────────────┼───┼──────────────────┼──────────────────────┼──────────────────────┤
+│ 3111950001928 │           1000.0 │ [{'lang': main, 't…  │ g                    │ … │            20516 │ ciqual               │ [{'name': energy, …  │
+│ 4099200179193 │            350.0 │ [{'lang': main, 't…  │ g                    │ … │            20904 │ ciqual               │ [{'name': energy, …  │
+├───────────────┴──────────────────┴──────────────────────┴──────────────────────┴───┴──────────────────┴──────────────────────┴──────────────────────┤
+│ 2 rows                                                                                                                          8 columns (7 shown) │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 CREATE OR REPLACE TABLE products AS (
     SELECT

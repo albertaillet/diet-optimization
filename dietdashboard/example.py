@@ -56,12 +56,12 @@ FROM full_tables.products WHERE code IN ('3111950001928', '4099200179193');
 def add_table_illustration(table: str, query_path: Path) -> None:
     """Print the contents of a table."""
     with redirect_stdout(StringIO()) as stdout:
-        con.table(table).show(max_width=152)
+        con.table(table).order("1").show(max_width=152)  # Order by the first column for consistency to avoid random order
     table_illustration = f"Illustration of {table}:\n{stdout.getvalue().strip()}"
-    table_illustration = f"Illustration of {table}:\n┌┘"  # Uncomment to have empty illustrations
+    # table_illustration = f"Illustration of {table}:\n┌┘"  # Uncomment to have empty illustrations
     pattern = re.compile(rf"Illustration of {table}:\n┌[^┘]*┘")
     if not pattern.fullmatch(table_illustration):
-        raise ValueError(f"Table illustration for {table} does not match the expected pattern in query file {query_path}.")
+        raise ValueError(f"Table illustration for {table} does not match the expected pattern {pattern.pattern}.")
     query = query_path.read_text()
     if not pattern.search(query):
         raise ValueError(f"No spot for illustration for table {table} found in query file {query_path}. regex: {pattern.pattern}")

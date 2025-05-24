@@ -1,7 +1,15 @@
 CREATE OR REPLACE TABLE final_table AS (
 WITH
 /* Illustration of step_1:
-┌┘
+┌───────────────┬──────────────────┬──────────────────────┬──────────────────────┬───┬──────────────────┬──────────────────────┬──────────────────────┐
+│     code      │ product_quantity │     product_name     │ product_quantity_u…  │ … │ ciqual_food_code │ ciqual_food_code_o…  │      nutriments      │
+│    varchar    │      float       │ struct(lang varcha…  │       varchar        │   │      int32       │       varchar        │ struct("name" varc…  │
+├───────────────┼──────────────────┼──────────────────────┼──────────────────────┼───┼──────────────────┼──────────────────────┼──────────────────────┤
+│ 3111950001928 │           1000.0 │ [{'lang': main, 't…  │ g                    │ … │            20516 │ ciqual               │ [{'name': energy, …  │
+│ 4099200179193 │            350.0 │ [{'lang': main, 't…  │ g                    │ … │            20904 │ ciqual               │ [{'name': energy, …  │
+├───────────────┴──────────────────┴──────────────────────┴──────────────────────┴───┴──────────────────┴──────────────────────┴──────────────────────┤
+│ 2 rows                                                                                                                          8 columns (7 shown) │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 step_1 AS (
     SELECT * FROM products
@@ -10,7 +18,15 @@ step_1 AS (
 ),
 /* step_1 x nutrient_map (table to later be pivoted)
 Illustration of step_2:
-┌┘
+┌───────────────┬──────────────────┬──────────────────────┬─────────────┬──────────┬───────────────────┬─────────────┬───────────────────┬─────────────┐
+│     code      │ ciqual_food_code │ ciqual_food_code_o…  │ nutrient_id │  off_id  │ ciqual_const_code │ ciqual_unit │ calnut_const_code │ calnut_unit │
+│    varchar    │      int32       │       varchar        │   varchar   │ varchar  │       int64       │   varchar   │       int64       │   varchar   │
+├───────────────┼──────────────────┼──────────────────────┼─────────────┼──────────┼───────────────────┼─────────────┼───────────────────┼─────────────┤
+│ 3111950001928 │            20516 │ ciqual               │ protein     │ proteins │             25000 │ g           │             25000 │ g           │
+│ 3111950001928 │            20516 │ ciqual               │ sodium      │ sodium   │             10110 │ mg          │             10110 │ mg          │
+│ 4099200179193 │            20904 │ ciqual               │ protein     │ proteins │             25000 │ g           │             25000 │ g           │
+│ 4099200179193 │            20904 │ ciqual               │ sodium      │ sodium   │             10110 │ mg          │             10110 │ mg          │
+└───────────────┴──────────────────┴──────────────────────┴─────────────┴──────────┴───────────────────┴─────────────┴───────────────────┴─────────────┘
 */
 step_2 AS (
     SELECT
@@ -27,7 +43,36 @@ step_2 AS (
 ),
 /* To be LEFT JOIN with step_2
 Illustration of step_3:
-┌┘
+┌───────────────┬──────────────────┬────────────────────┬───────────────┬────────────────┬───────────────────────────┐
+│     code      │ ciqual_food_code │       off_id       │ nutrient_unit │ nutrient_value │ product_nutrient_is_valid │
+│    varchar    │      int32       │      varchar       │    varchar    │     float      │          boolean          │
+├───────────────┼──────────────────┼────────────────────┼───────────────┼────────────────┼───────────────────────────┤
+│ 3111950001928 │            20516 │ energy             │ kJ            │         1480.0 │ true                      │
+│ 3111950001928 │            20516 │ fiber              │ g             │           13.3 │ true                      │
+│ 3111950001928 │            20516 │ carbohydrates      │ g             │           47.5 │ true                      │
+│ 3111950001928 │            20516 │ saturated-fat      │ g             │            0.6 │ true                      │
+│ 3111950001928 │            20516 │ salt               │ g             │           0.06 │ true                      │
+│ 3111950001928 │            20516 │ nova-group         │ NULL          │           NULL │ false                     │
+│ 3111950001928 │            20516 │ sodium             │ g             │          0.024 │ true                      │
+│ 3111950001928 │            20516 │ energy-kj          │ kJ            │         1480.0 │ true                      │
+│ 3111950001928 │            20516 │ sugars             │ g             │            6.5 │ true                      │
+│ 3111950001928 │            20516 │ fat                │ g             │            5.9 │ true                      │
+│       ·       │              ·   │  ·                 │ ·             │             ·  │  ·                        │
+│       ·       │              ·   │  ·                 │ ·             │             ·  │  ·                        │
+│       ·       │              ·   │  ·                 │ ·             │             ·  │  ·                        │
+│ 4099200179193 │            20904 │ energy-kj          │ kJ            │          528.0 │ true                      │
+│ 4099200179193 │            20904 │ carbohydrates      │ g             │            0.0 │ true                      │
+│ 4099200179193 │            20904 │ nutrition-score-fr │ NULL          │           NULL │ false                     │
+│ 4099200179193 │            20904 │ sodium             │ g             │          0.008 │ true                      │
+│ 4099200179193 │            20904 │ fat                │ g             │           7.99 │ true                      │
+│ 4099200179193 │            20904 │ sugars             │ g             │            0.0 │ true                      │
+│ 4099200179193 │            20904 │ saturated-fat      │ g             │            1.4 │ true                      │
+│ 4099200179193 │            20904 │ proteins           │ g             │           13.0 │ true                      │
+│ 4099200179193 │            20904 │ energy-kcal        │ kcal          │          126.0 │ true                      │
+│ 4099200179193 │            20904 │ energy             │ kJ            │          528.0 │ true                      │
+├───────────────┴──────────────────┴────────────────────┴───────────────┴────────────────┴───────────────────────────┤
+│ 26 rows (20 shown)                                                                                       6 columns │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 step_3 AS (
     SELECT
@@ -45,7 +90,15 @@ step_3 AS (
     -- )[]
 ),
 /* Illustration of step_4:
-┌┘
+┌───────────────┬─────────────┬──────────────────┬──────────────────────┬─────────────────────┬───────────────────────┐
+│     code      │ nutrient_id │ ciqual_food_code │ final_nutrient_value │ final_nutrient_unit │ final_nutrient_origin │
+│    varchar    │   varchar   │      int32       │        float         │       varchar       │        varchar        │
+├───────────────┼─────────────┼──────────────────┼──────────────────────┼─────────────────────┼───────────────────────┤
+│ 3111950001928 │ sodium      │            20516 │                 23.2 │ mg                  │ ciqual_C_81259        │
+│ 3111950001928 │ protein     │            20516 │                 20.5 │ g                   │ product               │
+│ 4099200179193 │ sodium      │            20904 │                 10.0 │ mg                  │ ciqual_A_83096        │
+│ 4099200179193 │ protein     │            20904 │                 13.0 │ g                   │ product               │
+└───────────────┴─────────────┴──────────────────┴──────────────────────┴─────────────────────┴───────────────────────┘
 */
 step_4 AS (
     SELECT
@@ -98,7 +151,13 @@ step_4 AS (
     ON nm.code = p.code AND nm.ciqual_food_code = p.ciqual_food_code AND nm.off_id = p.off_id
 ),
 /* Illustration of step_5:
-┌┘
+┌───────────────┬──────────────────┬──────────────┬─────────────┬────────────────┬───────────────┬──────────────┬────────────────┐
+│     code      │ ciqual_food_code │ sodium_value │ sodium_unit │ sodium_origin  │ protein_value │ protein_unit │ protein_origin │
+│    varchar    │      int32       │    float     │   varchar   │    varchar     │     float     │   varchar    │    varchar     │
+├───────────────┼──────────────────┼──────────────┼─────────────┼────────────────┼───────────────┼──────────────┼────────────────┤
+│ 3111950001928 │            20516 │         23.2 │ mg          │ ciqual_C_81259 │          20.5 │ g            │ product        │
+│ 4099200179193 │            20904 │         10.0 │ mg          │ ciqual_A_83096 │          13.0 │ g            │ product        │
+└───────────────┴──────────────────┴──────────────┴─────────────┴────────────────┴───────────────┴──────────────┴────────────────┘
 */
 step_5 AS (
 SELECT * FROM step_4
@@ -119,7 +178,16 @@ PIVOT (
 )
 ),
 /* Illustration of step_6:
-┌┘
+┌───────────────┬──────────────────────┬──────────────────┬──────────────────────┬───┬────────────────┬───────────────┬──────────────┬────────────────┐
+│ product_code  │     product_name     │ product_quantity │ product_quantity_u…  │ … │ sodium_origin  │ protein_value │ protein_unit │ protein_origin │
+│    varchar    │ struct(lang varcha…  │      float       │       varchar        │   │    varchar     │     float     │   varchar    │    varchar     │
+├───────────────┼──────────────────────┼──────────────────┼──────────────────────┼───┼────────────────┼───────────────┼──────────────┼────────────────┤
+│ 3111950001928 │ [{'lang': main, 't…  │           1000.0 │ g                    │ … │ ciqual_C_81259 │          20.5 │ g            │ product        │
+│ 4099200179193 │ [{'lang': main, 't…  │            350.0 │ g                    │ … │ ciqual_A_83096 │          13.0 │ g            │ product        │
+│ 4099200179193 │ [{'lang': main, 't…  │            350.0 │ g                    │ … │ ciqual_A_83096 │          13.0 │ g            │ product        │
+├───────────────┴──────────────────────┴──────────────────┴──────────────────────┴───┴────────────────┴───────────────┴──────────────┴────────────────┤
+│ 3 rows                                                                                                                         26 columns (8 shown) │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 step_6 AS (
     SELECT
@@ -137,33 +205,35 @@ step_6 AS (
     -- Price columns
     pr.id AS price_id,
     pr.price,
-    pr.type AS price_type,
-    pr.owner AS price_owner,
-    pr.price_is_discounted,
-    pr.price_without_discount,
-    pr.price_per,
     pr.currency,
-    pr.date AS price_date,
-    pr.created AS price_created,
-    pr.updated AS price_updated,
-    pr.source AS price_source,
     pr.location_id,
-    pr.location_type,
-    pr.location_osm_type,
     pr.location_osm_id,
     pr.location_osm_display_name,
-    pr.location_osm_tag_key,
-    pr.location_osm_tag_value,
-    pr.location_osm_address_postcode,
-    pr.location_osm_address_city,
-    pr.location_osm_address_country,
-    pr.location_osm_address_country_code,
     pr.location_osm_lat,
     pr.location_osm_lon,
-    pr.location_website_url,
-    pr.location_source,
-    pr.location_created,
-    pr.location_updated,
+    -- DEBUG columns start --
+    -- pr.type AS price_type,
+    -- pr.owner AS price_owner,
+    -- pr.price_is_discounted,
+    -- pr.price_without_discount,
+    -- pr.price_per,
+    -- pr.date AS price_date,
+    -- pr.created AS price_created,
+    -- pr.updated AS price_updated,
+    -- pr.source AS price_source,
+    -- pr.location_type,
+    -- pr.location_osm_type,
+    -- pr.location_osm_tag_key,
+    -- pr.location_osm_tag_value,
+    -- pr.location_osm_address_postcode,
+    -- pr.location_osm_address_city,
+    -- pr.location_osm_address_country,
+    -- pr.location_osm_address_country_code,
+    -- pr.location_website_url,
+    -- pr.location_source,
+    -- pr.location_created,
+    -- pr.location_updated,
+    -- DEBUG columns end --
     -- Price per quantity
     1000 * pr.price / p.product_quantity AS price_per_quantity,  -- TODO: this assumes that the quantity is in grams
     -- Nutrient columns

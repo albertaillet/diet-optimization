@@ -35,6 +35,13 @@ repos:
         types: [csv]
   - repo: local
     hooks:
+      - id: add-illustrations-to-queries
+        name: add-illustrations-to-queries
+        language: system
+        entry: ./dietdashboard/example.py
+        types_or: [sql]
+  - repo: local
+    hooks:
       - id: pyright
         name: pyright
         language: system
