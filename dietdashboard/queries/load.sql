@@ -26,6 +26,10 @@ Tables:
 - compo: information about the nutrients in the food (211 898 rows)
 - const: information about the nutrients (67 rows) (already in nutrient_map)
 - sources: information about the sources of the data (207 896 rows)
+Illustration of ciqual_alim:
+┌┘
+Illustration of ciqual_compo:
+┌┘
 */
 CREATE OR REPLACE TABLE ciqual_alim AS (
     SELECT alim_code, alim_nom_eng, alim_grp_code, alim_ssgrp_code, alim_ssssgrp_code
@@ -46,6 +50,10 @@ Table 0 contains food group information (2 119 rows)
 Table 1 contains nutrient information for each food and nutrient (131 378 rows)
 Both tables are joined on the ALIM_CODE and FOOD_LABEL columns
 Fetched from https://github.com/openfoodfacts/openfoodfacts-server/tree/main/external-data/ciqual/calnut
+Illustration of calnut_0:
+┌┘
+Illustration of calnut_1:
+┌┘
 */
 CREATE OR REPLACE TABLE calnut_0 AS (
     SELECT ALIM_CODE, FOOD_LABEL,
@@ -62,16 +70,18 @@ CREATE OR REPLACE TABLE calnut_1 AS (
     CAST(REPLACE(MB, ',', '.') AS FLOAT) AS mean,
     FROM read_csv('data/calnut.1.csv')
 );
--- Huggingface Documentation for open-prices data: https://huggingface.co/datasets/openfoodfacts/open-prices
--- Number of rows as of 27/01/2025: 70 283
+/* Huggingface Documentation for open-prices data: https://huggingface.co/datasets/openfoodfacts/open-prices
+Illustration of prices:
+┌┘
+*/
 CREATE OR REPLACE TABLE prices AS (
     SELECT * FROM read_parquet('data/prices.parquet')
 );
 /* Open Food Facts data page: https://world.openfoodfacts.org/data
-The exported parquet file is missing the 'categories_properties' that contains the ciqual information.
-Therefore the jsonl databse dump is used, available at: https://static.openfoodfacts.org/data/openfoodfacts-products.jsonl.gz
+Huggingface dataset: https://huggingface.co/datasets/openfoodfacts/product-database
 Note: there are duplicates of the code, it is not a unique key
-Number of rows as of 17/02/2025: 3 667 647
+Illustration of products:
+┌┘
 */
 CREATE OR REPLACE TABLE products AS (
     SELECT

@@ -1,12 +1,17 @@
--- TODO: Add illustrations of queries.
 CREATE OR REPLACE TABLE final_table AS (
 WITH
+/* Illustration of step_1:
+┌┘
+*/
 step_1 AS (
     SELECT * FROM products
     WHERE ciqual_food_code IS NOT NULL
     AND EXISTS ( SELECT 1 FROM prices WHERE products.code = prices.product_code )
 ),
--- step_1 x nutrient_map (table to later be pivoted)
+/* step_1 x nutrient_map (table to later be pivoted)
+Illustration of step_2:
+┌┘
+*/
 step_2 AS (
     SELECT
     prev.code,
@@ -20,7 +25,10 @@ step_2 AS (
     JOIN nutrient_map nm ON TRUE
     WHERE nm.ciqual_const_code IS NOT NULL OR nm.calnut_const_code IS NOT NULL -- TODO: Possibly use disabled here as well
 ),
--- To be LEFT JOIN with step_2
+/* To be LEFT JOIN with step_2
+Illustration of step_3:
+┌┘
+*/
 step_3 AS (
     SELECT
     p.code,
@@ -36,6 +44,9 @@ step_3 AS (
     --     prepared_100g FLOAT, prepared_value FLOAT, prepared_serving FLOAT, prepared_unit VARCHAR
     -- )[]
 ),
+/* Illustration of step_4:
+┌┘
+*/
 step_4 AS (
     SELECT
     nm.code,
@@ -86,6 +97,9 @@ step_4 AS (
     LEFT JOIN step_3 p
     ON nm.code = p.code AND nm.ciqual_food_code = p.ciqual_food_code AND nm.off_id = p.off_id
 ),
+/* Illustration of step_5:
+┌┘
+*/
 step_5 AS (
 SELECT * FROM step_4
 PIVOT (
@@ -104,6 +118,9 @@ PIVOT (
     GROUP BY code, ciqual_food_code
 )
 ),
+/* Illustration of step_6:
+┌┘
+*/
 step_6 AS (
     SELECT
     -- Product columns

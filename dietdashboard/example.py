@@ -1,6 +1,10 @@
 #!/usr/bin/env -S uv run --extra sql
+# type: ignore[reportOptionalMemberAccess]
 """This script creates a subset of the data and prints the intermediate tables for debugging."""
 
+import re
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
 
 import duckdb
@@ -9,6 +13,7 @@ import sqlglot.expressions as exp
 
 # sqlglot.pretty = True  # Enable pretty printing
 DATA_DIR = Path(__file__).parent.parent / "data"
+QUERIES_DIR = Path(__file__).parent / "queries"
 
 con = duckdb.connect(":memory:")
 # Attach the explore database with the full data to the in-memory database,
@@ -48,23 +53,31 @@ FROM full_tables.products WHERE code IN ('3111950001928', '4099200179193');
 """)
 
 
-def print_tables(*tables: str):
-    for table in tables:
-        print(f'Table "{table}"')
-        con.table(table).show()
+def add_table_illustration(table: str, query_path: Path) -> None:
+    """Print the contents of a table."""
+    with redirect_stdout(StringIO()) as stdout:
+        con.table(table).show(max_width=152)
+    table_illustration = f"Illustration of {table}:\n{stdout.getvalue().strip()}"
+    table_illustration = f"Illustration of {table}:\n┌┘"  # Uncomment to have empty illustrations
+    pattern = re.compile(rf"Illustration of {table}:\n┌[^┘]*┘")
+    if not pattern.fullmatch(table_illustration):
+        raise ValueError(f"Table illustration for {table} does not match the expected pattern in query file {query_path}.")
+    query = query_path.read_text()
+    if not pattern.search(query):
+        raise ValueError(f"No spot for illustration for table {table} found in query file {query_path}. regex: {pattern.pattern}")
+    query_path.write_text(pattern.sub(table_illustration, query))
 
 
-print_tables("nutrient_map", "ciqual_alim", "ciqual_compo", "calnut_1", "products", "prices")
+for table in ("ciqual_alim", "ciqual_compo", "calnut_0", "calnut_1", "prices", "products"):
+    add_table_illustration(table, QUERIES_DIR / "load.sql")
 
-process_query_path = Path(__file__).parent / "queries/process.sql"
-process_query = process_query_path.read_text()
-expression = sqlglot.parse_one(process_query)
+process_query_path = QUERIES_DIR / "process.sql"
+expression = sqlglot.parse_one(process_query_path.read_text())
 # --- Replace the chosen nutrients in the pivot expression ---
-expression.find(exp.Pivot).find(exp.In).args["expressions"] = ["sodium", "protein"]  # type: ignore[reportOptionalMemberAccess]
+expression.find(exp.Pivot).find(exp.In).args["expressions"] = ["sodium", "protein"]
 # --- Run each CTE as a CREATE TABLE statement ---
-for cte_expression in expression.find(exp.With).expressions:  # type: ignore[reportOptionalMemberAccess]
+for cte_expression in expression.find(exp.With).expressions:
     table = exp.Table(this=exp.Identifier(this=cte_expression.alias))
     create_table = exp.Create(this=table, kind="TABLE", expression=cte_expression.this)
-    con.execute(create_table.sql())
-    print(f'Table "{table.name}"')
-    con.table(table.name).show()
+    con.sql(create_table.sql())
+    add_table_illustration(table.name, process_query_path)
