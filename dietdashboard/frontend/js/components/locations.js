@@ -3,9 +3,12 @@ import { handleStateChange } from "../index";
 import { Map } from "./map";
 import { Table } from "./table";
 
+// License attribution to https://operations.osmfoundation.org/policies/tiles/
 const template = `<p style="margin: 0 0 0.5rem; font-size: 0.85rem">A map-based approach to selecting items or regions.</p>
   <div id="location-controls"></div>
   <div id="map" style="margin-top: 0.5rem"></div>
+  <div class="leaflet-control-attribution leaflet-control">
+  <div style="text-align: right">© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors</div>
   <table>
     <colgroup>
       <col style="width: 90%" />
