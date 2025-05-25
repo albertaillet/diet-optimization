@@ -108,8 +108,8 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
     Compress(app)
     app.template_folder = TEMPLATE_FOLDER
 
-    nutrient_ids = [row["id"] for row in query_dicts(con, """SELECT id FROM data.nutrient_map WHERE disabled IS NULL""")]
-    recommendations = query_dicts(con, """SELECT * FROM data.recommendations""")
+    recommendations = query_dicts(con, """SELECT * FROM recommendations""")
+    nutrient_ids = [row["id"] for row in recommendations]
     sliders = [{k: rec[k] for k in ("id", "name", "unit", "nutrient_type")} | create_rangeslider(rec) for rec in recommendations]
     slider_csv = create_csv(["id", "name", "unit", "nutrient_type", "min", "max", "lower", "upper", "active"], sliders)  # type: ignore[reportArgumentType]
 

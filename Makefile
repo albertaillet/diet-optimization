@@ -89,6 +89,9 @@ $(NNR_SUMMARY_CSV): $(NNR_EXTRACTED_TABLES)
 
 # ---------- Load the data into the database. ----------
 
+rm:
+	rm data/data.db
+
 load: $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(PRICES_PARQUET) $(PRODUCTS_PARQUET)
 	time duckdb data/data.db < ./dietdashboard/queries/load.sql
 
@@ -98,11 +101,17 @@ process:
 recommendations:
 	time duckdb data/data.db < ./dietdashboard/queries/recommendations.sql
 
-drop:
-	time duckdb data/data.db < ./dietdashboard/queries/drop.sql
+sendover: load process recommendations
+	time duckdb data/sendover_$(shell date +%Y%m%d_%H%M%S).db "\
+	ATTACH 'data/data.db' AS data;\
+	CREATE TABLE final_table AS SELECT * FROM data.final_table;\
+	CREATE TABLE recommendations AS SELECT * FROM data.recommendations;\
+	DETACH data;"
+# rsyunc -avz data/sendover_DATE.db host:~/path/to/remote/directory/
 
 data-info:
 	./scripts/db_info.py
+
 
 # ---------- Run the optmization dashboard. ----------
 
