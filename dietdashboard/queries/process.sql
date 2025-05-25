@@ -161,22 +161,22 @@ step_4 AS (
 └───────────────┴──────────────────┴──────────────┴─────────────┴────────────────┴───────────────┴──────────────┴────────────────┘
 */
 step_5 AS (
-SELECT * FROM step_4
-PIVOT (
-  first(final_nutrient_value) AS value,
-  first(final_nutrient_unit) AS unit,
-  first(final_nutrient_origin) AS origin,
-  FOR nutrient_id IN
-  ('energy_fibre_kj', 'energy_fibre_kcal', 'water', 'protein', 'carbohydrate', 'fat',
-  'sugars', 'fructose', 'galactose', 'glucose', 'lactose', 'maltose', 'sucrose', 'starch', 'fiber', 'polyols',
-  'alcohol', 'organic_acids', 'saturated_fat', 'monounsaturated_fat', 'polyunsaturated_fat',
-  'fa_04_0', 'fa_06_0', 'fa_08_0', 'fa_10_0', 'fa_12_0', 'fa_14_0', 'fa_16_0', 'fa_18_0', 'fa_18_1_ole', 'fa_18_2_lino',
-  'fa_18_3_a_lino', 'fa_20_4_ara', 'fa_20_5_epa', 'fa_20_6_dha', 'cholesterol', 'salt', 'calcium', 'copper', 'iron', 'iodine',
-  'magnesium', 'manganese', 'phosphorus', 'potassium', 'selenium', 'sodium', 'zinc', 'retinol', 'beta_carotene',
-  'vitamin_d', 'vitamin_e', 'vitamin_k1', 'vitamin_k2', 'vitamin_c', 'vitamin_b1', 'vitamin_b2', 'vitamin_pp',
-  'pantothenic_acid', 'vitamin_b6', 'vitamin_b9', 'folates', 'vitamin_b12')
-  GROUP BY code, ciqual_food_code
-)
+  SELECT * FROM step_4
+  PIVOT (
+    first(final_nutrient_value) AS value,
+    first(final_nutrient_unit) AS unit,
+    first(final_nutrient_origin) AS origin,
+    FOR nutrient_id IN
+      ('energy_fibre_kj', 'energy_fibre_kcal', 'water', 'protein', 'carbohydrate', 'fat',
+      'sugars', 'fructose', 'galactose', 'glucose', 'lactose', 'maltose', 'sucrose', 'starch', 'fiber', 'polyols',
+      'alcohol', 'organic_acids', 'saturated_fat', 'monounsaturated_fat', 'polyunsaturated_fat',
+      'fa_04_0', 'fa_06_0', 'fa_08_0', 'fa_10_0', 'fa_12_0', 'fa_14_0', 'fa_16_0', 'fa_18_0', 'fa_18_1_ole', 'fa_18_2_lino',
+      'fa_18_3_a_lino', 'fa_20_4_ara', 'fa_20_5_epa', 'fa_20_6_dha', 'cholesterol', 'salt', 'calcium', 'copper', 'iron', 'iodine',
+      'magnesium', 'manganese', 'phosphorus', 'potassium', 'selenium', 'sodium', 'zinc', 'retinol', 'beta_carotene',
+      'vitamin_d', 'vitamin_e', 'vitamin_k1', 'vitamin_k2', 'vitamin_c', 'vitamin_b1', 'vitamin_b2', 'vitamin_pp',
+      'pantothenic_acid', 'vitamin_b6', 'vitamin_b9', 'folates', 'vitamin_b12')
+    GROUP BY code, ciqual_food_code
+  )
 ),
 /* Illustration of step_6:
 ┌───────────────┬──────────────┬──────────────────┬──────────────────────┬───┬────────────────┬───────────────┬──────────────┬────────────────┐
@@ -246,6 +246,8 @@ step_6 AS (
     ON pr.product_code = p.code
   LEFT JOIN ciqual_alim AS ciq
     ON prev.ciqual_food_code = ciq.alim_code
+  WHERE pr.price IS NOT NULL
+    AND p.product_quantity > 0 and p.product_quantity < 30000 -- Filter out invalid quantities (e.g. 0 or >30 kg)
 )
 SELECT * FROM step_6
 );
