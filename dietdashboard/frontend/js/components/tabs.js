@@ -15,19 +15,19 @@ export function Tabs(parent, tabs, tabState) {
       enter
         .append("button")
         .attr("class", "tab-button")
-        .classed("active", d => d.id === tabState.currentTab)
+        .classed("active", d => d.id === tabState.current)
         .text(d => d.name)
     );
   const tabContent = parent.append("div").attr("class", "tab-content");
   tabSelection.on("click", (event, d) => {
     parent.selectAll("button.tab-button").classed("active", false);
-    tabState.currentTab = d.id;
+    tabState.current = d.id;
     persistState();
     d.component(tabContent);
     event.target.classList.add("active");
   });
 
   // Set the initial tab
-  const initialTab = tabs.find(tab => tab.id === tabState.currentTab);
+  const initialTab = tabs.find(tab => tab.id === tabState.current);
   tabContent.call(initialTab.component, [tabContent]);
 }

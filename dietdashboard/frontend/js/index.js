@@ -6,6 +6,7 @@ import { Result } from "./components/result";
 import { Sliders, SlidersTableBody } from "./components/sliders";
 import { Tabs } from "./components/tabs";
 import { autoType, csv, csvParse, select } from "./d3";
+import { defaultLocations } from "./defaultLocations";
 
 export function handleStateChange() {
   persistState();
@@ -41,8 +42,8 @@ function optimize(state) {
 var state = {
   currency: "EUR",
   sliders: csvParse(document.getElementById("slider-csv-data").textContent, autoType), // Default slider data
-  mapTransform: { k: 4096, x: 480, y: 250 },
-  locations: {},
+  mapTransform: { k: 4062, x: 415, y: 875 },
+  locations: defaultLocations,
   resultData: [],
   inputTabs: { current: "sliders-tab" },
   brushMode: null
