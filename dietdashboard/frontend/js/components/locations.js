@@ -82,8 +82,9 @@ function LocationControls(parent, data, state) {
   parent
     .selectAll("button")
     .data([
-      { label: "Bush Selection", click: () => setBrushMode("select") },
-      { label: "Clear Brush", click: () => setBrushMode("deselect") },
+      { label: "Bush", click: () => setBrushMode("select") },
+      { label: "Clearing brush", click: () => setBrushMode("deselect") },
+      { label: "Deactivate brush", click: () => setBrushMode(null) },
       { label: "Select All Locations", click: selectAll },
       { label: "Clear All Locations", click: clearAll }
     ])
