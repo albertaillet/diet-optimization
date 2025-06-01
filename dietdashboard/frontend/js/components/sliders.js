@@ -55,7 +55,6 @@ export function Sliders(parent, productsData, sliderData) {
  * @param {Array} sliderData
  */
 export function SlidersTableBody(parent, productsData, sliderData) {
-  const data = sliderData.filter(d => d.active);
   const height = CONFIG.svgHeight - CONFIG.margin.top - CONFIG.margin.bottom;
   const check = (event, nutrient) => {
     nutrient.active = event.target.checked;
@@ -64,7 +63,7 @@ export function SlidersTableBody(parent, productsData, sliderData) {
 
   parent
     .selectAll("tr")
-    .data(data, d => d.id)
+    .data(sliderData, d => d.id)
     .join(
       enter =>
         enter
@@ -75,7 +74,7 @@ export function SlidersTableBody(parent, productsData, sliderData) {
               .append("td")
               .append("input")
               .attr("type", "checkbox")
-              .attr("checked", d => d.active)
+              .property("checked", d => d.active)
               .on("change", check)
           )
           .call(tr => tr.append("td").append("button").text("Edit Range").on("click", openModal))
@@ -91,6 +90,10 @@ export function SlidersTableBody(parent, productsData, sliderData) {
     )
     .each(function (d) {
       const slider = d3.select(this);
+      if (!d.active) {
+        slider.selectAll("*").remove();
+        return;
+      }
       const width = this.parentNode.clientWidth - CONFIG.margin.left - CONFIG.margin.right;
       const x = d3.scaleLinear().domain([d.min, d.max]).range([0, width]);
       Axis(slider, x, height);
