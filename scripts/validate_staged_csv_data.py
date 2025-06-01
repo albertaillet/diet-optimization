@@ -39,7 +39,7 @@ def validate_nutrient_map(reader):
         assert row["name"], row
         assert row["disabled"] in {"", "TRUE"}, row
         assert row["template"] in {"", "TRUE"}, row
-        assert row["nutrient_type"] in {"micro", "macro"}, row
+        assert row["nutrient_type"] in {"energy", "macro", "sugar", "fatty_acid", "mineral", "vitamin", "other"}, row
         if row["ciqual_const_code"]:
             assert int(row["ciqual_const_code"]), row  # Check that the ciqual_const_code is a non-zero integer
             assert row["ciqual_const_name_eng"], row
@@ -74,8 +74,6 @@ def validate_nutrient_map(reader):
             continue
         assert int(row["ciqual_const_code"]), row
         assert int(row["calnut_const_code"]), row
-        if row["nutrient_type"] == "micro":
-            assert row["nnr2023_id"], row
 
 
 def validate_recommendations_macro(reader):
