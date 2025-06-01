@@ -2,6 +2,7 @@ import { registerCurrencySelect } from "./components/currency";
 import { Locations } from "./components/locations";
 import { Result } from "./components/result";
 
+import { Objective } from "./components/objective";
 import { Sliders, SlidersTableBody } from "./components/sliders";
 import { Tabs } from "./components/tabs";
 import { autoType, csv, csvParse, select } from "./d3";
@@ -45,6 +46,7 @@ var state = {
   sliders: csvParse(document.getElementById("slider-csv-data").textContent, autoType), // Default slider data
   mapTransform: { k: 4062, x: 415, y: 875 },
   locations: defaultLocations,
+  objective: "price", // Default objective function
   resultData: [],
   inputTabs: { current: "sliders-tab" },
   brushMode: null
@@ -56,7 +58,8 @@ const locationData = await csv("/locations.csv", autoType);
 
 const tabs = [
   { id: "sliders-tab", name: "Nutrient Targets", component: parent => Sliders(parent, state.resultData, state.sliders) },
-  { id: "locations-tab", name: "Location Selection", component: parent => Locations(parent, locationData, state) }
+  { id: "locations-tab", name: "Location Selection", component: parent => Locations(parent, locationData, state) },
+  { id: "objective-tab", name: "Objective Function", component: parent => Objective(parent, state) }
 ];
 
 /**

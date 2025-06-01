@@ -38,6 +38,7 @@
  * @property {MapTransform} mapTransform
  * @property {Array<Object>} locations - Currently selected locations. Has location IDs as keys.
  * @property {Array<Result>} resultData - Reslut data from the optimization.
+ * @property {string} objective - Current objective function to minimize.
  * @property {InputTabs} inputTabs - Current input tab state.
  * @property {string|null} brushMode - Current brush mode.
  *
