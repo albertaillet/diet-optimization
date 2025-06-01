@@ -66,6 +66,13 @@ function App(state) {
   Tabs(select("#input-tabs"), tabs, state.inputTabs);
   Result(select("#result"), state);
 }
+// Redraw on resize
+window.addEventListener("resize", () => {
+  Result(select("#result"), state);
+  if (state.inputTabs.current === "sliders-tab") {
+    SlidersTableBody(select("#slider-table-body"), state.resultData, state.sliders);
+  }
+});
 
 App(state);
 handleStateChange();
