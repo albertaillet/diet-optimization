@@ -1,4 +1,3 @@
-import { NutrientCheckboxes } from "./components/checkboxes";
 import { registerCurrencySelect } from "./components/currency";
 import { Locations } from "./components/locations";
 import { Result } from "./components/result";
@@ -59,7 +58,6 @@ const tabs = [
 ];
 
 function App(state) {
-  NutrientCheckboxes(select("#nutrient-checkboxes"), state);
   Tabs(select("#input-tabs"), tabs, state.inputTabs);
   Result(select("#result"), state);
 }
