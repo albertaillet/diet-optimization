@@ -17,7 +17,13 @@
  *
  * @typedef {Object} Result
  * @property {string} id
+ * @property {string} product_code
  * @property {string} product_name
+ * @property {string} ciqual_name
+ * @property {string} ciqual_code
+ * @property {string} location
+ * @property {string} location_osm_id
+ * @property {number} quantity_g
  * @property {number} price
  * Then it also has one property for each nutrient type, e.g. energy, macro, sugar, etc.
  *
