@@ -1,8 +1,13 @@
 import { persistState } from "..";
 /**
  *
+ * @typedef {Object} Tab
+ * @property {string} id - Unique identifier for the tab.
+ * @property {string} name - Display name for the tab.
+ * @property {function} component - Function to render the tab content.
+ *
  * @param {d3.Selection} parent
- * @param {Array} tabs - [{ id: string, name: string, component: function }]
+ * @param {Array<Tab>} tabs - [{ id: string, name: string, component: function }]
  * @param {object} tabState - The state object to be passed to the component function
  */
 export function Tabs(parent, tabs, tabState) {

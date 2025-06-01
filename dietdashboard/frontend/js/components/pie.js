@@ -2,7 +2,7 @@ import * as d3 from "../d3";
 
 /**
  * @param {d3.Selection} parent
- * @param {Array} data
+ * @param {Array<Object>} data
  * @param {number} total
  */
 export function MacroPie(parent, data, total) {

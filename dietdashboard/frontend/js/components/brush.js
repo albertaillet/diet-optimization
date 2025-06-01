@@ -3,7 +3,7 @@ import { handleStateChange } from "../index";
 
 /**
  * @param {d3.Selection} parent
- * @param {object} d
+ * @param {Slider} d
  * @param {d3.Scale} x
  * @param {number} height
  * @param {number} width

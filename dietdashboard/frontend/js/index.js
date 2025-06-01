@@ -16,7 +16,7 @@ export const persistState = () => localStorage.setItem("state", JSON.stringify(s
 const restoreState = () => JSON.parse(localStorage.getItem("state"));
 
 /**
- * @param {object} state
+ * @param {State} state
  */
 function optimize(state) {
   const data = { currency: state.currency, locations: Object.keys(state.locations) };
@@ -37,7 +37,9 @@ function optimize(state) {
     });
 }
 
-// Global state
+/** Global state object
+ * @type {State}
+ */
 var state = {
   currency: "EUR",
   sliders: csvParse(document.getElementById("slider-csv-data").textContent, autoType), // Default slider data
@@ -57,6 +59,9 @@ const tabs = [
   { id: "locations-tab", name: "Location Selection", component: parent => Locations(parent, locationData, state) }
 ];
 
+/**
+ * @param {State} state
+ */
 function App(state) {
   Tabs(select("#input-tabs"), tabs, state.inputTabs);
   Result(select("#result"), state);

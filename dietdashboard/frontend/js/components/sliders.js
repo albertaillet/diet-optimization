@@ -34,7 +34,7 @@ const NUTRIENTTYPENAMES = {
 };
 
 /**
- * @param {Array} products
+ * @param {Array<Result>} products
  * @param {string} nutrientId
  */
 function createSegmentsData(products, nutrientId) {
@@ -50,8 +50,8 @@ function createSegmentsData(products, nutrientId) {
 
 /**
  * @param {d3.Selection} parent
- * @param {Array} productsData
- * @param {Array} sliderData
+ * @param {Array<Result>} productsData
+ * @param {Array<Slider>} sliderData
  */
 export function Sliders(parent, productsData, sliderData) {
   parent.html(template);
@@ -98,8 +98,8 @@ function SliderLabelAndButtons(parent) {
 
 /**
  * @param {d3.Selection} parent
- * @param {Array} productsData
- * @param {Array} sliderData
+ * @param {Array<Result>} productsData
+ * @param {Array<Slider>} sliderData
  */
 export function SlidersTableBody(parent, productsData, sliderData) {
   const height = CONFIG.svgHeight - CONFIG.margin.top - CONFIG.margin.bottom;

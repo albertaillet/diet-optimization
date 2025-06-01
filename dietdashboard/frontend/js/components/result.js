@@ -51,7 +51,7 @@ const template = `<p>The recommended food items and quantities to meet your nutr
 
 /**
  * @param {d3.Selection} parent
- * @param {Array} data
+ * @param {Array<Result>} data
  */
 function ResultTable(parent, data) {
   Table(
@@ -69,7 +69,7 @@ function ResultTable(parent, data) {
 /**
  * @param {d3.Selection} tableContainer
  * @param {d3.Selection} pieContainer
- * @param {Array} data
+ * @param {Array<Result>} data
  */
 function MacroSummary(tableContainer, pieContainer, data) {
   const fields = ["protein", "carbohydrate", "fat"];
@@ -95,7 +95,7 @@ function MacroSummary(tableContainer, pieContainer, data) {
 
 /**
  * @param {d3.Selection} parent
- * @param {object} state
+ * @param {State} state
  */
 export function Result(parent, state) {
   // If there are no selected locations, do not render the result

@@ -20,9 +20,9 @@ const width = 960,
 
 /**
  * @param {d3.Selection} parent
- * @param {Array} data
- * @param {object} state
- * @param {Array} extent - [[x0, y0], [x1, y1]] defining the brush area
+ * @param {Array<LocationInfo>} data
+ * @param {State} state
+ * @param {Array<Array<number>>} extent - [[x0, y0], [x1, y1]] defining the brush area
  */
 function Brush(parent, data, state, extent) {
   parent.selectAll("g.map-brush").remove(); // Remove any existing brush group
@@ -39,6 +39,7 @@ function Brush(parent, data, state, extent) {
     data.forEach(d => {
       // d.x and d.y are base projected coordinates (from lon/lat)
       const cx = currentTransform.applyX(d.x);
+      x;
       const cy = currentTransform.applyY(d.y);
       if (cx >= x0 && cx <= x1 && cy >= y0 && cy <= y1) {
         if (state.brushMode === "select") {
@@ -55,8 +56,8 @@ function Brush(parent, data, state, extent) {
 
 /**
  * @param {d3.Selection} parent
- * @param {Array} data
- * @param {object} state
+ * @param {Array<LocationInfo>} data
+ * @param {State} state
  */
 export function Map(parent, data, state) {
   parent.attr("viewBox", [0, 0, width, height]);

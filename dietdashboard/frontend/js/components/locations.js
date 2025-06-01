@@ -26,8 +26,8 @@ const template = `<p style="margin: 0 0 0.5rem; font-size: 0.85rem">A map-based 
 
 /**
  * @param {d3.Selection} parent
- * @param {Array} data - location data
- * @param {object} state
+ * @param {Array<LocationInfo>} data
+ * @param {State} state
  */
 function LocationTable(parent, data, state) {
   const rows = data.filter(location => location.id in state.locations).map(location => [location.name, location.count]);
@@ -35,8 +35,8 @@ function LocationTable(parent, data, state) {
 }
 
 /**
- * @param {Array} data - location data
- * @param {object} state
+ * @param {Array<LocationInfo>} data
+ * @param {State} state
  */
 export function locationStateChange(data, state) {
   LocationTable(select("#location-table-body"), data, state);
@@ -46,8 +46,8 @@ export function locationStateChange(data, state) {
 
 /**
  * @param {d3.Selection} parent
- * @param {Array} data - location data
- * @param {object} state
+ * @param {Array<LocationInfo>} data
+ * @param {State} state
  */
 export function Locations(parent, data, state) {
   parent.html(template);
@@ -59,8 +59,8 @@ export function Locations(parent, data, state) {
 
 /**
  * @param {d3.Selection} parent
- * @param {Array} data - location data
- * @param {object} state
+ * @param {Array<LocationInfo>} data
+ * @param {State} state
  */
 function LocationControls(parent, data, state) {
   const selectAll = () => {

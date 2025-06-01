@@ -3,8 +3,8 @@ import { locationStateChange } from "./locations";
 
 /**
  * @param {d3.Selection} parent
- * @param {Array} data - location data
- * @param {object} state
+ * @param {Array<LocationInfo>} data
+ * @param {State} state
  */
 export function Markers(parent, data, state) {
   const projection = d3
