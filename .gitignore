@@ -6,35 +6,11 @@
 
 # Folders to exclude
 # python virtual environment
-venv/
-# temporary folder
+.venv/
+
+# Temporary folder and files
 tmp/
 tmp*
-
-# Data to exclude
-# Fetched and extracted NNR2023 data
-data/*.html
-# Ciqual 2020 table
-data/ciqual2020.csv
-data/XML_2020_07_07.zip
-data/ciqual2020/*.xml
-data/ciqual2020/*.csv
-# Calnut tables
-data/calnut.0.csv
-data/calnut.1.csv
-# Livsmedelsdatabasen table
-data/LivsmedelsDB_*.csv
-data/LivsmedelsDB_*.xlsx
-# Fetched nutrient_map
-data/nutrient_map_recipe_estimator.csv
-# Open food facts database dump
-*.jsonl.gz
-# Open prices exports in parquet format
-*.parquet
-# Any database in the data folder
-data/*.db
-# Numpy zipped data
-*.npz
 
 # All python cache files
 *.pyc
@@ -54,5 +30,6 @@ gunicorn.pid
 bundle.js
 bundle.js.map
 bundle.css
+
 # Javascript modules
 node_modules/
