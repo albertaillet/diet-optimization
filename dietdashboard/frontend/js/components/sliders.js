@@ -1,4 +1,5 @@
 import * as d3 from "../d3";
+import { handleStateChange } from "../index";
 import { Axis } from "./axis";
 import { Brush } from "./brush";
 import { openModal } from "./rangemodal";
@@ -10,7 +11,9 @@ const template = `
 <table style="border-spacing: 0">
   <colgroup>
     <col style="width: 15%" />
-    <col style="width: 85%" />
+    <col style="width: 1%" />
+    <col style="width: 10%" />
+    <col style="width: 80%" />
   </colgroup>
   <tbody id="slider-table-body"></tbody>
 </table>`;
@@ -54,6 +57,11 @@ export function Sliders(parent, productsData, sliderData) {
 export function SlidersTableBody(parent, productsData, sliderData) {
   const data = sliderData.filter(d => d.active);
   const height = CONFIG.svgHeight - CONFIG.margin.top - CONFIG.margin.bottom;
+  const check = (event, nutrient) => {
+    nutrient.active = event.target.checked;
+    handleStateChange();
+  };
+
   parent
     .selectAll("tr")
     .data(data, d => d.id)
@@ -61,14 +69,16 @@ export function SlidersTableBody(parent, productsData, sliderData) {
       enter =>
         enter
           .append("tr")
+          .call(tr => tr.append("td").text(d => `${d.name} (${d.unit})`))
           .call(tr =>
             tr
               .append("td")
-              .attr("class", "slider-label")
-              .append("div")
-              .call(div => div.append("span").text(d => `${d.name} (${d.unit})`))
-              .call(div => div.append("button").text("Edit Range").on("click", openModal))
+              .append("input")
+              .attr("type", "checkbox")
+              .attr("checked", d => d.active)
+              .on("change", check)
           )
+          .call(tr => tr.append("td").append("button").text("Edit Range").on("click", openModal))
           .append("td")
           .append("svg")
           .attr("width", "100%")
