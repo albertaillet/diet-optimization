@@ -39,7 +39,6 @@ function Brush(parent, data, state, extent) {
     data.forEach(d => {
       // d.x and d.y are base projected coordinates (from lon/lat)
       const cx = currentTransform.applyX(d.x);
-      x;
       const cy = currentTransform.applyY(d.y);
       if (cx >= x0 && cx <= x1 && cy >= y0 && cy <= y1) {
         if (state.brushMode === "select") {
