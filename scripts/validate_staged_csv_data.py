@@ -18,7 +18,7 @@ NNR2023_UNITS = {"g", "mg", "mcg", "µg", "NE", "RE"}  # noqa: RUF001  # TODO: f
 
 def get_ciqual_const_codes():
     if not CIQUAL_CONST_PATH.exists():
-        exit("Warning: CIQUAL data not found, plase fetch it using `make unzip_and_process_ciqual`.")
+        exit("Warning: CIQUAL data not found, plase fetch it using `make unzip-and-process-ciqual`.")
     with CIQUAL_CONST_PATH.open("r") as f:
         return {row["const_code"]: row for row in csv.DictReader(f)}
 

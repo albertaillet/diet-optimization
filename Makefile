@@ -34,6 +34,18 @@ nutrient-map-update-counts:
 nutrient-map-update-ciqual:
 	./scripts/nutrient_map/nutrient_map_update_ciqual.py
 
+# ---------- Fetch the EUR Exchange rates from the Europen Central Bank. ----------
+
+# The reference rates are usually updated at around 16:00 CET every working day.
+# Documentation: https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html
+EXCHANGE_RATES_CSV := data/eurofxref.csv
+fetch-exchange-rates:
+	wget https://www.ecb.europa.eu/stats/eurofxref/eurofxref.zip
+	unzip -o eurofxref.zip -d data/
+	rm eurofxref.zip
+$(EXCHANGE_RATES_CSV): fetch-exchange-rates
+
+
 # ---------- Fetch the prices parquet file and the products jsonl file. ----------
 
 PRICES_PARQUET := data/prices.parquet
@@ -55,12 +67,12 @@ $(PRODUCT_JSONL_GZ):
 
 # ---------- Fetch all. ----------
 
-fetch-all: $(CIQUAL_XML_ZIP) $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(PRICES_PARQUET) $(PRODUCTS_PARQUET)
+fetch-all: $(CIQUAL_XML_ZIP) $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(PRICES_PARQUET) $(PRODUCTS_PARQUET) fetch-exchange-rates
 
 # ---------- Unzip and convert the Ciqual data to csv. ----------
 
 CIQUAL_DIR := data/ciqual2020
-unzip_and_process_ciqual: $(CIQUAL_XML_ZIP)
+unzip-and-process-ciqual: $(CIQUAL_XML_ZIP)
 	[ -d $(CIQUAL_DIR) ] && rm -r $(CIQUAL_DIR) || true
 	unzip -o $(CIQUAL_XML_ZIP) -d $(CIQUAL_DIR)
 	./scripts/xml_to_csv.py $(CIQUAL_DIR)/alim_2020_07_07.xml $(CIQUAL_DIR)/alim.csv
@@ -92,7 +104,7 @@ $(NNR_SUMMARY_CSV): $(NNR_EXTRACTED_TABLES)
 rm:
 	rm data/data.db
 
-load: $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(PRICES_PARQUET) $(PRODUCTS_PARQUET)
+load: $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(PRICES_PARQUET) $(PRODUCTS_PARQUET) $(EXCHANGE_RATES_CSV)
 	time duckdb data/data.db < ./dietdashboard/queries/load.sql
 
 process:
