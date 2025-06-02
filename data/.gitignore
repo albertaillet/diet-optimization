@@ -25,7 +25,10 @@ calnut.0.csv
 calnut.1.csv
 
 # EUR exchange rates
-eurofxref.csv
+euro_exchange_rates/eurofxref.csv
+euro_exchange_rates/latest.csv
+# EUR exchange rates with date
+euro_exchange_rates/*-*-*.csv
 
 # Livsmedelsdatabasen table
 LivsmedelsDB_*.xlsx
