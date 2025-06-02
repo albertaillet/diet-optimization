@@ -24,6 +24,9 @@ ciqual2020/*.csv
 calnut.0.csv
 calnut.1.csv
 
+# Agribalyse tables
+agribalyse_*.csv
+
 # EUR exchange rates
 euro_exchange_rates/eurofxref.csv
 euro_exchange_rates/latest.csv

@@ -2,6 +2,10 @@ SHELL := /bin/sh
 
 # ---------- Fetch Ciqual and Calnut tables. ----------
 
+# Documentation:
+# https://ciqual.anses.fr/#/cms/download/node/20
+# https://www.data.gouv.fr/fr/datasets/table-de-composition-nutritionnelle-des-aliments-ciqual/
+
 # This file is not used anymore, the full ANSES-CIQUAL 2020 Table in xml format is used instead.
 # CIQUAL_CSV := data/ciqual2020.csv
 # $(CIQUAL_CSV):
@@ -18,6 +22,27 @@ $(CALNUT_0_CSV):
 CALNUT_1_CSV := data/calnut.1.csv
 $(CALNUT_1_CSV):
 	wget -O $(CALNUT_1_CSV) https://raw.githubusercontent.com/openfoodfacts/openfoodfacts-server/refs/heads/main/external-data/ciqual/calnut/CALNUT.csv.1
+
+# ---------- Fetch Agribalyse data. ----------
+# On Open Food Facts:
+# https://github.com/openfoodfacts/openfoodfacts-server/tree/main/external-data/environmental_score/agribalyse
+
+# Documentation:
+# https://doc.agribalyse.fr/documentation
+# Data License: ETALAB Licence Ouverte v2.0
+
+# Available at these links:
+# https://data.gouv.fr/datasets?q=AGRIBALYSE (.csv)
+# https://data.ademe.fr/datasets?topics=TQJGtxm2_ (multiple formats)
+# https://entrepot.recherche.data.gouv.fr/dataset.xhtml?persistentId=doi:10.57745/XTENSJ (.xlsx)
+
+AGRIBALYSE_CSV := data/agribalyse_synthese.csv
+$(AGRIBALYSE_CSV):
+	wget -O $(AGRIBALYSE_CSV) https://www.data.gouv.fr/fr/datasets/r/41397293-3e85-4959-8936-940bb79d91fc
+
+# fetch-agribalyse-details:
+# 	wget -O data/agribalyse_ingredient_details.csv https://www.data.gouv.fr/fr/datasets/r/6bd67be2-dea5-446c-bbf5-6fff9a6366c0
+# 	wget -O data/agribalyse_ingredient_details.csv https://www.data.gouv.fr/fr/datasets/r/93b8a0f4-03f4-41d4-8aef-287df16176fd
 
 # ---------- Fetch the nutrient map from recipe estimator map. ----------
 
@@ -46,8 +71,12 @@ fetch-exchange-rates:
 	./scripts/transpose_exchange_rates.py
 $(EXCHANGE_RATES_CSV): fetch-exchange-rates
 
+# ---------- Fetch the prices and products exports. ----------
 
-# ---------- Fetch the prices parquet file and the products jsonl file. ----------
+# Documentation:
+# https://huggingface.co/datasets/openfoodfacts/open-prices
+# https://huggingface.co/datasets/openfoodfacts/product-database
+# Data License: Open Database License family
 
 PRICES_PARQUET := data/prices.parquet
 $(PRICES_PARQUET):
@@ -62,13 +91,13 @@ $(PRODUCTS_PARQUET):
 # FROM read_parquet('hf://datasets/openfoodfacts/product-database/food.parquet')  -- (https link above also works)
 # ) TO 'data/products.parquet' WITH (FORMAT PARQUET);
 
-PRODUCT_JSONL_GZ := data/openfoodfacts-products.jsonl.gz
-$(PRODUCT_JSONL_GZ):
-	wget -O $(PRODUCT_JSONL_GZ) https://static.openfoodfacts.org/data/openfoodfacts-products.jsonl.gz
+# PRODUCT_JSONL_GZ := data/openfoodfacts-products.jsonl.gz
+# $(PRODUCT_JSONL_GZ):
+# 	wget -O $(PRODUCT_JSONL_GZ) https://static.openfoodfacts.org/data/openfoodfacts-products.jsonl.gz
 
 # ---------- Fetch all. ----------
 
-fetch-all: $(CIQUAL_XML_ZIP) $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(PRICES_PARQUET) $(PRODUCTS_PARQUET) fetch-exchange-rates
+fetch-all: $(CIQUAL_XML_ZIP) $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(PRICES_PARQUET) $(PRODUCTS_PARQUET) $(AGRIBALYSE_CSV) fetch-exchange-rates
 
 # ---------- Unzip and convert the Ciqual data to csv. ----------
 
@@ -124,7 +153,6 @@ sendover: load process recommendations
 
 data-info:
 	./scripts/db_info.py
-
 
 # ---------- Run the optmization dashboard. ----------
 
