@@ -1,3 +1,6 @@
+/* Queries for loading data into the database
+Links to data documentation can be found in the Makefile.
+*/
 -- Nutrient mapping table
 CREATE OR REPLACE TABLE nutrient_map AS (
   SELECT id, name, nutrient_type,
@@ -19,9 +22,7 @@ CREATE OR REPLACE TABLE recommendations_nnr2023 AS (
   value_males, value_females, value_upper_intake
   FROM read_csv('data/recommendations_nnr2023.csv')
 );
-/* Documentation: https://ciqual.anses.fr/cms/sites/default/files/inline-files/Table%20Ciqual%202020_doc_XML_ENG_2020%2007%2007.pdf
-Downloaded from: https://ciqual.anses.fr/#/cms/telechargement/node/20 (XML format)
-Tables:
+/* Tables:
 - alim: information about the food (3 185 rows)
 - compo: information about the nutrients in the food (211 898 rows)
 - const: information about the nutrients (67 rows) (already in nutrient_map)
@@ -59,11 +60,9 @@ CREATE OR REPLACE TABLE ciqual_compo AS (
 CREATE OR REPLACE TABLE ciqual_sources AS (
   SELECT source_code, ref_citation FROM read_csv('data/ciqual2020/sources.csv')
 );
-/* Documentation: https://ciqual.anses.fr/cms/sites/default/files/inline-files/Table%20CALNUT%202020_doc_FR_2020%2007%2007.pdf
-Table 0 contains food group information (2 119 rows)
+/* Table 0 contains food group information (2 119 rows)
 Table 1 contains nutrient information for each food and nutrient (131 378 rows)
 Both tables are joined on the ALIM_CODE and FOOD_LABEL columns
-Fetched from https://github.com/openfoodfacts/openfoodfacts-server/tree/main/external-data/ciqual/calnut
 Illustration of calnut_0:
 ┌───────────┬──────────────────────┬───────────────┬─────────────────┬───┬──────────────────────┬──────────────────────┬─────────────────────┐
 │ alim_code │      FOOD_LABEL      │ alim_grp_code │ alim_ssgrp_code │ … │   alim_grp_nom_fr    │  alim_ssgrp_nom_fr   │ alim_ssssgrp_nom_fr │
@@ -97,8 +96,7 @@ CREATE OR REPLACE TABLE calnut_1 AS (
   CAST(REPLACE(MB, ',', '.') AS FLOAT) AS mean,
   FROM read_csv('data/calnut.1.csv')
 );
-/* Huggingface Documentation for open-prices data: https://huggingface.co/datasets/openfoodfacts/open-prices
-Illustration of prices:
+/* Illustration of prices:
 ┌───────┬─────────┬───────────────┬──────────────────────┬───┬──────────────────────┬─────────────────┬──────────────────────┬──────────────────────┐
 │  id   │  type   │ product_code  │     product_name     │ … │ location_website_url │ location_source │   location_created   │   location_updated   │
 │ int64 │ varchar │    varchar    │       varchar        │   │       varchar        │     varchar     │ timestamp with tim…  │ timestamp with tim…  │
@@ -113,9 +111,7 @@ Illustration of prices:
 CREATE OR REPLACE TABLE prices AS (
   SELECT * FROM read_parquet('data/prices.parquet')
 );
-/* Open Food Facts data page: https://world.openfoodfacts.org/data
-Huggingface dataset: https://huggingface.co/datasets/openfoodfacts/product-database
-Note: there are duplicates of the code, it is not a unique key
+/* Note: there are duplicates of the code in products, it is not a unique key
 Illustration of products:
 ┌───────────────┬──────────────────┬──────────────────────┬──────────────────────┬───┬──────────────────┬──────────────────────┬──────────────────────┐
 │     code      │ product_quantity │     product_name     │ product_quantity_u…  │ … │ ciqual_food_code │ ciqual_food_code_o…  │      nutriments      │

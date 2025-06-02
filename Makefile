@@ -3,8 +3,12 @@ SHELL := /bin/sh
 # ---------- Fetch Ciqual and Calnut tables. ----------
 
 # Documentation:
-# https://ciqual.anses.fr/#/cms/download/node/20
+# Ciuqal: https://ciqual.anses.fr/cms/sites/default/files/inline-files/Table%20Ciqual%202020_doc_XML_ENG_2020%2007%2007.pdf
+# Calnut: https://ciqual.anses.fr/cms/sites/default/files/inline-files/Table%20CALNUT%202020_doc_FR_2020%2007%2007.pdf
+# Ciqual download page: https://ciqual.anses.fr/#/cms/download/node/20
 # https://www.data.gouv.fr/fr/datasets/table-de-composition-nutritionnelle-des-aliments-ciqual/
+# On Open Food Facts:
+# https://github.com/openfoodfacts/openfoodfacts-server/tree/main/external-data/ciqual/calnut
 
 # This file is not used anymore, the full ANSES-CIQUAL 2020 Table in xml format is used instead.
 # CIQUAL_CSV := data/ciqual2020.csv
@@ -76,6 +80,7 @@ fetch-exchange-rates: clean-exchange-rate $(EXCHANGE_RATES_CSV)
 # ---------- Fetch the prices and products exports. ----------
 
 # Documentation:
+# Open Food Facts data page: https://world.openfoodfacts.org/data
 # https://huggingface.co/datasets/openfoodfacts/open-prices
 # https://huggingface.co/datasets/openfoodfacts/product-database
 # Data License: Open Database License family
