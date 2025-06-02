@@ -96,6 +96,64 @@ CREATE OR REPLACE TABLE calnut_1 AS (
   CAST(REPLACE(MB, ',', '.') AS FLOAT) AS mean,
   FROM read_csv('data/calnut.1.csv')
 );
+/* Illustration of agribalyse:
+┌──────────────────────┬──────────────────┬──────────────────┬───┬──────────────────────┬──────────────────────┬──────────────────────┐
+│ agribalyse_food_code │ ciqual_food_code │ ciqual_food_name │ … │ biogenic_climate_c…  │ fossil_climate_cha…  │ land_use_change_cl…  │
+│       varchar        │      int64       │     varchar      │   │        double        │        double        │        double        │
+├──────────────────────┼──────────────────┼──────────────────┼───┼──────────────────────┼──────────────────────┼──────────────────────┤
+│ 20516                │            20516 │ Chick pea, dried │ … │               0.0148 │                0.709 │                0.175 │
+│ 20904                │            20904 │ Tofu, plain      │ … │               0.0161 │                0.986 │              0.00187 │
+├──────────────────────┴──────────────────┴──────────────────┴───┴──────────────────────┴──────────────────────┴──────────────────────┤
+│ 2 rows                                                                                                         29 columns (6 shown) │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+*/
+CREATE OR REPLACE TABLE agribalyse AS (
+  SELECT
+  "Code AGB" as agribalyse_food_code,
+  "Code CIQUAL" as ciqual_food_code,
+  "LCI Name" as ciqual_food_name,
+  "code saison" as season_code,
+  "code avion" as air_transport_code,
+  "Livraison" as delivery_method,
+  "Approche emballage" as packaging_approach,
+  "Préparation" as preparation_method,
+  "DQR" as data_quality_rating,
+  "Score unique EF" as eco_score,
+  "Changement climatique" as climate_change_score,
+  "Appauvrissement de la couche d'ozone" as ozone_depletion_score,
+  "Rayonnements ionisants" as ionizing_radiation_score,
+  "Formation photochimique d'ozone" as photochemical_ozone_formation_score,
+  "Particules fines" as fine_particles_score,
+  "Effets toxicologiques sur la santé humaine : substances non-cancérogènes" as non_carcinogenic_toxicity_score,
+  "Effets toxicologiques sur la santé humaine : substances cancérogènes" as carcinogenic_toxicity_score,
+  "Acidification terrestre et eaux douces" as terrestrial_acidification_score,
+  "Eutrophisation eaux douces" as freshwater_eutrophication_score,
+  "Eutrophisation marine" as marine_eutrophication_score,
+  "Eutrophisation terrestre" as terrestrial_eutrophication_score,
+  "Écotoxicité pour écosystèmes aquatiques d'eau douce" as freshwater_ecotoxicity_score,
+  "Utilisation du sol" as land_use_score,
+  "Épuisement des ressources eau" as water_depletion_score,
+  "Épuisement des ressources énergétiques" as energy_depletion_score,
+  "Épuisement des ressources minéraux" as mineral_depletion_score,
+  "Changement climatique - émissions biogéniques" as biogenic_climate_change_emissions,
+  "Changement climatique - émissions fossiles" as fossil_climate_change_emissions,
+  "Changement climatique - émissions liées au changement d'affectation des sols" as land_use_change_climate_change_emissions
+  FROM read_csv('data/agribalyse_synthese.csv')
+  WHERE agribalyse_food_code IS NOT NULL AND ciqual_food_code IS NOT NULL
+);
+/* Illustration of euro_exchange_rates:
+┌──────────┬─────────┐
+│ currency │  rate   │
+│ varchar  │ double  │
+├──────────┼─────────┤
+│ CHF      │  0.9336 │
+│ NOK      │   11.51 │
+│ SEK      │ 10.8535 │
+└──────────┴─────────┘
+*/
+CREATE OR REPLACE TABLE euro_exchange_rates AS (
+  SELECT currency, rate FROM read_csv('data/euro_exchange_rates/latest.csv')
+);
 /* Illustration of prices:
 ┌───────┬─────────┬───────────────┬──────────────────────┬───┬──────────────────────┬─────────────────┬──────────────────────┬──────────────────────┐
 │  id   │  type   │ product_code  │     product_name     │ … │ location_website_url │ location_source │   location_created   │   location_updated   │

@@ -42,6 +42,14 @@ SELECT * FROM full_tables.calnut_1
 WHERE CONST_CODE in ('10110', '25000') -- Same as CONST_LABEL in ('sodium_mg', 'proteines_g')
 AND ALIM_CODE IN ('20516', '20904');
 
+CREATE OR REPLACE TABLE agribalyse AS
+SELECT * FROM full_tables.agribalyse
+WHERE ciqual_food_code IN ('20516', '20904');
+
+CREATE OR REPLACE TABLE euro_exchange_rates AS
+SELECT * FROM full_tables.euro_exchange_rates
+WHERE currency IN ('EUR', 'CHF', 'SEK', 'NOK');
+
 CREATE OR REPLACE TABLE prices AS
 SELECT * FROM full_tables.prices
 WHERE product_code IN ('3111950001928', '4099200179193');
@@ -68,7 +76,7 @@ def add_table_illustration(table: str, query_path: Path) -> None:
     query_path.write_text(pattern.sub(table_illustration, query))
 
 
-for table in ("ciqual_alim", "ciqual_compo", "calnut_0", "calnut_1", "prices", "products"):
+for table in ("ciqual_alim", "ciqual_compo", "calnut_0", "calnut_1", "agribalyse", "euro_exchange_rates", "prices", "products"):
     add_table_illustration(table, QUERIES_DIR / "load.sql")
 
 process_query_path = QUERIES_DIR / "process.sql"

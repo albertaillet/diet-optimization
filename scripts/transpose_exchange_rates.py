@@ -20,7 +20,7 @@ if __name__ == "__main__":
     EXCHANGE_RATE_OUTPUT_CSV = EXCHANGE_RATE_DIR / f"{date}.csv"
     with EXCHANGE_RATE_OUTPUT_CSV.open("w") as f:
         writer = csv.writer(f)
-        writer.writerow(["Currency", "Rate"])
+        writer.writerow(["currency", "rate"])
         writer.writerows((c.strip(), r.strip()) for c, r in data[0].items() if c.strip() and r.strip())
 
     shutil.copy(EXCHANGE_RATE_OUTPUT_CSV, EXCHANGE_RATE_DIR / "latest.csv")
