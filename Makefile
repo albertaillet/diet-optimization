@@ -64,12 +64,14 @@ nutrient-map-update-ciqual:
 # The reference rates are usually updated at around 16:00 CET every working day.
 # Documentation: https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html
 EXCHANGE_RATES_CSV := data/euro_exchange_rates/latest.csv
-fetch-exchange-rates:
+$(EXCHANGE_RATES_CSV):
 	wget https://www.ecb.europa.eu/stats/eurofxref/eurofxref.zip
 	unzip -o eurofxref.zip -d data/euro_exchange_rates/
 	rm eurofxref.zip
 	./scripts/transpose_exchange_rates.py
-$(EXCHANGE_RATES_CSV): fetch-exchange-rates
+clean-exchange-rate:
+	rm $(EXCHANGE_RATES_CSV)
+fetch-exchange-rates: clean-exchange-rate $(EXCHANGE_RATES_CSV)
 
 # ---------- Fetch the prices and products exports. ----------
 
