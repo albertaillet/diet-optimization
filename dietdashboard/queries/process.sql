@@ -205,7 +205,7 @@ step_6 AS (
     ciq.alim_ssssgrp_code AS ciqual_subsubgroup_code,
     -- Price columns
     pr.id AS price_id,
-    pr.price,
+    pr.price as product_price,
     pr.currency,
     pr.location_id,
     pr.location_osm_id,
@@ -236,7 +236,7 @@ step_6 AS (
     -- pr.location_updated,
     -- DEBUG columns end --
     -- Price per quantity
-    1000 * pr.price / p.product_quantity AS price_per_quantity,  -- TODO: this assumes that the quantity is in grams
+    1000 * pr.price / p.product_quantity AS price,  -- TODO: this assumes that the quantity is in grams
     -- Nutrient columns
     prev.*,
   FROM prices AS pr

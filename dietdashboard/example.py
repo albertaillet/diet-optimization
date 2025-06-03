@@ -18,7 +18,7 @@ QUERIES_DIR = Path(__file__).parent / "queries"
 con = duckdb.connect(":memory:")
 # Attach the explore database with the full data to the in-memory database,
 # Then create a subset of the tables for the example
-con.sql(f"ATTACH DATABASE '{DATA_DIR / 'data.db'}' AS full_tables;")
+con.sql(f"ATTACH DATABASE '{DATA_DIR / 'data.db'}' AS full_tables (READ_ONLY);")
 con.sql("""
 CREATE OR REPLACE TABLE nutrient_map AS
 SELECT * FROM full_tables.nutrient_map

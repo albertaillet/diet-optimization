@@ -4,13 +4,13 @@ product_code,
 product_name,
 ciqual_code,
 ciqual_name,
-price_per_quantity,
+price,
 currency,
 location_osm_display_name,
 location_osm_id,
 -- Convert price to CHF using EUR_TO_CHF = 0.96 TODO: Get this from a table
-CASE WHEN currency = 'EUR' THEN price_per_quantity * 0.96 ELSE price_per_quantity END AS price_chf,
-CASE WHEN currency = 'CHF' THEN price_per_quantity / 0.96 ELSE price_per_quantity END AS price_eur,
+CASE WHEN currency = 'EUR' THEN price * 0.96 ELSE price END AS price_chf,
+CASE WHEN currency = 'CHF' THEN price / 0.96 ELSE price END AS price_eur,
 energy_fibre_kj_value,
 energy_fibre_kcal_value,
 water_value,
@@ -75,7 +75,7 @@ vitamin_b9_value,
 vitamin_b12_value,
 FROM final_table
 WHERE currency IN ('EUR', 'CHF')  -- TODO: Hardcoded currencies for now
-AND price_per_quantity IS NOT NULL
+AND price IS NOT NULL
+AND price > 0
 AND location_id IN (SELECT UNNEST($locations))
-AND price_per_quantity > 0
 AND product_quantity > 0;
