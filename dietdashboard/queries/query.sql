@@ -5,12 +5,8 @@ product_name,
 ciqual_code,
 ciqual_name,
 price,
-currency,
 location_osm_display_name,
 location_osm_id,
--- Convert price to CHF using EUR_TO_CHF = 0.96 TODO: Get this from a table
-CASE WHEN currency = 'EUR' THEN price * 0.96 ELSE price END AS price_chf,
-CASE WHEN currency = 'CHF' THEN price / 0.96 ELSE price END AS price_eur,
 energy_fibre_kj_value,
 energy_fibre_kcal_value,
 water_value,
@@ -74,8 +70,7 @@ vitamin_b6_value,
 vitamin_b9_value,
 vitamin_b12_value,
 FROM final_table
-WHERE currency IN ('EUR', 'CHF')  -- TODO: Hardcoded currencies for now
-AND price IS NOT NULL
-AND price > 0
-AND location_id IN (SELECT UNNEST($locations))
-AND product_quantity > 0;
+WHERE price IS NOT NULL
+  AND price > 0
+  AND location_id IN (SELECT UNNEST($locations))
+  AND product_quantity > 0;

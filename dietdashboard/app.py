@@ -48,14 +48,12 @@ def query_dicts(con: duckdb.DuckDBPyConnection, query: str, **kwargs) -> list[di
     return [{c: r for c, r in zip(cols, row, strict=True)} for row in con.fetchall()]
 
 
-def get_arrays(
-    bounds: dict[str, tuple[float, float]], products_and_prices: dict[str, np.ndarray], currency: str
-) -> tuple[np.ndarray, ...]:
+def get_arrays(bounds: dict[str, tuple[float, float]], products_and_prices: dict[str, np.ndarray]) -> tuple[np.ndarray, ...]:
     # Nutrients of each product
     A_nutrients = np.array([products_and_prices[nutrient_id + "_value"] for nutrient_id in bounds], dtype=np.float32)
 
-    # Costs of each product (* 0.1 to go from price per kg to price per 100g)
-    c_costs = 0.1 * np.array(products_and_prices[f"price_{currency.lower()}"], dtype=np.float32)
+    # Costs of each product
+    c_costs = np.array(products_and_prices["price"], dtype=np.float32)
 
     # Bounds for nutrients
     b = np.array([bounds[nutrient] for nutrient in bounds], dtype=np.float32)
@@ -144,7 +142,7 @@ def create_app() -> Flask:
     @app.route("/optimize.csv", methods=["POST"])
     def optimize():
         data = request.get_json()
-        currency = data["currency"]
+        # currency = data["currency"]
         debug_folder = DEBUG_DIR / f"optimize/{time.strftime('%Y-%m-%d-%H-%M-%S')}-{time.perf_counter_ns()}"
         debug_folder.mkdir(parents=True)
         with (debug_folder / "input.json").open("w+") as f:
@@ -160,7 +158,7 @@ def create_app() -> Flask:
         query_time = time.perf_counter() - start
 
         start = time.perf_counter()
-        A_nutrients, lb, ub, c_costs = get_arrays(chosen_bounds, products_and_prices, currency)
+        A_nutrients, lb, ub, c_costs = get_arrays(chosen_bounds, products_and_prices)
         array_time = time.perf_counter() - start
 
         if A_nutrients.size == 0:

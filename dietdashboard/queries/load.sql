@@ -146,9 +146,10 @@ CREATE OR REPLACE TABLE agribalyse AS (
 │ currency │  rate   │
 │ varchar  │ double  │
 ├──────────┼─────────┤
-│ CHF      │  0.9336 │
-│ NOK      │   11.51 │
-│ SEK      │ 10.8535 │
+│ CHF      │  0.9358 │
+│ EUR      │     1.0 │
+│ NOK      │  11.533 │
+│ SEK      │ 10.9245 │
 └──────────┴─────────┘
 */
 CREATE OR REPLACE TABLE euro_exchange_rates AS (

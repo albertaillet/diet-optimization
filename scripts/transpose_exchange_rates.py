@@ -16,6 +16,7 @@ if __name__ == "__main__":
 
     assert len(data) == 1, "Expected exactly one row in the exchange rates CSV file."
     date = datetime.strptime(data[0].pop("Date"), "%d %B %Y").strftime("%Y-%m-%d")
+    data[0]["EUR"] = "1.0"  # Add EUR as a currency with a rate of 1.0
 
     EXCHANGE_RATE_OUTPUT_CSV = EXCHANGE_RATE_DIR / f"{date}.csv"
     with EXCHANGE_RATE_OUTPUT_CSV.open("w") as f:

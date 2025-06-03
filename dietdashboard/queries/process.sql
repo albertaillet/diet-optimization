@@ -206,7 +206,7 @@ step_6 AS (
     -- Price columns
     pr.id AS price_id,
     pr.price as product_price,
-    pr.currency,
+    pr.currency as product_currency,
     pr.location_id,
     pr.location_osm_id,
     pr.location_osm_display_name,
@@ -235,8 +235,8 @@ step_6 AS (
     -- pr.location_created,
     -- pr.location_updated,
     -- DEBUG columns end --
-    -- Price per quantity
-    1000 * pr.price / p.product_quantity AS price,  -- TODO: this assumes that the quantity is in grams
+    -- Price in EUR per 100g
+    100 * pr.price / p.product_quantity / ex.rate AS price,  -- TODO: this assumes that product_quantity is in grams
     -- Nutrient columns
     prev.*,
   FROM prices AS pr
@@ -244,6 +244,8 @@ step_6 AS (
     ON pr.product_code = prev.code
   JOIN step_1 AS p
     ON pr.product_code = p.code
+  JOIN euro_exchange_rates AS ex
+    ON pr.currency = ex.currency
   LEFT JOIN ciqual_alim AS ciq
     ON prev.ciqual_food_code = ciq.alim_code
   WHERE pr.price IS NOT NULL
