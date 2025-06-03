@@ -95,23 +95,12 @@ function MacroSummary(tableContainer, pieContainer, data) {
 
 /**
  * @param {d3.Selection} parent
- * @param {State} state
+ * @param {Array<Result>} resultData
  */
-export function Result(parent, state) {
-  // If there are no selected locations, do not render the result
-  if (Object.keys(state.locations).length === 0) {
-    parent.html("<h3>No locations selected. Please select at least one location to see results.</h3>");
-    return;
-  }
-  // If there is no result data, do not render the result
-  if (state.resultData.length === 0) {
-    parent.html("<h3>Unfeasible. Please adjust your nutrient targets and locations.</h3>");
-    return;
-  }
-
+export function Result(parent, resultData) {
   parent.html(template);
-  const totalPrice = d3.sum(state.resultData, d => +d.price || 0).toFixed(2);
-  parent.select("#result-price").text(`${totalPrice} ${state.currency}`);
-  ResultTable(parent.select("#result-table"), state.resultData);
-  MacroSummary(parent.select("#macro-table-body"), parent.select("#macro-pie"), state.resultData);
+  const totalPrice = d3.sum(resultData, d => +d.price || 0).toFixed(2);
+  parent.select("#result-price").text(`${totalPrice} EUR`);
+  ResultTable(parent.select("#result-table"), resultData);
+  MacroSummary(parent.select("#macro-table-body"), parent.select("#macro-pie"), resultData);
 }

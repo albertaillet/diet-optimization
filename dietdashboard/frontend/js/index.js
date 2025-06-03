@@ -20,6 +20,7 @@ const restoreState = () => JSON.parse(localStorage.getItem("state"));
  * @param {State} state
  */
 function optimize(state) {
+  const result = select("#result");
   const data = { objective: state.objective, locations: Object.keys(state.locations) };
   state.sliders.forEach(nutrient => {
     if (!nutrient.active) return;
@@ -27,11 +28,15 @@ function optimize(state) {
     data[`${nutrient.id}_upper`] = nutrient.upper;
   });
   fetch("/optimize.csv", { body: JSON.stringify(data), method: "POST", headers: { "Content-Type": "application/json" } })
-    .then(response => response.text())
-    .then(text => csvParse(text, autoType))
-    .then(data => {
-      state.resultData = data;
-      Result(select("#result"), state);
+    .then(response => Promise.all([response.headers.get("Content-Type"), response.text()]))
+    .then(([contentType, text]) => {
+      if (!contentType.includes("text/csv")) {
+        state.resultData = [];
+        result.html(text);
+      } else {
+        state.resultData = csvParse(text, autoType);
+        Result(result, state.resultData);
+      }
       if (state.inputTabs.current === "sliders-tab") {
         SlidersTableBody(select("#slider-table-body"), state.resultData, state.sliders);
       }
@@ -67,11 +72,9 @@ const tabs = [
  */
 function App(state) {
   Tabs(select("#input-tabs"), tabs, state.inputTabs);
-  Result(select("#result"), state);
 }
 // Redraw on resize
 window.addEventListener("resize", () => {
-  Result(select("#result"), state);
   if (state.inputTabs.current === "sliders-tab") {
     SlidersTableBody(select("#slider-table-body"), state.resultData, state.sliders);
   }

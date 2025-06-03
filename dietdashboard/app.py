@@ -155,17 +155,17 @@ def create_app() -> Flask:
         con = get_con()
         valid, message = validate_objective(con, objective)
         if not valid:
-            print(f"Invalid objective function: {message}")
-            return ""
+            return f"Invalid objective function: {message}"
         debug_folder = DEBUG_DIR / f"optimize/{time.strftime('%Y-%m-%d-%H-%M-%S')}-{time.perf_counter_ns()}"
         debug_folder.mkdir(parents=True)
         with (debug_folder / "input.json").open("w+") as f:
             f.write(json.dumps(data, indent=2))
         chosen_bounds = {nid: (data.get(f"{nid}_lower"), data.get(f"{nid}_upper")) for nid in nutrient_ids}
-        locations = [int(loc) for loc in data.get("locations", [154])]  # id: 154, name: Auchan, Rue Lieutenant André Argenton
         if not chosen_bounds:
-            print("No nutrients selected.")
-            return ""
+            return "No nutrients selected."
+        locations = [int(loc) for loc in data["locations"]]  # id: 154, name: Auchan, Rue Lieutenant André Argenton
+        if not locations:
+            return "No locations selected."
 
         start = time.perf_counter()
         products_and_prices = query_numpy(con, QUERY.replace("$objective", objective), locations=locations)
@@ -176,8 +176,7 @@ def create_app() -> Flask:
         array_time = time.perf_counter() - start
 
         if A_nutrients.size == 0:
-            print("No products found.")
-            return ""
+            return "No products found."
 
         start = time.perf_counter()
         result = solve_optimization(A_nutrients, lb, ub, c_costs)
@@ -195,8 +194,7 @@ def create_app() -> Flask:
             )
         )
         if result.status != 0:
-            print(f"Optimization failed: {result.message}")
-            return ""
+            return f"Optimization failed: {result.message}"
 
         # Calculate nutrient levels
         nutrients_levels = A_nutrients * result.x
@@ -245,7 +243,7 @@ def create_app() -> Flask:
     def info(price_id: str) -> str:
         row_dicts = query_dicts(get_con(), """SELECT * FROM data.final_table WHERE price_id = $price_id""", price_id=price_id)
         if len(row_dicts) == 0:
-            return "<h1>Not found</h1>"
+            return "<h1>No product found</h1>"
         return render_template("info.html", item=row_dicts[0])
 
     # serve all static files TODO: do this in a better way
