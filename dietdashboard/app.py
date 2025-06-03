@@ -102,11 +102,13 @@ def create_csv(fieldnames: list[str], data: Iterable[dict[str, str]]) -> str:
     return output.getvalue()
 
 
-def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
+def create_app() -> Flask:
     app = Flask(__name__)
     app.config["COMPRESS_MIMETYPES"] = ["text/html", "text/css", "text/javascript", "text/csv", "text/plain"]
     Compress(app)
     app.template_folder = TEMPLATE_FOLDER
+
+    con = duckdb.connect(DATA_DIR / "data.db", read_only=True)
 
     recommendations = query_dicts(con, """SELECT * FROM recommendations""")
     nutrient_ids = [row["id"] for row in recommendations]
@@ -226,7 +228,6 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
             FROM final_table
             GROUP BY location_id, location_osm_lat, location_osm_lon, location_osm_display_name"""
         locations = query_dicts(con=con, query=query)
-        print(len(locations), "locations found")
         fieldnames = ["id", "lat", "lon", "name", "count"]
         colnames = ["location_id", "location_osm_lat", "location_osm_lon", "location_osm_display_name", "count"]
         data = ({f: loc[c] for f, c in zip(fieldnames, colnames, strict=True)} for loc in locations)
@@ -239,8 +240,6 @@ def create_app(con: duckdb.DuckDBPyConnection) -> Flask:
     return app
 
 
-con = duckdb.connect(DATA_DIR / "data.db", read_only=True)
-app = create_app(con)
-
 if __name__ == "__main__":
+    app = create_app()
     app.run(debug=True, host="localhost", port=8000)

@@ -170,13 +170,13 @@ run-dev:
 	wait
 
 run-gunicorn: frontend-install frontend-bundle
-	nohup uv run gunicorn -w 4 -b 0.0.0.0:8000 dietdashboard.app:app >> gunicorn.log 2>&1 &
+	nohup uv run gunicorn -w 4 -b 0.0.0.0:8000 'dietdashboard.app:create_app()' >> gunicorn.log 2>&1 &
 
 list-gunicorn:
-	pgrep -af "dietdashboard.app:app"
+	pgrep -af "dietdashboard.app"
 
 kill-gunicorn:
-	pkill -f "dietdashboard.app:app"
+	pkill -f "dietdashboard.app"
 
 # ---------- Frontend utilities. ----------
 
