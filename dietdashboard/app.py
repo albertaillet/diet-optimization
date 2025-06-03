@@ -38,6 +38,11 @@ CACHE_TIMEOUT = 60 * 10  # 10 minutes
 SQL_ERROR_COL_REF_REGEX = re.compile(r"Binder Error: Referenced column \"([a-zA-Z_]+)\" not found in FROM clause!")
 
 
+def get_con() -> duckdb.DuckDBPyConnection:
+    """Get a connection to the DuckDB database."""
+    return duckdb.connect(DATA_DIR / "data.db", read_only=True)
+
+
 def validate_objective(con: duckdb.DuckDBPyConnection, objective_string: str) -> tuple[bool, str]:
     """Validate the objective function expression."""
     valid, _ = validate_objective_str(objective_string)
@@ -128,10 +133,7 @@ def create_app() -> Flask:
     app.config["COMPRESS_MIMETYPES"] = ["text/html", "text/css", "text/javascript", "text/csv", "text/plain"]
     Compress(app)
     app.template_folder = TEMPLATE_FOLDER
-
-    con = duckdb.connect(DATA_DIR / "data.db", read_only=True)
-
-    recommendations = query_dicts(con, """SELECT * FROM recommendations""")
+    recommendations = query_dicts(con=get_con(), query="""SELECT * FROM recommendations""")
     nutrient_ids = [row["id"] for row in recommendations]
     sliders = [{k: rec[k] for k in ("id", "name", "unit", "nutrient_type")} | create_rangeslider(rec) for rec in recommendations]
     slider_csv = create_csv(["id", "name", "unit", "nutrient_type", "min", "max", "lower", "upper", "active"], sliders)  # type: ignore[reportArgumentType]
@@ -143,13 +145,14 @@ def create_app() -> Flask:
     @app.route("/validate_objective/<objective_string>", methods=["GET"])
     def validate(objective_string: str):
         """Validate the objective function expression."""
-        valid, message = validate_objective(con, unquote(objective_string))  # unquote to decode URL-encoded characters
+        valid, message = validate_objective(get_con(), unquote(objective_string))  # unquote to decode URL-encoded characters
         return app.json.response({"valid": valid, "message": message})
 
     @app.route("/optimize.csv", methods=["POST"])
     def optimize():
         data = request.get_json()
         objective = data["objective"]
+        con = get_con()
         valid, message = validate_objective(con, objective)
         if not valid:
             print(f"Invalid objective function: {message}")
@@ -240,7 +243,7 @@ def create_app() -> Flask:
 
     @app.route("/info/<price_id>", methods=["GET"])
     def info(price_id: str) -> str:
-        row_dicts = query_dicts(con, """SELECT * FROM data.final_table WHERE price_id = $price_id""", price_id=price_id)
+        row_dicts = query_dicts(get_con(), """SELECT * FROM data.final_table WHERE price_id = $price_id""", price_id=price_id)
         if len(row_dicts) == 0:
             return "<h1>Not found</h1>"
         return render_template("info.html", item=row_dicts[0])
@@ -253,12 +256,11 @@ def create_app() -> Flask:
     @app.route("/locations.csv", methods=["GET"])
     def locations():
         """Return a CSV of the locations within the given tile."""
-        con = duckdb.connect(DATA_DIR / "data.db", read_only=True)
         query = """SELECT DISTINCT ON (location_id)
             location_id, location_osm_lat, location_osm_lon, location_osm_display_name, COUNT(*) AS count
             FROM final_table
             GROUP BY location_id, location_osm_lat, location_osm_lon, location_osm_display_name"""
-        locations = query_dicts(con=con, query=query)
+        locations = query_dicts(con=get_con(), query=query)
         fieldnames = ["id", "lat", "lon", "name", "count"]
         colnames = ["location_id", "location_osm_lat", "location_osm_lon", "location_osm_display_name", "count"]
         data = ({f: loc[c] for f, c in zip(fieldnames, colnames, strict=True)} for loc in locations)
