@@ -53,7 +53,7 @@ def get_arrays(bounds: dict[str, tuple[float, float]], products_and_prices: dict
     A_nutrients = np.array([products_and_prices[nutrient_id + "_value"] for nutrient_id in bounds], dtype=np.float32)
 
     # Costs of each product
-    c_costs = np.array(products_and_prices["price"], dtype=np.float32)
+    c_costs = np.array(products_and_prices["objective"], dtype=np.float32)
 
     # Bounds for nutrients
     b = np.array([bounds[nutrient] for nutrient in bounds], dtype=np.float32)
@@ -131,7 +131,11 @@ def create_app() -> Flask:
         if not valid:
             return json.dumps({"valid": False, "message": "Invalid expression."})
         try:
-            con.execute(f"SELECT {objective_string} from final_table LIMIT 1")  # TODO: check that the colums are numeric
+            # Checks that the column exists and that it is a numeric (https://duckdb.org/docs/stable/sql/data_types/numeric.html)
+            out = con.sql(f"""SELECT column_name FROM (DESCRIBE (SELECT {objective_string} from final_table))
+                     WHERE column_type NOT IN ('DECIMAL', 'FLOAT', 'DOUBLE', 'REAL');""").fetchone()
+            if out:
+                return json.dumps({"valid": False, "message": f"Variable {out[0]} is not numeric."})
         except duckdb.BinderException as e:
             if match := SQL_ERROR_COL_REF_REGEX.match(str(e)):
                 return json.dumps({"valid": False, "message": f"Variable '{match.group(1)}' not found."})
@@ -142,7 +146,7 @@ def create_app() -> Flask:
     @app.route("/optimize.csv", methods=["POST"])
     def optimize():
         data = request.get_json()
-        # currency = data["currency"]
+        objective = data["objective"]  # TODO: validate objective again!
         debug_folder = DEBUG_DIR / f"optimize/{time.strftime('%Y-%m-%d-%H-%M-%S')}-{time.perf_counter_ns()}"
         debug_folder.mkdir(parents=True)
         with (debug_folder / "input.json").open("w+") as f:
@@ -154,7 +158,7 @@ def create_app() -> Flask:
             return ""
 
         start = time.perf_counter()
-        products_and_prices = query_numpy(con, QUERY, locations=locations)
+        products_and_prices = query_numpy(con, QUERY.replace("$objective", objective), locations=locations)
         query_time = time.perf_counter() - start
 
         start = time.perf_counter()
@@ -217,7 +221,7 @@ def create_app() -> Flask:
                 "location": location,
                 "location_osm_id": products_and_prices["location_osm_id"][i],
                 "quantity_g": round(100 * x[i], 1),  # type: ignore
-                "price": round(c_costs[i] * x[i], 2),  # type: ignore
+                "price": round(c_costs[i] * x[i], 2),  # type: ignore  # TODO: this is not true anymore.
                 **{nutrient_id: nutrients_levels[j, i].round(4) for j, nutrient_id in enumerate(chosen_bounds)},
             }
             optimal_products.append(product)

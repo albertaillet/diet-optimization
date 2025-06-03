@@ -1,4 +1,5 @@
 SELECT
+$objective as objective,
 price_id,
 product_code,
 product_name,
