@@ -38,6 +38,24 @@ CACHE_TIMEOUT = 60 * 10  # 10 minutes
 SQL_ERROR_COL_REF_REGEX = re.compile(r"Binder Error: Referenced column \"([a-zA-Z_]+)\" not found in FROM clause!")
 
 
+def validate_objective(con: duckdb.DuckDBPyConnection, objective_string: str) -> tuple[bool, str]:
+    """Validate the objective function expression."""
+    valid, _ = validate_objective_str(objective_string)
+    if not valid:
+        return False, "Invalid objective function syntax."
+    try:
+        # Checks that the column exists and that it is a numeric (https://duckdb.org/docs/stable/sql/data_types/numeric.html)
+        out = con.sql(f"""SELECT column_name FROM (DESCRIBE (SELECT {objective_string} from final_table))
+                    WHERE column_type NOT IN ('DECIMAL', 'FLOAT', 'DOUBLE', 'REAL');""").fetchone()
+        if out:
+            return False, f"Variable {out[0]} is not numeric."
+    except duckdb.BinderException as e:
+        if match := SQL_ERROR_COL_REF_REGEX.match(str(e)):
+            return False, f"Variable '{match.group(1)}' not found."
+        return False, "SQL error"
+    return valid, "Valid objective function."
+
+
 def query_numpy(con: duckdb.DuckDBPyConnection, query: str, **kwargs) -> dict[str, np.ndarray]:
     return con.execute(query, parameters=kwargs).fetchnumpy()
 
@@ -123,30 +141,19 @@ def create_app() -> Flask:
         return render_template("dashboard.html", slider_csv=slider_csv, currencies=POSSIBLE_CURRENCIES)
 
     @app.route("/validate_objective/<objective_string>", methods=["GET"])
-    def validate(objective_string: str) -> str:
+    def validate(objective_string: str):
         """Validate the objective function expression."""
-        objective_string = unquote(objective_string)  # unquote to decode URL-encoded characters
-        print(f"Validating expression: {objective_string}")
-        valid, _ = validate_objective_str(objective_string)
-        if not valid:
-            return json.dumps({"valid": False, "message": "Invalid expression."})
-        try:
-            # Checks that the column exists and that it is a numeric (https://duckdb.org/docs/stable/sql/data_types/numeric.html)
-            out = con.sql(f"""SELECT column_name FROM (DESCRIBE (SELECT {objective_string} from final_table))
-                     WHERE column_type NOT IN ('DECIMAL', 'FLOAT', 'DOUBLE', 'REAL');""").fetchone()
-            if out:
-                return json.dumps({"valid": False, "message": f"Variable {out[0]} is not numeric."})
-        except duckdb.BinderException as e:
-            if match := SQL_ERROR_COL_REF_REGEX.match(str(e)):
-                return json.dumps({"valid": False, "message": f"Variable '{match.group(1)}' not found."})
-            print(f"SQL error: {e}")
-            return json.dumps({"valid": False, "message": "SQL error"})
-        return json.dumps({"valid": valid, "message": "Valid expression."})
+        valid, message = validate_objective(con, unquote(objective_string))  # unquote to decode URL-encoded characters
+        return app.json.response({"valid": valid, "message": message})
 
     @app.route("/optimize.csv", methods=["POST"])
     def optimize():
         data = request.get_json()
-        objective = data["objective"]  # TODO: validate objective again!
+        objective = data["objective"]
+        valid, message = validate_objective(con, objective)
+        if not valid:
+            print(f"Invalid objective function: {message}")
+            return ""
         debug_folder = DEBUG_DIR / f"optimize/{time.strftime('%Y-%m-%d-%H-%M-%S')}-{time.perf_counter_ns()}"
         debug_folder.mkdir(parents=True)
         with (debug_folder / "input.json").open("w+") as f:
