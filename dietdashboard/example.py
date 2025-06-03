@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run --extra sql
+#!/usr/bin/env -S uv run
 # type: ignore[reportOptionalMemberAccess]
 """This script creates a subset of the data and prints the intermediate tables for debugging."""
 

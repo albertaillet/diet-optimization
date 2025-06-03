@@ -257,6 +257,7 @@ dependencies = [
     { name = "flask-compress" },
     { name = "gunicorn" },
     { name = "scipy" },
+    { name = "sqlglot" },
 ]
 
 [package.optional-dependencies]
@@ -266,9 +267,6 @@ benchmark = [
     { name = "highspy" },
     { name = "mosek" },
     { name = "pyscipopt" },
-]
-sql = [
-    { name = "sqlglot" },
 ]
 
 [package.dev-dependencies]
@@ -291,9 +289,9 @@ requires-dist = [
     { name = "mosek", marker = "extra == 'benchmark'", specifier = ">=11.0.11" },
     { name = "pyscipopt", marker = "extra == 'benchmark'", specifier = ">=5.4.1" },
     { name = "scipy" },
-    { name = "sqlglot", marker = "extra == 'sql'" },
+    { name = "sqlglot" },
 ]
-provides-extras = ["sql", "benchmark"]
+provides-extras = ["benchmark"]
 
 [package.metadata.requires-dev]
 dev = [

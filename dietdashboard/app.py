@@ -13,15 +13,19 @@ import io
 import json
 import math
 import os
+import re
 import time
 from collections.abc import Iterable
 from pathlib import Path
+from urllib.parse import unquote
 
 import duckdb
 import numpy as np
 from flask import Flask, make_response, render_template, request
 from flask_compress import Compress
 from scipy.optimize import linprog
+
+from dietdashboard.objective import validate_objective_str
 
 DEBUG_DIR = Path(__file__).parent.parent / "tmp"
 DATA_DIR = Path(__file__).parent.parent / "data"
@@ -31,6 +35,7 @@ TEMPLATE_FOLDER = Path(__file__).parent / "frontend/html"
 QUERY = (Path(__file__).parent / "queries/query.sql").read_text()
 LP_METHOD = "revised simplex"
 CACHE_TIMEOUT = 60 * 10  # 10 minutes
+SQL_ERROR_COL_REF_REGEX = re.compile(r"Binder Error: Referenced column \"([a-zA-Z_]+)\" not found in FROM clause!")
 
 
 def query_numpy(con: duckdb.DuckDBPyConnection, query: str, **kwargs) -> dict[str, np.ndarray]:
@@ -118,6 +123,23 @@ def create_app() -> Flask:
     @app.route("/")
     def index():
         return render_template("dashboard.html", slider_csv=slider_csv, currencies=POSSIBLE_CURRENCIES)
+
+    @app.route("/validate_objective/<objective_string>", methods=["GET"])
+    def validate(objective_string: str) -> str:
+        """Validate the objective function expression."""
+        objective_string = unquote(objective_string)  # unquote to decode URL-encoded characters
+        print(f"Validating expression: {objective_string}")
+        valid, _ = validate_objective_str(objective_string)
+        if not valid:
+            return json.dumps({"valid": False, "message": "Invalid expression."})
+        try:
+            con.execute(f"SELECT {objective_string} from final_table LIMIT 1")  # TODO: check that the colums are numeric
+        except duckdb.BinderException as e:
+            if match := SQL_ERROR_COL_REF_REGEX.match(str(e)):
+                return json.dumps({"valid": False, "message": f"Variable '{match.group(1)}' not found."})
+            print(f"SQL error: {e}")
+            return json.dumps({"valid": False, "message": "SQL error"})
+        return json.dumps({"valid": valid, "message": "Valid expression."})
 
     @app.route("/optimize.csv", methods=["POST"])
     def optimize():

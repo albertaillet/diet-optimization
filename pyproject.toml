@@ -3,10 +3,17 @@ name = "diet-optimization"
 version = "0.0.0"
 readme = "README.md"
 requires-python = "~=3.11"
-dependencies = ["scipy", "flask", "certifi", "duckdb", "gunicorn", "flask_compress"]
+dependencies = [
+    "certifi",
+    "duckdb",
+    "flask",
+    "flask_compress",
+    "gunicorn",
+    "scipy",
+    "sqlglot",
+]
 
 [project.optional-dependencies]
-sql = ["sqlglot"]
 benchmark = [
     "cvxopt>=1.3.2",
     "cvxpy>=1.6.3",
@@ -55,10 +62,6 @@ select = [
     "PERF", # perflint
     "FURB", # refurb
     "RUF",  # ruff-specific rules
-]
-ignore = [
-    "E731",  # Allow named lambdas
-    "FURB140",  # Allow list comprehensions
 ]
 
 [tool.pyright]

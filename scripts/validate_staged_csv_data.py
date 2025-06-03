@@ -5,6 +5,8 @@ import csv
 import sys
 from pathlib import Path
 
+from dietdashboard.objective import test_valid
+
 DATA_DIR = Path(__file__).parent.parent / "data"
 CIQUAL_CONST_PATH = DATA_DIR / "ciqual2020/const.csv"
 CALNUT_1_PATH = DATA_DIR / "calnut.1.csv"
@@ -115,5 +117,7 @@ if __name__ == "__main__":
                     validate_recommendations_macro(reader)
                 case "recommendations_nnr2023":
                     validate_recommendations_nnr2023(reader)
+                case "test_objectives":
+                    test_valid(reader)
                 case _:
                     raise ValueError(f"Unknown staged csv file {file_path}.")
