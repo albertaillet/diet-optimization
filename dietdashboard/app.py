@@ -227,8 +227,8 @@ def create_app() -> Flask:
                 "ciqual_code": products_and_prices["ciqual_code"][i],
                 "location": location,
                 "location_osm_id": products_and_prices["location_osm_id"][i],
-                "quantity_g": round(100 * x[i], 1),  # type: ignore
-                "price": round(c_costs[i] * x[i], 2),  # type: ignore  # TODO: this is not true anymore.
+                "quantity_g": round(100 * x[i], 1),
+                "price": round(products_and_prices["price"][i] * x[i], 2),
                 **{nutrient_id: nutrients_levels[j, i].round(4) for j, nutrient_id in enumerate(chosen_bounds)},
             }
             optimal_products.append(product)
