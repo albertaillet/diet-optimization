@@ -199,8 +199,5 @@ frontend-copy:
 
 # ---------- Create the nutrient extraction template. ----------
 
-template-nutriments:
-	./scripts/template_nutriments_query.py
-
-template-main:
-	duckdb data/data.db "SELECT id FROM nutrient_map WHERE calnut_const_code IS NOT NULL" -csv -noheader | sed "s/$$/_value,/"
+template-rename:
+	duckdb data/data.db "SELECT id FROM nutrient_map WHERE calnut_const_code IS NOT NULL" -csv -noheader | awk '{print $$0 "_value AS " $$0 ","}'

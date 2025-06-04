@@ -79,9 +79,9 @@
 
       <div
         id="pie"
-        data-protein="{{ item.protein_value|round(3) }}"
-        data-carbohydrate="{{ item.carbohydrate_value|round(3) }}"
-        data-fat="{{ item.fat_value|round(3) }}"
+        data-protein="{{ item.protein|round(3) }}"
+        data-carbohydrate="{{ item.carbohydrate|round(3) }}"
+        data-fat="{{ item.fat|round(3) }}"
       ></div>
 
       <!-- Nutrients Table -->
@@ -100,12 +100,12 @@
           </tr>
           <tr>
             <td>Energy (kJ)</td>
-            <td>{{ item.energy_fibre_kj_value }} {{ item.energy_fibre_kj_unit }}</td>
+            <td>{{ item.energy_fibre_kj }} {{ item.energy_fibre_kj_unit }}</td>
             <td>{{ item.energy_fibre_kj_origin }}</td>
           </tr>
           <tr>
             <td>Energy (kcal)</td>
-            <td>{{ item.energy_fibre_kcal_value }} {{ item.energy_fibre_kcal_unit }}</td>
+            <td>{{ item.energy_fibre_kcal }} {{ item.energy_fibre_kcal_unit }}</td>
             <td>{{ item.energy_fibre_kcal_origin }}</td>
           </tr>
           <!-- Macronutrients -->
@@ -114,67 +114,67 @@
           </tr>
           <tr>
             <td>Protein</td>
-            <td>{{ item.protein_value|round(3) }} {{ item.protein_unit }}</td>
+            <td>{{ item.protein|round(3) }} {{ item.protein_unit }}</td>
             <td>{{ item.protein_origin }}</td>
           </tr>
           <tr>
             <td>Carbohydrates</td>
-            <td>{{ item.carbohydrate_value|round(3) }} {{ item.carbohydrate_unit }}</td>
+            <td>{{ item.carbohydrate|round(3) }} {{ item.carbohydrate_unit }}</td>
             <td>{{ item.carbohydrate_origin }}</td>
           </tr>
           <tr>
             <td>Sugars</td>
-            <td>{{ item.sugars_value|round(3) }} {{ item.sugars_unit }}</td>
+            <td>{{ item.sugars|round(3) }} {{ item.sugars_unit }}</td>
             <td>{{ item.sugars_origin }}</td>
           </tr>
           <tr>
             <td>Fiber</td>
-            <td>{{ item.fiber_value|round(3) }} {{ item.fiber_unit }}</td>
+            <td>{{ item.fiber|round(3) }} {{ item.fiber_unit }}</td>
             <td>{{ item.fiber_origin }}</td>
           </tr>
           <tr>
             <td>Total Fat</td>
-            <td>{{ item.fat_value|round(3) }} {{ item.fat_unit }}</td>
+            <td>{{ item.fat|round(3) }} {{ item.fat_unit }}</td>
             <td>{{ item.fat_origin }}</td>
           </tr>
           <tr>
             <td>Saturated Fat</td>
-            <td>{{ item.saturated_fat_value|round(3) }} {{ item.saturated_fat_unit }}</td>
+            <td>{{ item.saturated_fat|round(3) }} {{ item.saturated_fat_unit }}</td>
             <td>{{ item.saturated_fat_origin }}</td>
           </tr>
           <tr>
             <td>Monounsaturated Fat</td>
-            <td>{{ item.monounsaturated_fat_value|round(3) }} {{ item.monounsaturated_fat_unit }}</td>
+            <td>{{ item.monounsaturated_fat|round(3) }} {{ item.monounsaturated_fat_unit }}</td>
             <td>{{ item.monounsaturated_fat_origin }}</td>
           </tr>
           <tr>
             <td>Polyunsaturated Fat</td>
-            <td>{{ item.polyunsaturated_fat_value|round(3) }} {{ item.polyunsaturated_fat_unit }}</td>
+            <td>{{ item.polyunsaturated_fat|round(3) }} {{ item.polyunsaturated_fat_unit }}</td>
             <td>{{ item.polyunsaturated_fat_origin }}</td>
           </tr>
           <tr>
             <td>Cholesterol</td>
-            <td>{{ item.cholesterol_value|round(3) }} {{ item.cholesterol_unit }}</td>
+            <td>{{ item.cholesterol|round(3) }} {{ item.cholesterol_unit }}</td>
             <td>{{ item.cholesterol_origin }}</td>
           </tr>
           <tr>
             <td>Salt</td>
-            <td>{{ item.salt_value|round(3) }} {{ item.salt_unit }}</td>
+            <td>{{ item.salt|round(3) }} {{ item.salt_unit }}</td>
             <td>{{ item.salt_origin }}</td>
           </tr>
           <tr>
             <td>Polyols</td>
-            <td>{{ item.polyols_value|round(3) }} {{ item.polyols_unit }}</td>
+            <td>{{ item.polyols|round(3) }} {{ item.polyols_unit }}</td>
             <td>{{ item.polyols_origin }}</td>
           </tr>
           <tr>
             <td>Alcohol</td>
-            <td>{{ item.alcohol_value|round(3) }} {{ item.alcohol_unit }}</td>
+            <td>{{ item.alcohol|round(3) }} {{ item.alcohol_unit }}</td>
             <td>{{ item.alcohol_origin }}</td>
           </tr>
           <tr>
             <td>Organic Acids</td>
-            <td>{{ item.organic_acids_value|round(3) }} {{ item.organic_acids_unit }}</td>
+            <td>{{ item.organic_acids|round(3) }} {{ item.organic_acids_unit }}</td>
             <td>{{ item.organic_acids_origin }}</td>
           </tr>
           <!-- Sugares -->
@@ -183,37 +183,37 @@
           </tr>
           <tr>
             <td>Fructose</td>
-            <td>{{ item.fructose_value|round(3) }} {{ item.fructose_unit }}</td>
+            <td>{{ item.fructose|round(3) }} {{ item.fructose_unit }}</td>
             <td>{{ item.fructose_origin }}</td>
           </tr>
           <tr>
             <td>Galactose</td>
-            <td>{{ item.galactose_value|round(3) }} {{ item.galactose_unit }}</td>
+            <td>{{ item.galactose|round(3) }} {{ item.galactose_unit }}</td>
             <td>{{ item.galactose_origin }}</td>
           </tr>
           <tr>
             <td>Glucose</td>
-            <td>{{ item.glucose_value|round(3) }} {{ item.glucose_unit }}</td>
+            <td>{{ item.glucose|round(3) }} {{ item.glucose_unit }}</td>
             <td>{{ item.glucose_origin }}</td>
           </tr>
           <tr>
             <td>Lactose</td>
-            <td>{{ item.lactose_value|round(3) }} {{ item.lactose_unit }}</td>
+            <td>{{ item.lactose|round(3) }} {{ item.lactose_unit }}</td>
             <td>{{ item.lactose_origin }}</td>
           </tr>
           <tr>
             <td>Maltose</td>
-            <td>{{ item.maltose_value|round(3) }} {{ item.maltose_unit }}</td>
+            <td>{{ item.maltose|round(3) }} {{ item.maltose_unit }}</td>
             <td>{{ item.maltose_origin }}</td>
           </tr>
           <tr>
             <td>Sucrose</td>
-            <td>{{ item.sucrose_value|round(3) }} {{ item.sucrose_unit }}</td>
+            <td>{{ item.sucrose|round(3) }} {{ item.sucrose_unit }}</td>
             <td>{{ item.sucrose_origin }}</td>
           </tr>
           <tr>
             <td>Starch</td>
-            <td>{{ item.starch_value|round(3) }} {{ item.starch_unit }}</td>
+            <td>{{ item.starch|round(3) }} {{ item.starch_unit }}</td>
             <td>{{ item.starch_origin }}</td>
           </tr>
           <!-- Water -->
@@ -222,7 +222,7 @@
           </tr>
           <tr>
             <td>Water</td>
-            <td>{{ item.water_value|round(3) }} {{ item.water_unit }}</td>
+            <td>{{ item.water|round(3) }} {{ item.water_unit }}</td>
             <td>{{ item.water_origin }}</td>
           </tr>
           <!-- Fatty Acid Breakdown -->
@@ -231,72 +231,72 @@
           </tr>
           <tr>
             <td>4:0</td>
-            <td>{{ item.fa_04_0_value|round(3) }} {{ item.fa_04_0_unit }}</td>
+            <td>{{ item.fa_04_0|round(3) }} {{ item.fa_04_0_unit }}</td>
             <td>{{ item.fa_04_0_origin }}</td>
           </tr>
           <tr>
             <td>6:0</td>
-            <td>{{ item.fa_06_0_value|round(3) }} {{ item.fa_06_0_unit }}</td>
+            <td>{{ item.fa_06_0|round(3) }} {{ item.fa_06_0_unit }}</td>
             <td>{{ item.fa_06_0_origin }}</td>
           </tr>
           <tr>
             <td>8:0</td>
-            <td>{{ item.fa_08_0_value|round(3) }} {{ item.fa_08_0_unit }}</td>
+            <td>{{ item.fa_08_0|round(3) }} {{ item.fa_08_0_unit }}</td>
             <td>{{ item.fa_08_0_origin }}</td>
           </tr>
           <tr>
             <td>10:0</td>
-            <td>{{ item.fa_10_0_value|round(3) }} {{ item.fa_10_0_unit }}</td>
+            <td>{{ item.fa_10_0|round(3) }} {{ item.fa_10_0_unit }}</td>
             <td>{{ item.fa_10_0_origin }}</td>
           </tr>
           <tr>
             <td>12:0</td>
-            <td>{{ item.fa_12_0_value|round(3) }} {{ item.fa_12_0_unit }}</td>
+            <td>{{ item.fa_12_0|round(3) }} {{ item.fa_12_0_unit }}</td>
             <td>{{ item.fa_12_0_origin }}</td>
           </tr>
           <tr>
             <td>14:0</td>
-            <td>{{ item.fa_14_0_value|round(3) }} {{ item.fa_14_0_unit }}</td>
+            <td>{{ item.fa_14_0|round(3) }} {{ item.fa_14_0_unit }}</td>
             <td>{{ item.fa_14_0_origin }}</td>
           </tr>
           <tr>
             <td>16:0</td>
-            <td>{{ item.fa_16_0_value|round(3) }} {{ item.fa_16_0_unit }}</td>
+            <td>{{ item.fa_16_0|round(3) }} {{ item.fa_16_0_unit }}</td>
             <td>{{ item.fa_16_0_origin }}</td>
           </tr>
           <tr>
             <td>18:0</td>
-            <td>{{ item.fa_18_0_value|round(3) }} {{ item.fa_18_0_unit }}</td>
+            <td>{{ item.fa_18_0|round(3) }} {{ item.fa_18_0_unit }}</td>
             <td>{{ item.fa_18_0_origin }}</td>
           </tr>
           <tr>
             <td>18:1 (Oleic)</td>
-            <td>{{ item.fa_18_1_ole_value|round(3) }} {{ item.fa_18_1_ole_unit }}</td>
+            <td>{{ item.fa_18_1_ole|round(3) }} {{ item.fa_18_1_ole_unit }}</td>
             <td>{{ item.fa_18_1_ole_origin }}</td>
           </tr>
           <tr>
             <td>18:2 (Linoleic)</td>
-            <td>{{ item.fa_18_2_lino_value|round(3) }} {{ item.fa_18_2_lino_unit }}</td>
+            <td>{{ item.fa_18_2_lino|round(3) }} {{ item.fa_18_2_lino_unit }}</td>
             <td>{{ item.fa_18_2_lino_origin }}</td>
           </tr>
           <tr>
             <td>18:3 (Alpha-Linolenic)</td>
-            <td>{{ item.fa_18_3_a_lino_value|round(3) }} {{ item.fa_18_3_a_lino_unit }}</td>
+            <td>{{ item.fa_18_3_a_lino|round(3) }} {{ item.fa_18_3_a_lino_unit }}</td>
             <td>{{ item.fa_18_3_a_lino_origin }}</td>
           </tr>
           <tr>
             <td>20:4 (Arachidonic)</td>
-            <td>{{ item.fa_20_4_ara_value|round(3) }} {{ item.fa_20_4_ara_unit }}</td>
+            <td>{{ item.fa_20_4_ara|round(3) }} {{ item.fa_20_4_ara_unit }}</td>
             <td>{{ item.fa_20_4_ara_origin }}</td>
           </tr>
           <tr>
             <td>20:5 (EPA)</td>
-            <td>{{ item.fa_20_5_epa_value|round(3) }} {{ item.fa_20_5_epa_unit }}</td>
+            <td>{{ item.fa_20_5_epa|round(3) }} {{ item.fa_20_5_epa_unit }}</td>
             <td>{{ item.fa_20_5_epa_origin }}</td>
           </tr>
           <tr>
             <td>20:6 (DHA)</td>
-            <td>{{ item.fa_20_6_dha_value|round(3) }} {{ item.fa_20_6_dha_unit }}</td>
+            <td>{{ item.fa_20_6_dha|round(3) }} {{ item.fa_20_6_dha_unit }}</td>
             <td>{{ item.fa_20_6_dha_origin }}</td>
           </tr>
           <!-- Minerals -->
@@ -305,57 +305,57 @@
           </tr>
           <tr>
             <td>Calcium</td>
-            <td>{{ item.calcium_value|round(3) }} {{ item.calcium_unit }}</td>
+            <td>{{ item.calcium|round(3) }} {{ item.calcium_unit }}</td>
             <td>{{ item.calcium_origin }}</td>
           </tr>
           <tr>
             <td>Copper</td>
-            <td>{{ item.copper_value|round(5) }} {{ item.copper_unit }}</td>
+            <td>{{ item.copper|round(5) }} {{ item.copper_unit }}</td>
             <td>{{ item.copper_origin }}</td>
           </tr>
           <tr>
             <td>Iron</td>
-            <td>{{ item.iron_value|round(5) }} {{ item.iron_unit }}</td>
+            <td>{{ item.iron|round(5) }} {{ item.iron_unit }}</td>
             <td>{{ item.iron_origin }}</td>
           </tr>
           <tr>
             <td>Iodine</td>
-            <td>{{ item.iodine_value|round(3) }} {{ item.iodine_unit }}</td>
+            <td>{{ item.iodine|round(3) }} {{ item.iodine_unit }}</td>
             <td>{{ item.iodine_origin }}</td>
           </tr>
           <tr>
             <td>Magnesium</td>
-            <td>{{ item.magnesium_value|round(3) }} {{ item.magnesium_unit }}</td>
+            <td>{{ item.magnesium|round(3) }} {{ item.magnesium_unit }}</td>
             <td>{{ item.magnesium_origin }}</td>
           </tr>
           <tr>
             <td>Manganese</td>
-            <td>{{ item.manganese_value|round(5) }} {{ item.manganese_unit }}</td>
+            <td>{{ item.manganese|round(5) }} {{ item.manganese_unit }}</td>
             <td>{{ item.manganese_origin }}</td>
           </tr>
           <tr>
             <td>Phosphorus</td>
-            <td>{{ item.phosphorus_value|round(3) }} {{ item.phosphorus_unit }}</td>
+            <td>{{ item.phosphorus|round(3) }} {{ item.phosphorus_unit }}</td>
             <td>{{ item.phosphorus_origin }}</td>
           </tr>
           <tr>
             <td>Potassium</td>
-            <td>{{ item.potassium_value|round(3) }} {{ item.potassium_unit }}</td>
+            <td>{{ item.potassium|round(3) }} {{ item.potassium_unit }}</td>
             <td>{{ item.potassium_origin }}</td>
           </tr>
           <tr>
             <td>Selenium</td>
-            <td>{{ item.selenium_value|round(3) }} {{ item.selenium_unit }}</td>
+            <td>{{ item.selenium|round(3) }} {{ item.selenium_unit }}</td>
             <td>{{ item.selenium_origin }}</td>
           </tr>
           <tr>
             <td>Sodium</td>
-            <td>{{ item.sodium_value|round(3) }} {{ item.sodium_unit }}</td>
+            <td>{{ item.sodium|round(3) }} {{ item.sodium_unit }}</td>
             <td>{{ item.sodium_origin }}</td>
           </tr>
           <tr>
             <td>Zinc</td>
-            <td>{{ item.zinc_value|round(3) }} {{ item.zinc_unit }}</td>
+            <td>{{ item.zinc|round(3) }} {{ item.zinc_unit }}</td>
             <td>{{ item.zinc_origin }}</td>
           </tr>
           <!-- Vitamins -->
@@ -364,75 +364,75 @@
           </tr>
           <tr>
             <td>Retinol (Vitamin A)</td>
-            <td>{{ item.retinol_value|round(3) }} {{ item.retinol_unit }}</td>
+            <td>{{ item.retinol|round(3) }} {{ item.retinol_unit }}</td>
             <td>{{ item.retinol_origin }}</td>
           </tr>
           <tr>
             <td>Beta-Carotene</td>
-            <td>{{ item.beta_carotene_value|round(3) }} {{ item.beta_carotene_unit }}</td>
+            <td>{{ item.beta_carotene|round(3) }} {{ item.beta_carotene_unit }}</td>
             <td>{{ item.beta_carotene_origin }}</td>
           </tr>
           <tr>
             <td>Vitamin D</td>
-            <td>{{ item.vitamin_d_value|round(3) }} {{ item.vitamin_d_unit }}</td>
+            <td>{{ item.vitamin_d|round(3) }} {{ item.vitamin_d_unit }}</td>
             <td>{{ item.vitamin_d_origin }}</td>
           </tr>
           <tr>
             <td>Vitamin E</td>
-            <td>{{ item.vitamin_e_value|round(3) }} {{ item.vitamin_e_unit }}</td>
+            <td>{{ item.vitamin_e|round(3) }} {{ item.vitamin_e_unit }}</td>
             <td>{{ item.vitamin_e_origin }}</td>
           </tr>
           <tr>
             <td>Vitamin K1</td>
-            <td>{{ item.vitamin_k1_value|round(3) }} {{ item.vitamin_k1_unit }}</td>
+            <td>{{ item.vitamin_k1|round(3) }} {{ item.vitamin_k1_unit }}</td>
             <td>{{ item.vitamin_k1_origin }}</td>
           </tr>
           <tr>
             <td>Vitamin K2</td>
-            <td>{{ item.vitamin_k2_value|round(3) }} {{ item.vitamin_k2_unit }}</td>
+            <td>{{ item.vitamin_k2|round(3) }} {{ item.vitamin_k2_unit }}</td>
             <td>{{ item.vitamin_k2_origin }}</td>
           </tr>
           <tr>
             <td>Vitamin C</td>
-            <td>{{ item.vitamin_c_value|round(3) }} {{ item.vitamin_c_unit }}</td>
+            <td>{{ item.vitamin_c|round(3) }} {{ item.vitamin_c_unit }}</td>
             <td>{{ item.vitamin_c_origin }}</td>
           </tr>
           <tr>
             <td>Vitamin B1 (Thiamine)</td>
-            <td>{{ item.vitamin_b1_value|round(3) }} {{ item.vitamin_b1_unit }}</td>
+            <td>{{ item.vitamin_b1|round(3) }} {{ item.vitamin_b1_unit }}</td>
             <td>{{ item.vitamin_b1_origin }}</td>
           </tr>
           <tr>
             <td>Vitamin B2 (Riboflavin)</td>
-            <td>{{ item.vitamin_b2_value|round(3) }} {{ item.vitamin_b2_unit }}</td>
+            <td>{{ item.vitamin_b2|round(3) }} {{ item.vitamin_b2_unit }}</td>
             <td>{{ item.vitamin_b2_origin }}</td>
           </tr>
           <tr>
             <td>Vitamin PP (Niacin)</td>
-            <td>{{ item.vitamin_pp_value|round(3) }} {{ item.vitamin_pp_unit }}</td>
+            <td>{{ item.vitamin_pp|round(3) }} {{ item.vitamin_pp_unit }}</td>
             <td>{{ item.vitamin_pp_origin }}</td>
           </tr>
           <tr>
             <td>Pantothenic Acid</td>
-            <td>{{ item.pantothenic_acid_value|round(3) }} {{ item.pantothenic_acid_unit }}</td>
+            <td>{{ item.pantothenic_acid|round(3) }} {{ item.pantothenic_acid_unit }}</td>
             <td>{{ item.pantothenic_acid_origin }}</td>
           </tr>
           <tr>
             <td>Vitamin B6</td>
-            <td>{{ item.vitamin_b6_value|round(3) }} {{ item.vitamin_b6_unit }}</td>
+            <td>{{ item.vitamin_b6|round(3) }} {{ item.vitamin_b6_unit }}</td>
             <td>{{ item.vitamin_b6_origin }}</td>
           </tr>
           <tr>
             <td>Vitamin B9 (Folate)</td>
             <td>
-              {% if item.folates_value is not none %} {{ item.folates_value|round(3) }} {{ item.folates_unit }} {% else %} (No
-              data) {% endif %}
+              {% if item.folates is not none %} {{ item.folates|round(3) }} {{ item.folates_unit }} {% else %} (No data) {% endif
+              %}
             </td>
             <td>{{ item.folates_origin }}</td>
           </tr>
           <tr>
             <td>Vitamin B12</td>
-            <td>{{ item.vitamin_b12_value|round(3) }} {{ item.vitamin_b12_unit }}</td>
+            <td>{{ item.vitamin_b12|round(3) }} {{ item.vitamin_b12_unit }}</td>
             <td>{{ item.vitamin_b12_origin }}</td>
           </tr>
         </tbody>

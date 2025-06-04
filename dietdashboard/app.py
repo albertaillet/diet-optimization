@@ -73,7 +73,7 @@ def query_dicts(con: duckdb.DuckDBPyConnection, query: str, **kwargs) -> list[di
 
 def get_arrays(bounds: dict[str, tuple[float, float]], products_and_prices: dict[str, np.ndarray]) -> tuple[np.ndarray, ...]:
     # Nutrients of each product
-    A_nutrients = np.array([products_and_prices[nutrient_id + "_value"] for nutrient_id in bounds], dtype=np.float32)
+    A_nutrients = np.array([products_and_prices[nutrient_id] for nutrient_id in bounds], dtype=np.float32)
 
     # Costs of each product
     c_costs = np.array(products_and_prices["objective"], dtype=np.float32)
@@ -86,19 +86,9 @@ def get_arrays(bounds: dict[str, tuple[float, float]], products_and_prices: dict
 
 
 def solve_optimization(A, lb, ub, c):
-    # Constraints for lower bounds
-    A_ub_lb = -A[~np.isnan(lb)]
-    b_ub_lb = -lb[~np.isnan(lb)]
-
-    # Constraints for upper bounds
-    A_ub_ub = A[~np.isnan(ub)]
-    b_ub_ub = ub[~np.isnan(ub)]
-
-    # Concatenate both constraints
-    A_ub = np.vstack([A_ub_lb, A_ub_ub])
-    b_ub = np.concatenate([b_ub_lb, b_ub_ub])
-
-    # Solve the problem and result the result.
+    # Concatenate contraints for lower bounds the upper bounds.
+    A_ub = np.vstack([-A, A])
+    b_ub = np.concatenate([-lb, ub])
     return linprog(c, A_ub=A_ub, b_ub=b_ub, bounds=(0, None), method=LP_METHOD)
 
 
@@ -110,13 +100,7 @@ def create_rangeslider(data: dict[str, str]) -> dict[str, float | str]:
     min_value = 0
     max_value = 4 * lower if upper is None else math.ceil(upper + lower - min_value)
     max_value = min_value + 100 if max_value == min_value else max_value
-    return {
-        "min": min_value,
-        "max": max_value,
-        "lower": lower,
-        "upper": upper if upper is not None else max_value,
-        "active": 1,
-    }
+    return {"min": min_value, "max": max_value, "lower": lower, "upper": upper if upper is not None else max_value, "active": 1}
 
 
 def create_csv(fieldnames: list[str], data: Iterable[dict[str, str]]) -> str:
@@ -161,7 +145,11 @@ def create_app() -> Flask:
         debug_folder.mkdir(parents=True)
         with (debug_folder / "input.json").open("w+") as f:
             f.write(json.dumps(data, indent=2))
-        chosen_bounds = {nid: (data.get(f"{nid}_lower"), data.get(f"{nid}_upper")) for nid in nutrient_ids}
+        chosen_bounds = {
+            nid: (data.get(f"{nid}_lower"), data.get(f"{nid}_upper"))
+            for nid in nutrient_ids
+            if f"{nid}_lower" in data and f"{nid}_upper" in data
+        }
         if not chosen_bounds:
             return "No nutrients selected."
         locations = [int(loc) for loc in data["locations"]]  # id: 154, name: Auchan, Rue Lieutenant André Argenton
@@ -169,7 +157,9 @@ def create_app() -> Flask:
             return "No locations selected."
 
         start = time.perf_counter()
-        products_and_prices = query_numpy(con, QUERY.replace("$objective", objective), locations=locations)
+        q = QUERY.replace("$objective", objective)  # Replace the placeholder with the actual objective function
+        chosen_nutrient_ids = [nid for nid in nutrient_ids if nid in chosen_bounds]
+        products_and_prices = query_numpy(con, q, locations=locations, nutrient_ids=chosen_nutrient_ids)
         query_time = time.perf_counter() - start
 
         start = time.perf_counter()

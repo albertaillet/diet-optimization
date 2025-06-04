@@ -178,19 +178,98 @@ step_5 AS (
     GROUP BY code, ciqual_food_code
   )
 ),
-/* Illustration of step_6:
-┌───────────────┬──────────────┬──────────────────┬──────────────────────┬───┬────────────────┬───────────────┬──────────────┬────────────────┐
-│ product_code  │ product_name │ product_quantity │ product_quantity_u…  │ … │ sodium_origin  │ protein_value │ protein_unit │ protein_origin │
-│    varchar    │   varchar    │      float       │       varchar        │   │    varchar     │     float     │   varchar    │    varchar     │
-├───────────────┼──────────────┼──────────────────┼──────────────────────┼───┼────────────────┼───────────────┼──────────────┼────────────────┤
-│ 3111950001928 │ Pois chiches │           1000.0 │ g                    │ … │ ciqual_C_81259 │          20.5 │ g            │ product        │
-│ 4099200179193 │ Tofu natur   │            350.0 │ g                    │ … │ ciqual_A_83096 │          13.0 │ g            │ product        │
-│ 4099200179193 │ Tofu natur   │            350.0 │ g                    │ … │ ciqual_A_83096 │          13.0 │ g            │ product        │
-├───────────────┴──────────────┴──────────────────┴──────────────────────┴───┴────────────────┴───────────────┴──────────────┴────────────────┤
-│ 3 rows                                                                                                                 26 columns (8 shown) │
-└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+/** Strip the `_value` suffix from any column name
+Illustration of step_6:
+┌───────────────┬──────────────────┬────────┬─────────────┬────────────────┬─────────┬──────────────┬────────────────┐
+│     code      │ ciqual_food_code │ sodium │ sodium_unit │ sodium_origin  │ protein │ protein_unit │ protein_origin │
+│    varchar    │      int32       │ float  │   varchar   │    varchar     │  float  │   varchar    │    varchar     │
+├───────────────┼──────────────────┼────────┼─────────────┼────────────────┼─────────┼──────────────┼────────────────┤
+│ 3111950001928 │            20516 │   23.2 │ mg          │ ciqual_C_81259 │    20.5 │ g            │ product        │
+│ 4099200179193 │            20904 │   10.0 │ mg          │ ciqual_A_83096 │    13.0 │ g            │ product        │
+└───────────────┴──────────────────┴────────┴─────────────┴────────────────┴─────────┴──────────────┴────────────────┘
 */
 step_6 AS (
+  SELECT *
+  RENAME (
+    energy_fibre_kj_value AS energy_fibre_kj,
+    energy_fibre_kcal_value AS energy_fibre_kcal,
+    water_value AS water,
+    protein_value AS protein,
+    carbohydrate_value AS carbohydrate,
+    fat_value AS fat,
+    sugars_value AS sugars,
+    fructose_value AS fructose,
+    galactose_value AS galactose,
+    glucose_value AS glucose,
+    lactose_value AS lactose,
+    maltose_value AS maltose,
+    sucrose_value AS sucrose,
+    starch_value AS starch,
+    fiber_value AS fiber,
+    polyols_value AS polyols,
+    alcohol_value AS alcohol,
+    organic_acids_value AS organic_acids,
+    saturated_fat_value AS saturated_fat,
+    monounsaturated_fat_value AS monounsaturated_fat,
+    polyunsaturated_fat_value AS polyunsaturated_fat,
+    fa_04_0_value AS fa_04_0,
+    fa_06_0_value AS fa_06_0,
+    fa_08_0_value AS fa_08_0,
+    fa_10_0_value AS fa_10_0,
+    fa_12_0_value AS fa_12_0,
+    fa_14_0_value AS fa_14_0,
+    fa_16_0_value AS fa_16_0,
+    fa_18_0_value AS fa_18_0,
+    fa_18_1_ole_value AS fa_18_1_ole,
+    fa_18_2_lino_value AS fa_18_2_lino,
+    fa_18_3_a_lino_value AS fa_18_3_a_lino,
+    fa_20_4_ara_value AS fa_20_4_ara,
+    fa_20_5_epa_value AS fa_20_5_epa,
+    fa_20_6_dha_value AS fa_20_6_dha,
+    cholesterol_value AS cholesterol,
+    salt_value AS salt,
+    calcium_value AS calcium,
+    copper_value AS copper,
+    iron_value AS iron,
+    iodine_value AS iodine,
+    magnesium_value AS magnesium,
+    manganese_value AS manganese,
+    phosphorus_value AS phosphorus,
+    potassium_value AS potassium,
+    selenium_value AS selenium,
+    sodium_value AS sodium,
+    zinc_value AS zinc,
+    retinol_value AS retinol,
+    beta_carotene_value AS beta_carotene,
+    vitamin_d_value AS vitamin_d,
+    vitamin_e_value AS vitamin_e,
+    vitamin_k1_value AS vitamin_k1,
+    vitamin_k2_value AS vitamin_k2,
+    vitamin_c_value AS vitamin_c,
+    vitamin_b1_value AS vitamin_b1,
+    vitamin_b2_value AS vitamin_b2,
+    vitamin_pp_value AS vitamin_pp,
+    pantothenic_acid_value AS pantothenic_acid,
+    vitamin_b6_value AS vitamin_b6,
+    vitamin_b9_value AS vitamin_b9,
+    folates_value AS folates,
+    vitamin_b12_value AS vitamin_b12,
+  )
+  FROM step_5
+),
+/* Illustration of step_7:
+┌───────────────┬──────────────┬──────────────────┬──────────────────────┬─────────────┬───┬────────────────┬─────────┬──────────────┬────────────────┐
+│ product_code  │ product_name │ product_quantity │ product_quantity_u…  │ ciqual_code │ … │ sodium_origin  │ protein │ protein_unit │ protein_origin │
+│    varchar    │   varchar    │      float       │       varchar        │    int64    │   │    varchar     │  float  │   varchar    │    varchar     │
+├───────────────┼──────────────┼──────────────────┼──────────────────────┼─────────────┼───┼────────────────┼─────────┼──────────────┼────────────────┤
+│ 3111950001928 │ Pois chiches │           1000.0 │ g                    │       20516 │ … │ ciqual_C_81259 │    20.5 │ g            │ product        │
+│ 4099200179193 │ Tofu natur   │            350.0 │ g                    │       20904 │ … │ ciqual_A_83096 │    13.0 │ g            │ product        │
+│ 4099200179193 │ Tofu natur   │            350.0 │ g                    │       20904 │ … │ ciqual_A_83096 │    13.0 │ g            │ product        │
+├───────────────┴──────────────┴──────────────────┴──────────────────────┴─────────────┴───┴────────────────┴─────────┴──────────────┴────────────────┤
+│ 3 rows                                                                                                                         26 columns (9 shown) │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+*/
+step_7 AS (
   SELECT
     -- Product columns
     p.code AS product_code,
@@ -240,7 +319,7 @@ step_6 AS (
     -- Nutrient columns
     prev.*,
   FROM prices AS pr
-  JOIN step_5 AS prev
+  JOIN step_6 AS prev
     ON pr.product_code = prev.code
   JOIN step_1 AS p
     ON pr.product_code = p.code
@@ -251,5 +330,5 @@ step_6 AS (
   WHERE pr.price IS NOT NULL
     AND p.product_quantity > 0 and p.product_quantity < 30000 -- Filter out invalid quantities (e.g. 0 or >30 kg)
 )
-SELECT * FROM step_6
+SELECT * FROM step_7
 );

@@ -33,14 +33,12 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)  # filter scipy D
 #     bounds = {row["id"]: (float(row["value_males"]), row["value_upper_intake"]) for row in recommendations}
 
 
-def get_arrays(
-    bounds: dict[str, tuple[float, float | None]], products_and_prices: dict[str, np.ndarray]
-) -> tuple[np.ndarray, ...]:
+def get_arrays(bounds: dict[str, tuple[float, float]], products_and_prices: dict[str, np.ndarray]) -> tuple[np.ndarray, ...]:
     # Nutrients of each product
-    A_nutrients = np.array([products_and_prices[nutrient_id + "_value"] for nutrient_id in bounds], dtype=np.float32)
+    A_nutrients = np.array([products_and_prices[nutrient_id] for nutrient_id in bounds], dtype=np.float32)
 
-    # Costs of each product (* 0.1 to go from price per kg to price per 100g)
-    c_costs = 0.1 * np.array(products_and_prices["price_eur"], dtype=np.float32)
+    # Costs of each product
+    c_costs = np.array(products_and_prices["price"], dtype=np.float32)
 
     # Bounds for nutrients
     b = np.array([bounds[nutrient] for nutrient in bounds], dtype=np.float32)
@@ -50,26 +48,16 @@ def get_arrays(
 
 
 def solve_optimization_scipy(A, lb, ub, c, solver, solver_options):
-    # Constraints for lower bounds
-    A_ub_lb = -A[~np.isnan(lb)]
-    b_ub_lb = -lb[~np.isnan(lb)]
-
-    # Constraints for upper bounds
-    A_ub_ub = A[~np.isnan(ub)]
-    b_ub_ub = ub[~np.isnan(ub)]
-
-    # Concatenate both constraints
-    A_ub = np.vstack([A_ub_lb, A_ub_ub])
-    b_ub = np.concatenate([b_ub_lb, b_ub_ub])
-
-    # Solve the problem and result the result.
+    # Concatenate contraints for lower bounds the upper bounds.
+    A_ub = np.vstack([-A, A])
+    b_ub = np.concatenate([-lb, ub])
     return linprog(c, A_ub=A_ub, b_ub=b_ub, bounds=(0, None), method=solver, options=solver_options, integrality=0)
 
 
 def solve_optimization_cvxpy(A, lb, ub, c, solver, solver_options):
     x = cp.Variable(c.shape[0])
     objective = cp.Minimize(c @ x)
-    constraints = [x >= 0, A[~np.isnan(lb)] @ x >= lb[~np.isnan(lb)], A[~np.isnan(ub)] @ x <= ub[~np.isnan(ub)]]
+    constraints = [x >= 0, A @ x >= lb, A @ x <= ub]
     prob = cp.Problem(objective, constraints)
     return prob.solve(solver=solver, **solver_options)
 
