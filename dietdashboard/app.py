@@ -142,9 +142,10 @@ def create_app() -> Flask:
     def index():
         return render_template("dashboard.html", slider_csv=slider_csv, currencies=POSSIBLE_CURRENCIES)
 
-    @app.route("/validate_objective/<objective_string>", methods=["GET"])
-    def validate(objective_string: str):
+    @app.route("/validate_objective", methods=["GET"])
+    def validate():
         """Validate the objective function expression."""
+        objective_string = request.args.get("q", "")
         valid, message = validate_objective(get_con(), unquote(objective_string))  # unquote to decode URL-encoded characters
         return app.json.response({"valid": valid, "message": message})
 

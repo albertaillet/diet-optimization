@@ -29,7 +29,7 @@ function onInputChange(objective, state) {
   const input = d3.select("#objective");
   const validationMessage = d3.select("#validation-message");
   if (!objective) return; // Do not update if the input is empty
-  fetch(`/validate_objective/${encodeURIComponent(objective)}`)
+  fetch(`/validate_objective?q=${encodeURIComponent(objective)}`)
     .then(response => response.json())
     .then(data => {
       input.classed("valid", data.valid).classed("invalid", !data.valid);
