@@ -7,34 +7,19 @@ from pathlib import Path
 import duckdb
 
 DATA_DIR = Path(__file__).parent.parent.parent / "data"
-
-
-def first_nutriment_in_prducts(con: duckdb.DuckDBPyConnection) -> dict:
-    nutriments = con.sql("SELECT nutriments FROM products LIMIT 1").fetchone()
-    if nutriments is None:
-        exit("No data found")
-    return nutriments[0]
-
-
-def make_query(nutriments: dict) -> str:
-    queries = []
-    for key in nutriments:
-        if key.endswith("_value"):
-            q = f"SELECT '{key}' AS name,count(nutriments.\"{key}\") AS count FROM products"
-            queries.append(q)
-
-    # Combine all queries with UNION ALL and add an ORDER BY clause
-    return "\nUNION ALL\n".join(queries) + "\nORDER BY count DESC;"
+QUERY = """
+SELECT n.unnest.name as off_id, count(*) AS count
+FROM products, UNNEST(products.nutriments) AS n
+GROUP BY n.unnest.name
+ORDER BY count DESC;
+"""
 
 
 if __name__ == "__main__":
     nutrient_map = DATA_DIR / "nutrient_map.csv"
     con = duckdb.connect(DATA_DIR / "data.db", read_only=True)
 
-    nutriments = first_nutriment_in_prducts(con)
-    query = make_query(nutriments)
-
-    counts = {key.replace("_value", ""): count for key, count in con.sql(query).fetchall()}
+    counts = {off_id: count for off_id, count in con.sql(QUERY).fetchall()}
     keys = set(counts)
 
     # Open the nutrient_map.csv and write the correct count
