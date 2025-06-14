@@ -217,6 +217,7 @@ Other apps:
 - [Cali AI](https://www.calai.app), calorie tracking app with a focus on tracking food portions from images using multimodal AI.
 - [Truefood.tech](https://truefood.tech/), from a team of researchers to find least processed food.
 - [Foodop](https://foodop.dk), a Danish web app to optimize kitchen operations.
+- [EatThisMuch](https://www.eatthismuch.com/), a meal planning app that can generate meal plans based on nutritional needs.
 
 Other tools:
 
@@ -226,6 +227,7 @@ Other tools:
 - [Foodvisor](https://www.foodvisor.io/en/), they have an API for their food recognition tool.
 - NanEye, WIP project connecting biomarkers to nutrition data.
 - [Completefoods](https://www.completefoods.co/), prev diy soylent, a database of recipes for diy meal replacement shakes.
+- [Calculette Nutritionnelle](https://calculettenutritionnelle.fr)
 
 ## Food classification / taxonomy standards:
 
