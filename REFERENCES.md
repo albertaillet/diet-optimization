@@ -164,6 +164,12 @@ Apps with a bit of information about their databases:
 - [MyFoodData](https://www.myfooddata.com/), data sources described [here](https://www.myfooddata.com/about-the-data).
 - [MyNetDiary](https://www.mynetdiary.com/food-database.html), data sources described [here](https://www.mynetdiary.com/food-database.html).
 
+Product scanning apps:
+
+- [Open Food Facts app](https://world.openfoodfacts.org/open-food-facts-mobile-app), lets you scan barcodes and upload product information.
+- [Ingredicheck.app](https://www.ingredicheck.app), lets you scan food labels to instantly see if they fit your dietary needs.
+- [Yuka](https://yuka.io/), a mobile app that scans food products and cosmetics to provide nutritional information and health scores.
+
 Other apps:
 
 - [Joy Health Tracker](https://www.joyapp.com/)
@@ -174,13 +180,16 @@ Other apps:
 - [PlateJoy](https://www.platejoy.com/)
 - [EatLove](https://www.eatlove.is/)
 - [MacroFactor](https://macrofactorapp.com/)
-- [Rex](https://www.rex.fit/), calorie and exercise tracking over WhatsApp, has some kind of API.
+- [Rex](https://www.rex.fit/), calorie and exercise tracking over WhatsApp, has some kind of API. Now they are selling a wearable device.
 - [Lolo](https://apps.apple.com/us/app/lolo-ai-food-calorie-tracker/id6448986851?l=en)
 - [SnackFolio](https://www.snackfolio.com/), offline friendly nutrition tracker.
-- [Cali AI](https://www.calai.app), calorie tracking app with a focus on tracking food portions from images using multimodal AI.
-- [Truefood.tech](https://truefood.tech/), from a team of researchers to find least processed food.
+- [Cal AI](https://www.calai.app), calorie tracking app with a focus on tracking food portions from images using multimodal AI.
+- [Truefood.tech](https://truefood.tech/), from a team of researchers to find least processed food. Uses GroceryDB as a data source.
 - [Foodop](https://foodop.dk), a Danish web app to optimize kitchen operations.
-- [EatThisMuch](https://www.eatthismuch.com/), a meal planning app that can generate meal plans based on nutritional needs.
+- 🎖️[EatThisMuch](https://www.eatthismuch.com/), a meal planning app that can generate meal plans based on nutritional needs.
+  - Possible to browse their [food database](https://www.eatthismuch.com/food/browse/).
+  - Has a [calorie calculator](https://www.eatthismuch.com/calculator).
+  - Has a nutrient glossary.
 
 Other tools:
 
@@ -201,18 +210,26 @@ Related [xkcd](https://xkcd.com/927/).
 - [FoodEx2](https://www.efsa.europa.eu/en/data/data-standardisation), a food classification standardisation system.
 - [FoodOn](https://foodon.org/), an ontology for food [github](https://github.com/FoodOntology/foodon). Available in [Ontobee](https://ontobee.org/ontology/FOODON).
 
+## Price data sources
+
+- [Open Food Prices](https://prices.openfoodfacts.org/), a crowdsourced database of food prices.
+- [Purchase to Plate](https://www.ers.usda.gov/data-products/purchase-to-plate/), a USDA database that provides information on food prices and expenditures in the United States.
+
+## Other data sources
+
+- [Food and Agriculture Organization (FAO) of the United Nations](https://www.fao.org/faostat/en/#home), provides data on food production, trade, and consumption.
+- [Kaggle dataset](https://www.kaggle.com/datasets/irkaal/foodcom-recipes-and-reviews?select=recipes.csv) with recipes and reviews from Food.com, contains over 1.5 million recipes.
+- [Random kaggle dataset](https://www.kaggle.com/datasets/trolukovich/nutritional-values-for-common-foods-and-products), nutritional values for common foods and products, source unclear.
+- [Nutrition5k](https://github.com/google-research-datasets/Nutrition5k), a dataset of 5k images of food items with nutritional information.
+
 ## Other links
 
 ### Random links:
 
 - [Open Food Facts post on HN](https://news.ycombinator.com/item?id=22683416)
 - [Food Facts](https://www.foodfacts.se/), Swedish food stratup at Norrsken House.
-- [Random kaggle dataset](https://www.kaggle.com/datasets/trolukovich/nutritional-values-for-common-foods-and-products), nutritional values for common foods and products, source unclear.
-- [Nutrition5k](https://github.com/google-research-datasets/Nutrition5k), a dataset of 5k images of food items with nutritional information.
 - [Documenu](https://github.com/documenu), Restaurant menu API.
-- [Foodoptimizer](https://kkloste.github.io/projects/foodoptimizer/), a blogpost on food optimization.
 - 🎖️[knowledge-mining-nutrition](https://forgemia.inra.fr/stephane.dervaux/knowledge-mining-nutrition) Ongoing research project on knowledge mining in nutrition (02/2025).
-- [PyomoDietProblem](https://github.com/Pyomo/PyomoGallery/blob/main/diet/DietProblem.ipynb), a Pyomo example for the diet problem.
 
 ### Outdated projects:
 
@@ -220,6 +237,99 @@ Related [xkcd](https://xkcd.com/927/).
 - [EuroFIR](https://www.eurofir.org/), a European network that provides a comprehensive food composition database. The project has ended, so support and database updates is questionable (https://www.eurofir.org/foodexplorer). It also seems to use Wordpress.
 - [Optifood](https://www.sciencedirect.com/science/article/pii/S0002916523049262) A paper about the use of linear programming to determine if a food product can ensure adequate nutrients for Cambodian infants.
 - [Nutrioptimizer](https://nutrioptimizer.com) indian website for diet optimization, by Sri Mookambika Infosystems, apparently only runs on Mozilla Firefox Browser.
+
+### Academic Papers
+
+- Can micronutrient requirements be met by diets from sustainable sources: outcomes of dietary modelling studies using diet optimization, Leonard et al. (2024) https://pmc.ncbi.nlm.nih.gov/articles/PMC11321105/
+- Achieving Healthy and Sustainable Diets: A Review of the Results of Recent Mathematical Optimization Studies, Wilson et al. (2019) https://pmc.ncbi.nlm.nih.gov/articles/PMC6855945/
+- A Review of the Use of Linear Programming to Optimize Diets, Nutritiously, Economically and Environmentally, van Dooren (2018) https://www.frontiersin.org/journals/nutrition/articles/10.3389/fnut.2018.00048Combining
+- Low Price, Low Climate Impact and High Nutritional Value in One Shopping Basket through Diet Optimization by Linear Programming, van Dooren et al (2015) https://www.mdpi.com/2071-1050/7/9/12837
+- Defining a nutritionally healthy, environmentally friendly, and culturally acceptable Low Lands Diet, van Dooren et al (2015) https://link.springer.com/article/10.1007/s11367-015-1007-3
+- PhD Thesis Heerschop: Feasible solutions for sustainable diets with adequate protein intake Modelling diets for the Netherlands and Europe. [link](https://www.wur.nl/en/activity/feasible-solutions-for-sustainable-diets-with-adequate-protein-intake-modelling-diets-for-the-netherlands-and-europe.htm), [SHARP model](https://www.wur.nl/en/project/sharp-diet-modelling-for-achieving-healthy-and-sustainable-diets.htm), [pdf](https://edepot.wur.nl/681865)
+- Other:
+  - https://bmcpublichealth.biomedcentral.com/articles/10.1186/s12889-019-6872-4
+  - https://arxiv.org/pdf/2312.11767
+  - https://www.cambridge.org/core/journals/public-health-nutrition/article/designing-a-healthy-lowcost-and-environmentally-sustainable-food-basket-an-optimisation-study/F34CA67C609E5F762ED7B72A7F2A1D6C
+  - https://www.mdpi.com/2304-8158/9/11/1677
+
+### Historic notes:
+
+- Leonid Vitalyevich Kantorovich was a Soviet mathematician and economist, known for his theory and development of techniques for the optimal allocation of resources. He is regarded as the founder of linear programming. He was the winner of the Stalin Prize in 1949 and the Nobel Memorial Prize in Economic Sciences in 1975. https://en.wikipedia.org/wiki/Leonid_Kantorovich
+- The [Stigler diet](https://en.wikipedia.org/wiki/Stigler_diet) is an optimization problem named for George Stigler, a 1982 Nobel laureate in economics, who posed the following problem
+  - For a moderately active man weighing 154 pounds, how much of each of 77 foods should be eaten on a daily basis so that the man’s intake of nine nutrients will be at least equal to the recommended dietary allowances (RDAs) suggested by the National Research Council in 1943, with the cost of the diet being minimal?:
+  - [Official Google OR-tools tutorial](https://developers.google.com/optimization/lp/stigler_diet) for The Stigler Diet Problem:
+    - Includes code in multiple languages supported by OR-tools.
+    - [Relevant question](https://groups.google.com/g/or-tools-discuss/c/JNBniraiLgk?pli=1) in google group.
+  - [Google research post](https://research.google/blog/sudoku-linear-optimization-and-the-ten-cent-diet/) for Stigler Diet problem with a Google Sheets optimization add-on and a comparisons to solving Sudoku.
+- George Dantzig’s 1990 article in *Interfaces*: G.B. Dantzig. [The Diet Problem](https://resources.mpi-inf.mpg.de/departments/d1/teaching/ws14/Ideen-der-Informatik/Dantzig-Diet.pdf), *Interfaces* 20(4), 1990, 43-47.
+- The Diet Problem: A WWW-based Interactive Case Study in Linear Programming, Czyzyk J and Wisniewski TJ, July 1996 [link](https://ftp.mcs.anl.gov/pub/tech_reports/reports/P602.pdf)
+
+### Blogposts
+
+### Linear programming diet blogposts:
+
+- https://neos-guide.org/case-studies/om/the-diet-problem/
+- [Foodoptimizer](https://kkloste.github.io/projects/foodoptimizer/), a blogpost on food optimization.
+- Jeremy Kun series:
+  - https://www.jeremykun.com/2014/06/02/linear-programming-and-the-most-affordable-healthy-diet-part-1/ - Blog post introducing the diet optimization problem as a linear program, explaining the dual problem.
+  - https://www.jeremykun.com/2017/09/24/linear-programming-and-healthy-diets-part-2/ - A real-world diet optimization Google OR-Tools, minimizing calorie intake while satisfying all nutrient constraints.
+  - https://github.com/j2kun/lp-diet - Python code and data for linear programming diet experiments using OR-Tools and USDA nutrients.
+  - https://news.ycombinator.com/item?id=42976244
+- https://www.oxinabox.net/2018/05/28/Optimizing-your-diet-with-JuMP.html - Using the Julia JuMP library, LP to maximize protein intake.
+- https://www.tautvidas.com/blog/2020/04/overcomplicating-meal-planning-with-z3-constraint-solver/ - Personal blog exploring meal plan optimization with a constraint solver (Z3). It sets calorie/macronutrient targets as constraints and finds meal combinations that meet those ranges while minimizing total cost.
+
+- Genetic algorithms
+  - https://archive.is/6N8sz - Towards Data Science article using genetic algorithms in Python (DEAP library) to optimize a weekly meal plan, given a calorie goal and macronutrient split.
+  - https://github.com/mikemayuare/stiglers-diet-ga - Genetic algorithm for the Stigler diet problem.
+  - https://github.com/AngelsGills/Meal-Recommendation-Optimization - Genetic algorithm-based meal recommendation system (MATLAB). It optimizes meal selections from a recipe dataset to meet specified calorie and macronutrient targets for personal diet planning.
+- https://groovy.apache.org/blog/solving-simple-optimization-problems-with-groovy - A detailed case study on using linear programming for a diet optimization problem, comparing approaches (spreadsheet solver, Apache Commons Math, OptaPlanner, OR-Tools) and even referencing the classic Stigler diet example.
+- [Inductive Bias “Auto-Soylent” project (2014)](http://inductivebias.com/Blog/project-auto-soylent/), automatically generates a DIY Soylent. Both as a solver problem (LP) and the custom approach used to balance nutrients and cost while limiting recipe complexity.
+- https://dev.to/mathewthe2/figuring-out-a-balanced-diet-at-wendy-s-with-python-pulp-d3d – Tutorial blog using Python and PuLP to find an optimal balanced diet from Wendy’s menu items under nutritional constraints.
+- [thegeeksdiary blog post](https://thegeeksdiary.com/2023/03/22/linear-programming-in-python-using-pulp-part-2/) demonstrating multi-objective diet optimization with PuLP (balancing Vitamin B12 and fat intake for a patient’s meal plan) (2023).
+- [Matlab blog post](https://blogs.mathworks.com/matlab/2024/11/04/linear-programming-the-highs-optimization-library-and-matlab/) on using the HiGHS optimization library with MATLAB for linear programming, including diet optimization examples.
+
+Medium posts of varying quality:
+
+- https://kaushikthoughts.medium.com/optimising-diet-plan-in-tight-budget-modelling-in-python-6775f843765c, Optimising Diet Plan In Tight Budget-Modelling In Python
+- https://medium.com/@sindhu.j1729/diet-suggester-a-diet-optimizer-using-linear-programming-302048e36f3f - Diet Suggester that uses Django and linear programming (SciPy’s linprog)
+- https://medium.com/@antravers.data/stigler-diet-project-using-python-c8840bd04eec - Revisiting the Stigler diet problem with modern data and uses linear programming (SciPy)
+- https://medium.com/data-science/building-your-diet-using-artificial-intelligence-with-python-d618d601ab02 - Uses "AI" (python PuLP LP).
+- https://apexanalyticslab.wordpress.com/portfolio/my-portfolio/ - Notebook that demonstrates the classic Army field ration optimization (Stigler’s 64-food diet problem) using Python and PuLP
+- https://medium.com/@shradhdha.bhalodia/real-world-problem-solving-with-scipy-optimizing-diet-plans-for-health-and-budget-3bdf7871c6ac – Medium article demonstrating how to use SciPy’s linear programming (linprog) to design a low-cost, nutrient-rich daily meal plan.
+
+### Github projects of solving the diet problem:
+
+- https://github.com/DerekGloudemans/Nutrition-Optimization-New LP using the USDA nutrition database. Author mentions adopting the output (a chili recipe).
+- https://github.com/kavir1698/DietRecommender.jl A Julia project with USDA food composition data. User inputs age, sex, weight and disliked foods or entire categories to exclude.
+- https://github.com/BlackNellore/MaxProfitFeeding Mixed-integer linear programming model for beef cattle feeding (based on NRC guidelines).
+- https://github.com/ligon/MinCostDiet/ Stiegler diet with scipy, USDA nutritional requirements, and Purchase to Plate data and FNDDS (Food and Nutrition Database for Dietary Studies). [Main notebook](https://github.com/ligon/MinCostDiet/blob/master/fndds_diet_problem.ipynb) [Good documentation](https://github.com/ligon/MinCostDiet/blob/master/minimum_cost_diet.org)
+- https://github.com/Pyomo/PyomoGallery/blob/main/diet/DietProblem.ipynb A Pyomo example for the diet problem, uses USDA food composition data and nutritional requirements.
+
+Other projects:
+
+- https://github.com/k-w-lee/Diet_Optimisation
+- https://github.com/smd519/DietOptimization
+- [Diet-Recommendation-System](https://github.com/zakaria-narjis/Diet-Recommendation-System), uses kaggle dataset with recipes from food.com. [deployed app](https://diet-recommendation-system.streamlit.app)
+- https://github.com/sadsa/food_impact_app (just environment impact, not linear programming)
+  - Port of the original web-based app: https://www.bbc.com/news/science-environment-46459714
+
+### Other Linear programming blogposts:
+
+- https://modal.com/blog/resource-solver (HN: https://modal.com/blog/resource-solver)
+- https://markis.cool/posts/2023-08-05-lp-for-fun-and-profit.html
+- https://sysid.github.io/linear-programming-for-dummies-1/
+
+### Cheap diets blogposts:
+
+- https://futureboy.us/blog/twofifty.html
+  - https://news.ycombinator.com/item?id=42606773
+- https://archive.is/Qfk4W
+  - https://news.ycombinator.com/item?id=2491908
+- https://lukerissacher.com/blog/cheapest_healthy_diet
+- They made a book out of it: https://onedollardietproject.wordpress.com
+- Other HN discussions:
+  - https://news.ycombinator.com/item?id=5618035
+  - https://news.ycombinator.com/item?id=311740
 
 ## D3 documentation
 
