@@ -266,7 +266,7 @@ step_6 AS (
 │ 4099200179193 │ Tofu natur   │            350.0 │ g                    │       20904 │ … │ ciqual_A_83096 │    13.0 │ g            │ product        │
 │ 4099200179193 │ Tofu natur   │            350.0 │ g                    │       20904 │ … │ ciqual_A_83096 │    13.0 │ g            │ product        │
 ├───────────────┴──────────────┴──────────────────┴──────────────────────┴─────────────┴───┴────────────────┴─────────┴──────────────┴────────────────┤
-│ 3 rows                                                                                                                         26 columns (9 shown) │
+│ 3 rows                                                                                                                         52 columns (9 shown) │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 step_7 AS (
@@ -282,6 +282,33 @@ step_7 AS (
     ciq.alim_grp_code AS ciqual_group_code,
     ciq.alim_ssgrp_code AS ciqual_subgroup_code,
     ciq.alim_ssssgrp_code AS ciqual_subsubgroup_code,
+    -- Agribalyse columns
+    ab.season_code,
+    ab.air_transport_code,
+    ab.delivery_method,
+    ab.packaging_approach,
+    ab.preparation_method,
+    ab.data_quality_rating,
+    ab.eco_score,
+    ab.climate_change_score,
+    ab.ozone_depletion_score,
+    ab.ionizing_radiation_score,
+    ab.photochemical_ozone_formation_score,
+    ab.fine_particles_score,
+    ab.non_carcinogenic_toxicity_score,
+    ab.carcinogenic_toxicity_score,
+    ab.terrestrial_acidification_score,
+    ab.freshwater_eutrophication_score,
+    ab.marine_eutrophication_score,
+    ab.terrestrial_eutrophication_score,
+    ab.freshwater_ecotoxicity_score,
+    ab.land_use_score,
+    ab.water_depletion_score,
+    ab.energy_depletion_score,
+    ab.mineral_depletion_score,
+    ab.biogenic_climate_change_emissions,
+    ab.fossil_climate_change_emissions,
+    ab.land_use_change_climate_change_emissions,
     -- Price columns
     pr.id AS price_id,
     pr.price as product_price,
@@ -327,6 +354,8 @@ step_7 AS (
     ON pr.currency = ex.currency
   LEFT JOIN ciqual_alim AS ciq
     ON prev.ciqual_food_code = ciq.alim_code
+  LEFT JOIN agribalyse AS ab
+    ON prev.ciqual_food_code = ab.ciqual_food_code
   WHERE pr.price IS NOT NULL
     AND p.product_quantity > 0 and p.product_quantity < 30000 -- Filter out invalid quantities (e.g. 0 or >30 kg)
 )
