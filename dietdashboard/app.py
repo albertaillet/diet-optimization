@@ -30,7 +30,6 @@ from dietdashboard.objective import validate_objective_str
 DEBUG_DIR = Path(__file__).parent.parent / "tmp"
 DATA_DIR = Path(__file__).parent.parent / "data"
 OFF_USERNAME = os.getenv("OFF_USERNAME")
-POSSIBLE_CURRENCIES = ["EUR", "CHF"]
 TEMPLATE_FOLDER = Path(__file__).parent / "frontend/html"
 QUERY = (Path(__file__).parent / "queries/query.sql").read_text()
 LP_METHOD = "revised simplex"
@@ -124,7 +123,7 @@ def create_app() -> Flask:
 
     @app.route("/")
     def index():
-        return render_template("dashboard.html", slider_csv=slider_csv, currencies=POSSIBLE_CURRENCIES)
+        return render_template("dashboard.html", slider_csv=slider_csv)
 
     @app.route("/validate_objective", methods=["GET"])
     def validate():

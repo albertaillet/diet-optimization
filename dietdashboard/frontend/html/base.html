@@ -4,6 +4,9 @@
     {% include 'partials/head.html' %}
   </head>
   <body>
-    {% include 'partials/header.html' %} {% block content %}{% endblock %} {% include 'partials/modal_range.html' %}
+    <header>
+      <h1>Nutrition Dashboard</h1>
+    </header>
+    {% block content %}{% endblock %} {% include 'partials/modal_range.html' %}
   </body>
 </html>

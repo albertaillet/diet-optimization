@@ -1,4 +1,3 @@
-import { registerCurrencySelect } from "./components/currency";
 import { Locations } from "./components/locations";
 import { Result } from "./components/result";
 
@@ -47,7 +46,6 @@ function optimize(state) {
  * @type {State}
  */
 var state = {
-  currency: "EUR",
   sliders: csvParse(document.getElementById("slider-csv-data").textContent, autoType), // Default slider data
   mapTransform: { k: 4062, x: 415, y: 875 },
   locations: defaultLocations,
@@ -57,7 +55,6 @@ var state = {
   brushMode: null
 };
 state = { ...state, ...restoreState() };
-registerCurrencySelect(state);
 
 const locationData = await csv("/locations.csv", autoType);
 
