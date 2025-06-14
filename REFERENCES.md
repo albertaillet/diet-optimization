@@ -214,6 +214,7 @@ Related [xkcd](https://xkcd.com/927/).
 
 - [Open Food Prices](https://prices.openfoodfacts.org/), a crowdsourced database of food prices.
 - [Purchase to Plate](https://www.ers.usda.gov/data-products/purchase-to-plate/), a USDA database that provides information on food prices and expenditures in the United States.
+- [Matpriskollen](https://matpriskollen.se/), a Swedish food price comparison tool.
 
 ## Other data sources
 
@@ -221,6 +222,8 @@ Related [xkcd](https://xkcd.com/927/).
 - [Kaggle dataset](https://www.kaggle.com/datasets/irkaal/foodcom-recipes-and-reviews?select=recipes.csv) with recipes and reviews from Food.com, contains over 1.5 million recipes.
 - [Random kaggle dataset](https://www.kaggle.com/datasets/trolukovich/nutritional-values-for-common-foods-and-products), nutritional values for common foods and products, source unclear.
 - [Nutrition5k](https://github.com/google-research-datasets/Nutrition5k), a dataset of 5k images of food items with nutritional information.
+- [Les références nutritionnelles
+  en vitamines et minéraux](https://www.anses.fr/fr/system/files/NUT2018SA0238Ra.pdf), nutritional recommendations for vitamins and minerals from ANSES.
 
 ## Other links
 
@@ -240,17 +243,44 @@ Related [xkcd](https://xkcd.com/927/).
 
 ### Academic Papers
 
-- Can micronutrient requirements be met by diets from sustainable sources: outcomes of dietary modelling studies using diet optimization, Leonard et al. (2024) https://pmc.ncbi.nlm.nih.gov/articles/PMC11321105/
-- Achieving Healthy and Sustainable Diets: A Review of the Results of Recent Mathematical Optimization Studies, Wilson et al. (2019) https://pmc.ncbi.nlm.nih.gov/articles/PMC6855945/
-- A Review of the Use of Linear Programming to Optimize Diets, Nutritiously, Economically and Environmentally, van Dooren (2018) https://www.frontiersin.org/journals/nutrition/articles/10.3389/fnut.2018.00048Combining
-- Low Price, Low Climate Impact and High Nutritional Value in One Shopping Basket through Diet Optimization by Linear Programming, van Dooren et al (2015) https://www.mdpi.com/2071-1050/7/9/12837
-- Defining a nutritionally healthy, environmentally friendly, and culturally acceptable Low Lands Diet, van Dooren et al (2015) https://link.springer.com/article/10.1007/s11367-015-1007-3
-- PhD Thesis Heerschop: Feasible solutions for sustainable diets with adequate protein intake Modelling diets for the Netherlands and Europe. [link](https://www.wur.nl/en/activity/feasible-solutions-for-sustainable-diets-with-adequate-protein-intake-modelling-diets-for-the-netherlands-and-europe.htm), [SHARP model](https://www.wur.nl/en/project/sharp-diet-modelling-for-achieving-healthy-and-sustainable-diets.htm), [pdf](https://edepot.wur.nl/681865)
+- Van Dooren, C. et al. Low Price, Low Climate Impact and High Nutritional Value in One Shopping Basket through Diet Optimization by Linear Programming. Sustainability (2015). [doi](https://doi.org/10.3390/su70912837)
+- van Dooren, C., Aiking, H. Defining a nutritionally healthy, environmentally friendly, and culturally acceptable Low Lands Diet. Int J Life Cycle Assess 21, 688–700 (2016). [doi](https://doi.org/10.1007/s11367-015-1007-3)
+- Van Dooren, C. et al. A Review of the Use of Linear Programming to Optimize Diets, Nutritiously, Economically and Environmentally. Front. Nutr (2018) [doi](https://doi.org/10.3389/fnut.2018.00048)
+- Gazan R, et al. Mathematical Optimization to
+  Explore Tomorrow's Sustainable Diets: A Narrative Review. Advances in Nutrition (2018) [doi](https://doi.org/10.1093/advances/nmy049).
+- Wilson N, et al. Achieving Healthy and Sustainable Diets: A Review of the Results of Recent Mathematical Optimization Studies. Adv Nutr. (2019) [doi](https://doi.org/10.1093/advances/nmz037)
+- Colombo et al. Designing Nutritionally Adequate and Climate-Friendly Diets for Omnivorous, Pescatarian, Vegetarian and Vegan Adolescents in Sweden Using Linear Optimization. Nutrients (2021) [doi](https://doi.org/10.3390/nu13082507)
+  - Used [matpriskollen.se](matpriskollen.se) for food prices, Climate Database from RISE for CO2 emissions, and the Swedish Food Agency for nutritional values, recommendations from Swedish Food Agency’s Food composition database, and used the CBC solver in Excel 2016.
+  - Minimized the deviation from a baseline diet and had different constraints (CO2, Max RD, See Table 1 for details).
+- Gazan R, et al. Individual Diet Optimization in French
+  Adults Shows That Plant-Based ‘Dairy-like’ Products May Complement Dairy in Sustainable Diets.
+  Sustainability (2022) [doi](https://doi.org/10.3390/su14052817).
+  - Uses SUStable for foods and CIQUAL for nutritional values, the carbon impact was obtained from a database of 402 foods built previously by the environmental consultancy firm BIO by Deloitte, and used Alpro data for plant-based dairy alternatives.
+  - Constraints based on French RDAs, NNR2004 for sodium, WHO guidelines on most macronutrients, ANSES for fish and seafood limits and some constraints to make the solution "culturally acceptable".
+- Fouillet, H. et al. Plant to animal protein ratio in the diet: nutrient adequacy, long-term health and environmental pressure. Front. Nutr (2023) [doi](https://doi.org/10.3389/fnut.2023.1178121)
+
+  - Used CIQUAL and survey of dietary data. Uses ANSES recommendations for nutrients [link](https://www.anses.fr/fr/system/files/NUT2018SA0238Ra.pdf).
+  - Formula used for the Health Risk (HR) criterion, and Diet Departure (DD) see paper for details. Not sure how accurate the values for disability-adjusted life-years (DALYs) and their minimum risk exposure levels (TMREL) are.
+    $$
+    \begin{aligned}
+    \min \text{HR} &=\sum_{\mathrm{i}=1}^3\left(\frac{\operatorname{Opt}(\mathrm{i})}{\operatorname{Max}(\mathrm{i})} \times \frac{\operatorname{DALYs}(\mathrm{i})}{\operatorname{DALYs}(\text { all })}\right)\\
+    & +\sum_{\mathrm{j}=1}^6\left(\max \left[\frac{\operatorname{TMREL}(\mathrm{j})-\operatorname{Opt}(\mathrm{j})}{\operatorname{TMREL}(\mathrm{j})} ; 0\right] \times \frac{\operatorname{DALYs}(\mathrm{j})}{\operatorname{DALYs}(\text { all })}\right)\\
+    \min \text{DD}&=\sum_{\mathrm{k}=1}^{\mathrm{n}}\left[\frac{\mathrm{Obs}(\mathrm{k})-\mathrm{Opt}(\mathrm{k})}{\mathrm{SD}(\mathrm{k})}\right]^2
+    \end{aligned}
+    $$
+
+- Leonard, U. M., Kiely, M. E., Can micronutrient requirements be met by diets from sustainable sources: outcomes of dietary modelling studies using diet optimization, Annals of Medicine (2024) [doi](https://doi.org/10.1080/07853890.2024.2389295)
+- Heerschop, S. N., Feasible solutions for sustainable diets with adequate protein intake Modelling diets for the Netherlands and Europe. PhD thesis (2025) [doi](https://doi.org/10.18174/681865), [defense](https://www.wur.nl/en/activity/feasible-solutions-for-sustainable-diets-with-adequate-protein-intake-modelling-diets-for-the-netherlands-and-europe.htm), [SHARP model project](https://www.wur.nl/en/project/sharp-diet-modelling-for-achieving-healthy-and-sustainable-diets.htm)
+  - Propositions:
+    1. A guideline for a global sustainable diet is not suitable for consumers.
+    2. Results of diet optimization models are subjective.
+    3. Prevention through a healthy lifestyle improves quality of life more than medical interventions.
+    4. Planetary health is more important than human health.
 - Other:
-  - https://bmcpublichealth.biomedcentral.com/articles/10.1186/s12889-019-6872-4
+  - https://doi.org/10.1186/s12889-019-6872-4
   - https://arxiv.org/pdf/2312.11767
-  - https://www.cambridge.org/core/journals/public-health-nutrition/article/designing-a-healthy-lowcost-and-environmentally-sustainable-food-basket-an-optimisation-study/F34CA67C609E5F762ED7B72A7F2A1D6C
-  - https://www.mdpi.com/2304-8158/9/11/1677
+  - https://doi.org/10.1017/S1368980020003729
+  - https://doi.org/10.3390/foods9111677
 
 ### Historic notes:
 
