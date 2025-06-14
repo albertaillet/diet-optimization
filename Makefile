@@ -40,9 +40,12 @@ $(CALNUT_1_CSV):
 # https://data.ademe.fr/datasets?topics=TQJGtxm2_ (multiple formats)
 # https://entrepot.recherche.data.gouv.fr/dataset.xhtml?persistentId=doi:10.57745/XTENSJ (.xlsx)
 
+# Sed to remove all rows that are empty or contain only commas.
 AGRIBALYSE_CSV := data/agribalyse_synthese.csv
 $(AGRIBALYSE_CSV):
 	wget -O $(AGRIBALYSE_CSV) https://www.data.gouv.fr/fr/datasets/r/41397293-3e85-4959-8936-940bb79d91fc
+	sed -i.bak '/^,/d' $(AGRIBALYSE_CSV)
+	rm $(AGRIBALYSE_CSV).bak
 
 # fetch-agribalyse-details:
 # 	wget -O data/agribalyse_ingredient_details.csv https://www.data.gouv.fr/fr/datasets/r/6bd67be2-dea5-446c-bbf5-6fff9a6366c0
