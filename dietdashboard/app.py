@@ -32,6 +32,7 @@ DATA_DIR = Path(__file__).parent.parent / "data"
 OFF_USERNAME = os.getenv("OFF_USERNAME")
 TEMPLATE_FOLDER = Path(__file__).parent / "frontend/html"
 QUERY = (Path(__file__).parent / "queries/query.sql").read_text()
+QUERY_DESC = (Path(__file__).parent / "queries/desc.sql").read_text()
 LP_METHOD = "revised simplex"
 CACHE_TIMEOUT = 60 * 10  # 10 minutes
 SQL_ERROR_COL_REF_REGEX = re.compile(r"Binder Error: Referenced column \"([a-zA-Z_]+)\" not found in FROM clause!")
@@ -268,6 +269,16 @@ def create_app() -> Flask:
         colnames = ["location_id", "location_osm_lat", "location_osm_lon", "location_osm_display_name", "count"]
         data = ({f: loc[c] for f, c in zip(fieldnames, colnames, strict=True)} for loc in locations)
         csv_string = create_csv(fieldnames, data)
+        response = make_response(csv_string)
+        response.mimetype = "text/csv"
+        response.headers["Cache-Control"] = f"public, max-age={CACHE_TIMEOUT}"
+        return response
+
+    @app.route("/column_description.csv")
+    def column_description():
+        rows = query_dicts(con=get_con(), query=QUERY_DESC)
+        fieldnames = ["column_name", "comment", "mean", "min", "max"]
+        csv_string = create_csv(fieldnames, rows)
         response = make_response(csv_string)
         response.mimetype = "text/csv"
         response.headers["Cache-Control"] = f"public, max-age={CACHE_TIMEOUT}"

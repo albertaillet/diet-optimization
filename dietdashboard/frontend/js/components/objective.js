@@ -1,5 +1,6 @@
 import * as d3 from "../d3";
 import { handleStateChange } from "../index";
+import { Table } from "./table";
 
 // Regex pattern from objective.py
 const template = `
@@ -19,6 +20,18 @@ The objective function defines the goal of the optimization. It can be set to "p
 <p>
 You can use any valid Python expression here, such as <code>price</code>, <code>carbon</code>, or a custom expression like <code>price + 0.1 * carbon</code>. The expression can include arithmetic operations, variables, and functions.
 </p>
+<table>
+  <thead>
+    <tr>
+      <th>Variable</th>
+      <th>Description</th>
+      <th>Mean</th>
+      <th>Min</th>
+      <th>Max</th>
+    </tr>
+  </thead>
+  <tbody id="objective-variables"></tbody>
+</table>
 `;
 
 /**
@@ -53,5 +66,14 @@ export function Objective(parent, state) {
     .select("input")
     .attr("value", state.objective || "price") // Set the initial value from state or default to "price"
     .on("input", event => onInputChange(event.target.value, state));
+
+  // Loading the objective variables table
+  parent.select("#objective-variables").html("<tr><td>Loading...</td></tr>");
+  fetch("/column_description.csv")
+    .then(response => response.text())
+    .then(text => d3.csvParse(text, d3.autoType))
+    .then(csv => csv.map(row => [row.column_name, row.comment, row.mean, row.min, row.max]))
+    .then(csv => Table(parent.select("#objective-variables"), csv));
+
   onInputChange(state.objective, state); // Validate the initial value
 }
