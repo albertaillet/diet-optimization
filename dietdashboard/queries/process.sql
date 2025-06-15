@@ -57,7 +57,7 @@ Illustration of step_3:
 │ 3111950001928 │            20516 │ carbohydrates      │ g             │           47.5 │ true                      │
 │ 3111950001928 │            20516 │ saturated-fat      │ g             │            0.6 │ true                      │
 │ 3111950001928 │            20516 │ salt               │ g             │           0.06 │ true                      │
-│ 3111950001928 │            20516 │ nova-group         │ NULL          │           NULL │ false                     │
+│ 3111950001928 │            20516 │ nova-group         │ NULL          │            1.0 │ false                     │
 │ 3111950001928 │            20516 │ sodium             │ g             │          0.024 │ true                      │
 │ 3111950001928 │            20516 │ energy-kj          │ kJ            │         1480.0 │ true                      │
 │ 3111950001928 │            20516 │ sugars             │ g             │            6.5 │ true                      │
@@ -67,7 +67,7 @@ Illustration of step_3:
 │       ·       │              ·   │  ·                 │ ·             │             ·  │  ·                        │
 │ 4099200179193 │            20904 │ energy-kj          │ kJ            │          528.0 │ true                      │
 │ 4099200179193 │            20904 │ carbohydrates      │ g             │            0.0 │ true                      │
-│ 4099200179193 │            20904 │ nutrition-score-fr │ NULL          │           NULL │ false                     │
+│ 4099200179193 │            20904 │ nutrition-score-fr │ NULL          │           -3.0 │ false                     │
 │ 4099200179193 │            20904 │ sodium             │ g             │          0.008 │ true                      │
 │ 4099200179193 │            20904 │ fat                │ g             │           7.99 │ true                      │
 │ 4099200179193 │            20904 │ sugars             │ g             │            0.0 │ true                      │
@@ -85,7 +85,7 @@ step_3 AS (
     p.ciqual_food_code,
     n.unnest.name AS off_id,
     n.unnest.unit AS nutrient_unit,
-    n.unnest.value AS nutrient_value,
+    n.unnest."100g" AS nutrient_value,
     nutrient_value IS NOT NULL AND nutrient_unit IS NOT NULL AS product_nutrient_is_valid,
   FROM step_1 AS p,
   UNNEST(p.nutriments) AS n
