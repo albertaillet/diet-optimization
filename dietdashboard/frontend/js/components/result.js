@@ -35,6 +35,7 @@ const template = `<p>The recommended food items and quantities to meet your nutr
       <col style="width: 20%" />
       <col style="width: 15%" />
       <col style="width: 15%" />
+      <col style="width: 15%" />
     </colgroup>
     <thead>
       <tr>
@@ -43,6 +44,7 @@ const template = `<p>The recommended food items and quantities to meet your nutr
         <th>Location</th>
         <th>Quantity (g)</th>
         <th>Price</th>
+        <th></th>
       </tr>
     </thead>
     <tbody id="result-table"></tbody>
@@ -60,8 +62,9 @@ function ResultTable(parent, data) {
       `<a href="https://world.openfoodfacts.org/product/${d.product_code}" target="_blank">${d.product_name}</a>`,
       `<a href="https://ciqual.anses.fr/#/aliments/${d.ciqual_code}" target="_blank">${d.ciqual_name}</a>`,
       `<a href="https://www.openstreetmap.org/way/${d.location_osm_id}" target="_blank">${d.location}</a>`,
-      `<a href="info/${d.id}" target="_blank">${d.quantity_g}</a>`,
-      `<a href="https://prices.openfoodfacts.org/prices/${d.id}" target="_blank">${d.price}</a>`
+      `${d.quantity_g}`,
+      `<a href="https://prices.openfoodfacts.org/prices/${d.id}" target="_blank">${d.price}</a>`,
+      `<a href="info/${d.id}" target="_blank">Product Info</a>`
     ])
   );
 }
