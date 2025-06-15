@@ -63,7 +63,7 @@ nutrient-map-reformat: $(NUTRIENT_MAP_RE)
 nutrient-map-update-counts:
 	./scripts/nutrient_map/nutrient_map_update_counts.py
 
-nutrient-map-update-ciqual:
+nutrient-map-update-ciqual: $(CALNUT_1_CSV)
 	duckdb < ./dietdashboard/queries/nutrient_map_update_ciqual.sql
 
 # ---------- Fetch the EUR Exchange rates from the Europen Central Bank. ----------
@@ -144,7 +144,7 @@ $(NNR_SUMMARY_CSV): $(NNR_EXTRACTED_TABLES)
 rm:
 	rm data/data.db
 
-load: $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(PRICES_PARQUET) $(PRODUCTS_PARQUET) $(EXCHANGE_RATES_CSV)
+load: $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(PRICES_PARQUET) $(PRODUCTS_PARQUET) $(EXCHANGE_RATES_CSV) nutrient-map-update-ciqual
 	time duckdb data/data.db < ./dietdashboard/queries/load.sql
 
 process:
