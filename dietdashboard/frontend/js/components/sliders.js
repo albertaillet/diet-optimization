@@ -34,21 +34,6 @@ const NUTRIENTTYPENAMES = {
 };
 
 /**
- * @param {Array<Result>} products
- * @param {string} nutrientId
- */
-function createSegmentsData(products, nutrientId) {
-  const segments = products.map((p, i) => ({ i: i, id: p.id, name: p.product_name, level: p[nutrientId] })).reverse();
-  let cum = 0;
-  segments.forEach(p => {
-    p.startValue = cum;
-    cum += p.level;
-    p.endValue = cum;
-  });
-  return segments;
-}
-
-/**
  * @param {d3.Selection} parent
  * @param {Array<Result>} productsData
  * @param {Array<Slider>} sliderData
@@ -127,7 +112,7 @@ export function SlidersTableBody(parent, productsData, sliderData) {
       const width = this.parentNode.clientWidth - CONFIG.margin.left - CONFIG.margin.right;
       const x = d3.scaleLinear().domain([d.min, d.max]).range([0, width]);
       Axis(slider, x, height);
-      Segments(slider, createSegmentsData(productsData, d.id), x, height);
+      Segments(slider, productsData, d.id, x, height);
       Brush(slider, d, x, height, width);
     });
 }

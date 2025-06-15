@@ -283,7 +283,7 @@ step_7 AS (
     ciq.alim_ssgrp_code AS ciqual_subgroup_code,
     ciq.alim_ssssgrp_code AS ciqual_subsubgroup_code,
     -- Color column
-    sc.color AS display_color,
+    COALESCE(sc.color, '#ffffff') AS color,
     -- Agribalyse columns
     ab.season_code,
     ab.air_transport_code,

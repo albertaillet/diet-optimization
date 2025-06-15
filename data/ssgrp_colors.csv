@@ -13,6 +13,7 @@ color,alim_ssgrp_code,alim_ssgrp_nom_eng
 #fcd64d,0301,"pasta, rice and grains"
 #c19a6b,0302,breads and similar
 #e5c28e,0303,savoury biscuits
+#f0a83c,0305,"grains (missing in alim_grp, should possibly be reported)"
 #8b4513,0401,cooked meat
 #d94a4a,0402,raw meat
 #e89bac,0403,delicatessen meat and similar

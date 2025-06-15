@@ -213,6 +213,7 @@ def create_app() -> Flask:
             "product_name",
             "ciqual_name",
             "ciqual_code",
+            "color",
             "location",
             "location_osm_id",
             "quantity_g",
@@ -228,6 +229,7 @@ def create_app() -> Flask:
                 "product_name": products_and_prices["product_name"][i],
                 "ciqual_name": products_and_prices["ciqual_name"][i],
                 "ciqual_code": products_and_prices["ciqual_code"][i],
+                "color": products_and_prices["color"][i],
                 "location": location,
                 "location_osm_id": products_and_prices["location_osm_id"][i],
                 "quantity_g": round(100 * x[i], 1),
@@ -235,9 +237,9 @@ def create_app() -> Flask:
                 **{nutrient_id: nutrients_levels[j, i].round(4) for j, nutrient_id in enumerate(chosen_bounds)},
             }
             optimal_products.append(product)
-        reslut_csv_string = create_csv(fieldnames, optimal_products)
-        (debug_folder / "output.csv").write_text(reslut_csv_string)  # Write the CSV to the debug folder
-        response = make_response(reslut_csv_string)
+        result_csv_string = create_csv(fieldnames, optimal_products)
+        (debug_folder / "output.csv").write_text(result_csv_string)  # Write the CSV to the debug folder
+        response = make_response(result_csv_string)
         response.mimetype = "text/csv"
         return response
 
