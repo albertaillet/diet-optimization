@@ -47,8 +47,8 @@ SELECT * FROM full_tables.agribalyse
 WHERE ciqual_food_code IN ('20516', '20904');
 
 CREATE OR REPLACE TABLE euro_exchange_rates AS
-SELECT * FROM full_tables.euro_exchange_rates
-WHERE currency IN ('EUR', 'CHF', 'SEK', 'NOK');
+SELECT currency, CAST(rate AS DOUBLE) AS rate FROM
+(VALUES ('CHF', 0.9358), ('EUR', 1.0), ('NOK', 11.533), ('SEK', 10.9245)) AS t(currency, rate);
 
 CREATE OR REPLACE TABLE prices AS
 SELECT * FROM full_tables.prices
