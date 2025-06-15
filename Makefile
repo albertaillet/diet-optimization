@@ -204,3 +204,68 @@ frontend-copy:
 
 template-rename:
 	duckdb data/data.db "SELECT id FROM nutrient_map WHERE calnut_const_code IS NOT NULL" -csv -noheader | awk '{print $$0 "_value AS " $$0 ","}'
+
+# ---------- Queries to view available units. ----------
+
+unit-products:
+	duckdb data/data.db \
+	"SELECT p.product_quantity_unit AS unit, count(*) AS count \
+	FROM products AS p \
+	GROUP BY p.product_quantity_unit ORDER BY count DESC"
+
+# ┌────────┬─────────┐
+# │  unit  │  count  │
+# ├────────┼─────────┤
+# │ NULL   │ 2853258 │
+# │ g      │  853132 │
+# │ ml     │  151917 │
+# │ mmol/l │      21 │
+# │ %      │      18 │
+# │ kj     │      13 │
+# └────────┴─────────┘
+
+unit-nutrients:
+	duckdb data/data.db \
+	"SELECT n.unnest.unit as unit, count(*) AS count \
+	FROM products, UNNEST(products.nutriments) AS n \
+	GROUP BY n.unnest.unit ORDER BY count DESC"
+
+# ┌───────────┬──────────┐
+# │   unit    │  count   │
+# ├───────────┼──────────┤
+# │ g         │ 19830436 │
+# │ kcal      │  5286595 │
+# │ NULL      │  4613615 │
+# │ mg        │  2034441 │
+# │           │   996735 │
+# │ kJ        │   752115 │
+# │ IU        │   185308 │
+# │ µg        │   147253 │
+# │ % vol     │    44983 │
+# │ % DV      │    30690 │
+# │ kj        │    19114 │
+# │ %         │     3891 │
+# │ % vol / * │     1452 │
+# │ &#181;g   │      552 │
+# │ mcg       │      333 │
+# │ vol       │       90 │
+# │ 100g      │       56 │
+# │ g/100mL   │       41 │
+# │ g/100g    │       20 │
+# │ Cal       │       19 │
+# │ missing   │        8 │
+# etc..
+
+unit-ciqual-calnut:
+	duckdb data/data.db "SELECT ciqual_unit, count(*) AS count FROM nutrient_map AS n GROUP BY ciqual_unit ORDER BY count DESC"
+	duckdb data/data.db "SELECT calnut_unit, count(*) AS count FROM nutrient_map AS n GROUP BY calnut_unit ORDER BY count DESC"
+
+# ┌─────────────┬───────┐     ┌─────────────┬───────┐
+# │ ciqual_unit │ count │     │ calnut_unit │ count │
+# ├─────────────┼───────┤     ├─────────────┼───────┤
+# │ g           │    34 │     │ g           │    34 │
+# │ mg          │    17 │     │ mg          │    17 │
+# │ µg          │     9 │     │ mcg         │     9 │
+# │ kj          │     1 │     │ kj          │     1 │
+# │ kcal        │     1 │     │ kcal        │     1 │
+# └─────────────┴───────┘     └─────────────┴───────┘

@@ -1,0 +1,8 @@
+from_unit,to_unit,conversion_factor,name,comment
+g,g,1.0,gram,
+mg,g,0.001,milligram,
+µg,g,1e-06,microgram,
+mcg,g,1e-06,microgram,non-SI alias for µg
+kJ,kcal,0.239005736,kilojoule,
+kj,kcal,0.239005736,kilojoule,
+kcal,kcal,1.0,kilocalorie,

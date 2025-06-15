@@ -22,6 +22,10 @@ CREATE OR REPLACE TABLE recommendations_nnr2023 AS (
   value_males, value_females, value_upper_intake
   FROM read_csv('data/recommendations_nnr2023.csv')
 );
+-- Hardcoded unit conversions
+CREATE OR REPLACE TABLE unit_conversion AS (
+  SELECT from_unit, to_unit, conversion_factor FROM read_csv('data/unit_conversion.csv')
+);
 /* Tables:
 - alim: information about the food (3 185 rows)
 - compo: information about the nutrients in the food (211 898 rows)

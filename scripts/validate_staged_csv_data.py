@@ -101,6 +101,14 @@ def validate_recommendations_nnr2023(reader):
         assert not row["value_upper_intake"] or float(row["value_upper_intake"]) >= 0, row
 
 
+def validate_unit_conversion(reader):
+    for row in reader:
+        assert row["from_unit"], row
+        assert row["to_unit"], row
+        assert row["conversion_factor"], row
+        assert float(row["conversion_factor"]) > 0, row
+
+
 if __name__ == "__main__":
     FILE_PATHS = [Path(p).resolve() for p in sys.argv[1:]]
 
@@ -119,5 +127,7 @@ if __name__ == "__main__":
                     validate_recommendations_nnr2023(reader)
                 case "test_objectives":
                     test_valid(reader)
+                case "unit_conversion":
+                    validate_unit_conversion(reader)
                 case _:
                     raise ValueError(f"Unknown staged csv file {file_path}.")
