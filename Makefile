@@ -64,7 +64,7 @@ nutrient-map-update-counts:
 	./scripts/nutrient_map/nutrient_map_update_counts.py
 
 nutrient-map-update-ciqual:
-	./scripts/nutrient_map/nutrient_map_update_ciqual.py
+	duckdb < ./dietdashboard/queries/nutrient_map_update_ciqual.sql
 
 # ---------- Fetch the EUR Exchange rates from the Europen Central Bank. ----------
 
