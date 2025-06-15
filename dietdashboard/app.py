@@ -116,10 +116,22 @@ def create_app() -> Flask:
     app.config["COMPRESS_MIMETYPES"] = ["text/html", "text/css", "text/javascript", "text/csv", "text/plain"]
     Compress(app)
     app.template_folder = TEMPLATE_FOLDER
-    recommendations = query_dicts(con=get_con(), query="""SELECT * FROM recommendations""")
+    con = get_con()
+
+    # Create sliders
+    recommendations = query_dicts(con=con, query="""SELECT * FROM recommendations""")
     nutrient_ids = [row["id"] for row in recommendations]
     sliders = [{k: rec[k] for k in ("id", "name", "unit", "nutrient_type")} | create_rangeslider(rec) for rec in recommendations]
     slider_csv = create_csv(["id", "name", "unit", "nutrient_type", "min", "max", "lower", "upper", "active"], sliders)  # type: ignore[reportArgumentType]
+
+    # Create nutrient for info page (and order them)
+    q = """SELECT nutrient_type, list({'id': id, 'name': name, 'unit': ciqual_unit}) AS nutrients
+             FROM nutrient_map GROUP BY nutrient_type"""
+    grouped_nutrients = query_dicts(con=con, query=q)
+    order = {nt: i for i, nt in enumerate(["energy", "macro", "sugar", "fatty_acid", "mineral", "vitamin", "other"])}
+    grouped_nutrients.sort(key=lambda x: order.get(x["nutrient_type"], len(order)))
+
+    con.close()
 
     @app.route("/")
     def index():
@@ -231,10 +243,11 @@ def create_app() -> Flask:
 
     @app.route("/info/<price_id>", methods=["GET"])
     def info(price_id: str) -> str:
-        row_dicts = query_dicts(get_con(), """SELECT * FROM data.final_table WHERE price_id = $price_id""", price_id=price_id)
-        if len(row_dicts) == 0:
+        rows = query_dicts(get_con(), """SELECT * FROM data.final_table WHERE price_id = $price_id""", price_id=price_id)
+        if len(rows) == 0:
             return "<h1>No product found</h1>"
-        return render_template("info.html", item=row_dicts[0])
+        row = rows[0]
+        return render_template("info.html", item=row, grouped_nutrients=grouped_nutrients)
 
     # serve all static files TODO: do this in a better way
     @app.route("/static/<path:path>")
