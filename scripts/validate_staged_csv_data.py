@@ -39,8 +39,8 @@ def validate_nutrient_map(reader):
     for row in reader:
         assert row["id"], row
         assert row["name"], row
-        assert row["disabled"] in {"", "TRUE"}, row
-        assert row["template"] in {"", "TRUE"}, row
+        assert row["disabled"] in {"", "true"}, row
+        assert row["template"] in {"", "true"}, row
         assert row["nutrient_type"] in {"energy", "macro", "sugar", "fatty_acid", "mineral", "vitamin", "other"}, row
         if row["ciqual_const_code"]:
             assert int(row["ciqual_const_code"]), row  # Check that the ciqual_const_code is a non-zero integer

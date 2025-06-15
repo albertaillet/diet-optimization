@@ -20,7 +20,7 @@ if __name__ == "__main__":
         reader = csv.DictReader(f)
         for row in reader:
             new_nutrient_map.append(row)
-            code = row["calnut_const_code"]
+            code = row["ciqual_const_code"]
             if code not in code_to_name:
                 print(f"Missing const code: {code}")
                 continue
