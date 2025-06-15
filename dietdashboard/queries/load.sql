@@ -26,6 +26,10 @@ CREATE OR REPLACE TABLE recommendations_nnr2023 AS (
 CREATE OR REPLACE TABLE unit_conversion AS (
   SELECT from_unit, to_unit, conversion_factor FROM read_csv('data/unit_conversion.csv')
 );
+-- Hardcoded colors
+CREATE OR REPLACE TABLE ssgrp_colors AS (
+  SELECT color, alim_ssgrp_code, alim_ssgrp_nom_eng FROM read_csv('data/ssgrp_colors.csv')
+);
 /* Tables:
 - alim: information about the food (3 185 rows)
 - compo: information about the nutrients in the food (211 898 rows)

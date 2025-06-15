@@ -24,6 +24,9 @@ CREATE OR REPLACE TABLE nutrient_map AS
 SELECT * FROM full_tables.nutrient_map
 WHERE id IN ('sodium', 'protein');
 
+CREATE OR REPLACE TABLE ssgrp_colors AS
+SELECT * FROM full_tables.ssgrp_colors;
+
 CREATE OR REPLACE TABLE ciqual_alim AS
 SELECT * FROM full_tables.ciqual_alim
 WHERE alim_code IN ('20516', '20904');

@@ -2,6 +2,7 @@
 """This script validates the csv files data, and is run using pre-commit before they are committed."""
 
 import csv
+import string
 import sys
 from pathlib import Path
 
@@ -109,6 +110,16 @@ def validate_unit_conversion(reader):
         assert float(row["conversion_factor"]) > 0, row
 
 
+def validate_ssgrp_colors(reader):
+    for row in reader:
+        assert row["alim_ssgrp_code"], row
+        assert row["alim_ssgrp_nom_eng"], row
+        assert row["color"], row
+        assert row["color"].startswith("#"), row
+        assert len(row["color"]) == 7, row  # Hex color code should be 7 characters long including '#'
+        assert all(c in string.hexdigits for c in row["color"][1:]), row
+
+
 if __name__ == "__main__":
     FILE_PATHS = [Path(p).resolve() for p in sys.argv[1:]]
 
@@ -129,5 +140,7 @@ if __name__ == "__main__":
                     test_valid(reader)
                 case "unit_conversion":
                     validate_unit_conversion(reader)
+                case "ssgrp_colors":
+                    validate_ssgrp_colors(reader)
                 case _:
                     raise ValueError(f"Unknown staged csv file {file_path}.")

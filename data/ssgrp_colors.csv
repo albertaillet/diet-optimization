@@ -1,0 +1,65 @@
+color,alim_ssgrp_code,alim_ssgrp_nom_eng
+#7cb342,0101,mixed salads
+#ffb84d,0102,soups
+#d5a56b,0103,dishes
+#ef4a4a,0104,"pizzas, crepe and pies"
+#9c7334,0105,sandwiches
+#e465c0,0106,savoury pastries and other starters
+#206f23,0201,vegetables
+#ebd43b,0202,potatoes and other tubers
+#a2b65e,0203,legumes
+#ff4f4f,0204,fruits
+#e4b699,0205,nuts and seeds
+#fcd64d,0301,"pasta, rice and grains"
+#c19a6b,0302,breads and similar
+#e5c28e,0303,savoury biscuits
+#8b4513,0401,cooked meat
+#d94a4a,0402,raw meat
+#e89bac,0403,delicatessen meat and similar
+#8b5a2b,0404,other meat products
+#d1dbe2,0405,"fish, cooked"
+#ffa07a,0406,"fish, raw"
+#ff8c42,0407,"seafood, cooked"
+#b0c4de,0408,"seafood, raw"
+#f0e68c,0409,fish products
+#fff8dc,0410,eggs
+#b3a854,0411,meat substitute
+#ffffff,0501,milk
+#fffdd0,0502,dairy products and similar
+#ffd95b,0503,cheese and similar
+#fff1e0,0504,cream and similar
+#add8e6,0601,water
+#d4a017,0602,non-alcoholic beverages
+#8b0000,0603,alcoholic beverages
+#ffc30b,0701,sugars and honey
+#7b3f00,0702,chocolate and chocolate products
+#ff69b4,0703,non-chocolate confectionery
+#c2185b,0704,jam
+#e8b169,0705,Viennese pastries
+#f6d8a5,0706,sweet biscuits
+#d8b16e,0707,breakfast cereals
+#a67b5b,0708,cereal bars
+#f3e5ab,0709,cakes and pastry
+#a9a9a9,0000,-
+#ffd1dc,0801,ice cream
+#ffe0b2,0802,sorbet
+#e1bee7,0803,frozen desserts
+#ffe135,0901,butters
+#f8de7e,0902,vegetable oils
+#fff5ba,0903,margarines
+#ffa500,0904,fish oils
+#fff8e1,0905,other fats
+#e53935,1001,sauces
+#ffeb3b,1002,condiments
+#b0bec5,1003,cooking aids
+#f5f5f5,1004,salts
+#ff7043,1005,spices
+#2e7d32,1006,herbs
+#014421,1007,seaweed
+#ce93d8,1008,foods for particular nutritional uses
+#b2ff59,1009,miscellaneous ingredients for vegetarian
+#bdbdbd,1009,miscellaneous ingredients
+#fff9c4,1101,baby milk and beverages
+#ffccbc,1102,baby dishes
+#ffe4e1,1103,baby deserts
+#f0ead6,1104,baby biscuits and cereals

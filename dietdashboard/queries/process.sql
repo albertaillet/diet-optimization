@@ -258,15 +258,15 @@ step_6 AS (
   FROM step_5
 ),
 /* Illustration of step_7:
-┌───────────────┬──────────────┬──────────────────┬──────────────────────┬─────────────┬───┬────────────────┬─────────┬──────────────┬────────────────┐
-│ product_code  │ product_name │ product_quantity │ product_quantity_u…  │ ciqual_code │ … │ sodium_origin  │ protein │ protein_unit │ protein_origin │
-│    varchar    │   varchar    │      float       │       varchar        │    int64    │   │    varchar     │  float  │   varchar    │    varchar     │
-├───────────────┼──────────────┼──────────────────┼──────────────────────┼─────────────┼───┼────────────────┼─────────┼──────────────┼────────────────┤
-│ 3111950001928 │ Pois chiches │           1000.0 │ g                    │       20516 │ … │ ciqual_C_81259 │    20.5 │ g            │ product        │
-│ 4099200179193 │ Tofu natur   │            350.0 │ g                    │       20904 │ … │ ciqual_A_83096 │    13.0 │ g            │ product        │
-│ 4099200179193 │ Tofu natur   │            350.0 │ g                    │       20904 │ … │ ciqual_A_83096 │    13.0 │ g            │ product        │
-├───────────────┴──────────────┴──────────────────┴──────────────────────┴─────────────┴───┴────────────────┴─────────┴──────────────┴────────────────┤
-│ 3 rows                                                                                                                         52 columns (9 shown) │
+┌───────────────┬──────────────┬──────────────────┬──────────────────────┬───┬─────────────┬────────────────┬─────────┬──────────────┬────────────────┐
+│ product_code  │ product_name │ product_quantity │ product_quantity_u…  │ … │ sodium_unit │ sodium_origin  │ protein │ protein_unit │ protein_origin │
+│    varchar    │   varchar    │      float       │       varchar        │   │   varchar   │    varchar     │  float  │   varchar    │    varchar     │
+├───────────────┼──────────────┼──────────────────┼──────────────────────┼───┼─────────────┼────────────────┼─────────┼──────────────┼────────────────┤
+│ 3111950001928 │ Pois chiches │           1000.0 │ g                    │ … │ mg          │ ciqual_C_81259 │    20.5 │ g            │ product        │
+│ 4099200179193 │ Tofu natur   │            350.0 │ g                    │ … │ mg          │ ciqual_A_83096 │    13.0 │ g            │ product        │
+│ 4099200179193 │ Tofu natur   │            350.0 │ g                    │ … │ mg          │ ciqual_A_83096 │    13.0 │ g            │ product        │
+├───────────────┴──────────────┴──────────────────┴──────────────────────┴───┴─────────────┴────────────────┴─────────┴──────────────┴────────────────┤
+│ 3 rows                                                                                                                         53 columns (9 shown) │
 └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 step_7 AS (
@@ -282,6 +282,8 @@ step_7 AS (
     ciq.alim_grp_code AS ciqual_group_code,
     ciq.alim_ssgrp_code AS ciqual_subgroup_code,
     ciq.alim_ssssgrp_code AS ciqual_subsubgroup_code,
+    -- Color column
+    sc.color AS display_color,
     -- Agribalyse columns
     ab.season_code,
     ab.air_transport_code,
@@ -356,6 +358,8 @@ step_7 AS (
     ON prev.ciqual_food_code = ciq.alim_code
   LEFT JOIN agribalyse AS ab
     ON prev.ciqual_food_code = ab.ciqual_food_code
+  LEFT JOIN ssgrp_colors AS sc
+    ON ciq.alim_ssgrp_code = sc.alim_ssgrp_code
   WHERE pr.price IS NOT NULL
     AND p.product_quantity > 0 and p.product_quantity < 30000 -- Filter out invalid quantities (e.g. 0 or >30 kg)
 )
