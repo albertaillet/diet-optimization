@@ -203,12 +203,12 @@ frontend-copy:
 # ---------- Create the nutrient extraction template. ----------
 
 template-rename:
-	duckdb data/data.db "SELECT id FROM nutrient_map WHERE calnut_const_code IS NOT NULL" -csv -noheader | awk '{print $$0 "_value AS " $$0 ","}'
+	duckdb data/data.db -readonly "SELECT id FROM nutrient_map WHERE calnut_const_code IS NOT NULL" -csv -noheader | awk '{print $$0 "_value AS " $$0 ","}'
 
 # ---------- Queries to view available units. ----------
 
 unit-products:
-	duckdb data/data.db \
+	duckdb data/data.db -readonly \
 	"SELECT p.product_quantity_unit AS unit, count(*) AS count \
 	FROM products AS p \
 	GROUP BY p.product_quantity_unit ORDER BY count DESC"
@@ -225,7 +225,7 @@ unit-products:
 # └────────┴─────────┘
 
 unit-nutrients:
-	duckdb data/data.db \
+	duckdb data/data.db -readonly \
 	"SELECT n.unnest.unit as unit, count(*) AS count \
 	FROM products, UNNEST(products.nutriments) AS n \
 	GROUP BY n.unnest.unit ORDER BY count DESC"
@@ -257,8 +257,8 @@ unit-nutrients:
 # etc..
 
 unit-ciqual-calnut:
-	duckdb data/data.db "SELECT ciqual_unit, count(*) AS count FROM nutrient_map AS n GROUP BY ciqual_unit ORDER BY count DESC"
-	duckdb data/data.db "SELECT calnut_unit, count(*) AS count FROM nutrient_map AS n GROUP BY calnut_unit ORDER BY count DESC"
+	duckdb data/data.db -readonly "SELECT ciqual_unit, count(*) AS count FROM nutrient_map AS n GROUP BY ciqual_unit ORDER BY count DESC"
+	duckdb data/data.db -readonly "SELECT calnut_unit, count(*) AS count FROM nutrient_map AS n GROUP BY calnut_unit ORDER BY count DESC"
 
 # ┌─────────────┬───────┐     ┌─────────────┬───────┐
 # │ ciqual_unit │ count │     │ calnut_unit │ count │
