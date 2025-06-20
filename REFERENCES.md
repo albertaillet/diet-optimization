@@ -235,6 +235,12 @@ Related [xkcd](https://xkcd.com/927/).
 - [Documenu](https://github.com/documenu), Restaurant menu API.
 - 🎖️[knowledge-mining-nutrition](https://forgemia.inra.fr/stephane.dervaux/knowledge-mining-nutrition) Ongoing research project on knowledge mining in nutrition (02/2025).
 
+### Linear programming inside databases:
+
+- Linear Optimization in Relational Databases thesis at UZH [Berni](https://www.ifi.uzh.ch/dam/jcr:adafa697-21ee-43a9-9031-fc27d5428dee/ReportBerniBSc.pdf) [Peru](https://www.ifi.uzh.ch/dam/jcr:21df42d7-3d96-47a8-bef6-3d512bad0a60/preuFacharbeit.pdf)
+- [Running LP-solver in Postgres](https://skipperkongen.dk/2013/06/17/running-lp-solver-in-postgres/)
+- [SolveDB](https://github.com/aau-daisy/solvedb), a PostgreSQL-based DBMS for optimization applications
+
 ### Outdated projects:
 
 - [MyDietCoach](https://www.mydietcoachapp.com/) (deprecated, now redirects to [Bending Spoons](https://www.bendingspoons.com/))
