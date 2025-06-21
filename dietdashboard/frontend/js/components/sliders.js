@@ -48,16 +48,45 @@ export function Sliders(parent, productsData, sliderData) {
  * @param {d3.Selection} parent
  */
 function SliderLabelAndButtons(parent) {
+  /**
+   * @param {string} nutrient_type
+   * @param {boolean} bool
+   */
+  const setAllCheckboxes = (nutrient_type, bool) =>
+    parent
+      .selectAll("input[type='checkbox']")
+      .filter(d => d.nutrient_type == nutrient_type)
+      .property("checked", bool)
+      .each(d => (d.active = bool));
+
   // Add header row
   parent
     .filter(d => d.header)
     .append("td")
     .attr("colspan", 4)
-    .append("h3")
-    .text(d => NUTRIENTTYPENAMES[d.nutrient_type]);
+    .append("div")
+    .attr("style", "display: flex; justify-content: space-between; align-items: center;")
+    .call(div => div.append("h3").text(d => NUTRIENTTYPENAMES[d.nutrient_type]))
+    .append("div")
+    .call(div => {
+      div
+        .append("button")
+        .text("Deselect All")
+        .on("click", (event, d) => {
+          setAllCheckboxes(d.nutrient_type, false);
+          handleStateChange();
+        });
+      div
+        .append("button")
+        .text("Select All")
+        .on("click", (event, d) => {
+          setAllCheckboxes(d.nutrient_type, true);
+          handleStateChange();
+        });
+    });
 
   // Add nutrient rows with sliders
-  return parent
+  parent
     .filter(d => !d.header)
     .call(tr => tr.append("td").text(d => `${d.name} (${d.unit})`))
     .call(tr =>
@@ -66,8 +95,8 @@ function SliderLabelAndButtons(parent) {
         .append("input")
         .attr("type", "checkbox")
         .property("checked", d => d.active)
-        .on("change", (event, nutrient) => {
-          nutrient.active = event.target.checked;
+        .on("change", (event, d) => {
+          d.active = event.target.checked;
           handleStateChange();
         })
     )
