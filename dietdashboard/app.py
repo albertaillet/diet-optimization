@@ -142,7 +142,8 @@ def create_app() -> Flask:
     def validate():
         """Validate the objective function expression."""
         objective_string = request.args.get("q", "")
-        valid, message = validate_objective(get_con(), unquote(objective_string))  # unquote to decode URL-encoded characters
+        with get_con() as con:
+            valid, message = validate_objective(con, unquote(objective_string))  # unquote to decode URL-encoded characters
         return app.json.response({"valid": valid, "message": message})
 
     @app.route("/optimize.csv", methods=["POST"])
@@ -173,6 +174,7 @@ def create_app() -> Flask:
         chosen_nutrient_ids = [nid for nid in nutrient_ids if nid in chosen_bounds]
         products_and_prices = query_numpy(con, q, locations=locations, nutrient_ids=chosen_nutrient_ids)
         query_time = time.perf_counter() - start
+        con.close()
 
         start = time.perf_counter()
         A_nutrients, lb, ub, c_costs = get_arrays(chosen_bounds, products_and_prices)
@@ -246,7 +248,8 @@ def create_app() -> Flask:
 
     @app.route("/info/<price_id>", methods=["GET"])
     def info(price_id: str) -> str:
-        rows = query_dicts(get_con(), """SELECT * FROM data.final_table WHERE price_id = $price_id""", price_id=price_id)
+        with get_con() as con:
+            rows = query_dicts(con, """SELECT * FROM data.final_table WHERE price_id = $price_id""", price_id=price_id)
         if len(rows) == 0:
             return "<h1>No product found</h1>"
         row = rows[0]
@@ -264,7 +267,8 @@ def create_app() -> Flask:
             location_id, location_osm_lat, location_osm_lon, location_osm_display_name, COUNT(*) AS count
             FROM final_table
             GROUP BY location_id, location_osm_lat, location_osm_lon, location_osm_display_name"""
-        locations = query_dicts(con=get_con(), query=query)
+        with get_con() as con:
+            locations = query_dicts(con=con, query=query)
         fieldnames = ["id", "lat", "lon", "name", "count"]
         colnames = ["location_id", "location_osm_lat", "location_osm_lon", "location_osm_display_name", "count"]
         data = ({f: loc[c] for f, c in zip(fieldnames, colnames, strict=True)} for loc in locations)
@@ -276,7 +280,9 @@ def create_app() -> Flask:
 
     @app.route("/column_description.csv")
     def column_description():
-        rows = query_dicts(con=get_con(), query=QUERY_DESC)
+        with get_con() as con:
+            # Fetch the column descriptions from the database
+            rows = query_dicts(con=con, query=QUERY_DESC)
         fieldnames = ["column_name", "comment", "mean", "min", "max"]
         csv_string = create_csv(fieldnames, rows)
         response = make_response(csv_string)
