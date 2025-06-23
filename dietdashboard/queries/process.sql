@@ -258,16 +258,16 @@ step_6 AS (
   FROM step_5
 ),
 /* Illustration of step_7:
-┌───────────────┬──────────────┬──────────────────┬──────────────────────┬───┬─────────────┬────────────────┬─────────┬──────────────┬────────────────┐
-│ product_code  │ product_name │ product_quantity │ product_quantity_u…  │ … │ sodium_unit │ sodium_origin  │ protein │ protein_unit │ protein_origin │
-│    varchar    │   varchar    │      float       │       varchar        │   │   varchar   │    varchar     │  float  │   varchar    │    varchar     │
-├───────────────┼──────────────┼──────────────────┼──────────────────────┼───┼─────────────┼────────────────┼─────────┼──────────────┼────────────────┤
-│ 3111950001928 │ Pois chiches │           1000.0 │ g                    │ … │ mg          │ ciqual_C_81259 │    20.5 │ g            │ product        │
-│ 4099200179193 │ Tofu natur   │            350.0 │ g                    │ … │ mg          │ ciqual_A_83096 │    13.0 │ g            │ product        │
-│ 4099200179193 │ Tofu natur   │            350.0 │ g                    │ … │ mg          │ ciqual_A_83096 │    13.0 │ g            │ product        │
-├───────────────┴──────────────┴──────────────────┴──────────────────────┴───┴─────────────┴────────────────┴─────────┴──────────────┴────────────────┤
-│ 3 rows                                                                                                                         53 columns (9 shown) │
-└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌───────────────┬──────────────┬──────────────────┬───┬───────────────────┬──────────────────────┬──────────────────────┬──────────────────────┐
+│ product_code  │ product_name │ product_quantity │ … │ mineral_depletion │ biogenic_climate_c…  │ fossil_climate_cha…  │ land_use_change_cl…  │
+│    varchar    │   varchar    │      float       │   │      double       │        double        │        double        │        double        │
+├───────────────┼──────────────┼──────────────────┼───┼───────────────────┼──────────────────────┼──────────────────────┼──────────────────────┤
+│ 3111950001928 │ Pois chiches │           1000.0 │ … │           4.9e-06 │               0.0148 │                0.709 │                0.175 │
+│ 4099200179193 │ Tofu natur   │            350.0 │ … │          5.15e-06 │               0.0161 │                0.986 │              0.00187 │
+│ 4099200179193 │ Tofu natur   │            350.0 │ … │          5.15e-06 │               0.0161 │                0.986 │              0.00187 │
+├───────────────┴──────────────┴──────────────────┴───┴───────────────────┴──────────────────────┴──────────────────────┴──────────────────────┤
+│ 3 rows                                                                                                                  53 columns (7 shown) │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 step_7 AS (
   SELECT
@@ -284,33 +284,6 @@ step_7 AS (
     ciq.alim_ssssgrp_code AS ciqual_subsubgroup_code,
     -- Color column
     COALESCE(sc.color, '#ffffff') AS color,
-    -- Agribalyse columns
-    ab.season_code,
-    ab.air_transport_code,
-    ab.delivery_method,
-    ab.packaging_approach,
-    ab.preparation_method,
-    ab.data_quality_rating,
-    ab.eco_score,
-    ab.climate_change_score,
-    ab.ozone_depletion_score,
-    ab.ionizing_radiation_score,
-    ab.photochemical_ozone_formation_score,
-    ab.fine_particles_score,
-    ab.non_carcinogenic_toxicity_score,
-    ab.carcinogenic_toxicity_score,
-    ab.terrestrial_acidification_score,
-    ab.freshwater_eutrophication_score,
-    ab.marine_eutrophication_score,
-    ab.terrestrial_eutrophication_score,
-    ab.freshwater_ecotoxicity_score,
-    ab.land_use_score,
-    ab.water_depletion_score,
-    ab.energy_depletion_score,
-    ab.mineral_depletion_score,
-    ab.biogenic_climate_change_emissions,
-    ab.fossil_climate_change_emissions,
-    ab.land_use_change_climate_change_emissions,
     -- Price columns
     pr.id AS price_id,
     pr.price as product_price,
@@ -347,6 +320,33 @@ step_7 AS (
     100 * pr.price / p.product_quantity / ex.rate AS price,  -- TODO: this assumes that product_quantity is in grams
     -- Nutrient columns
     prev.*,
+    -- Agribalyse columns
+    ab.season_code,
+    ab.air_transport_code,
+    ab.delivery_method,
+    ab.packaging_approach,
+    ab.preparation_method,
+    ab.data_quality_rating,
+    ab.eco_score,
+    ab.climate_change,
+    ab.ozone_depletion,
+    ab.ionizing_radiation,
+    ab.photochemical_ozone_formation,
+    ab.fine_particles,
+    ab.non_carcinogenic_toxicity,
+    ab.carcinogenic_toxicity,
+    ab.terrestrial_acidification,
+    ab.freshwater_eutrophication,
+    ab.marine_eutrophication,
+    ab.terrestrial_eutrophication,
+    ab.freshwater_ecotoxicity,
+    ab.land_use,
+    ab.water_depletion,
+    ab.energy_depletion,
+    ab.mineral_depletion,
+    ab.biogenic_climate_change_emissions,
+    ab.fossil_climate_change_emissions,
+    ab.land_use_change_climate_change_emissions,
   FROM prices AS pr
   JOIN step_6 AS prev
     ON pr.product_code = prev.code
@@ -370,7 +370,8 @@ COMMENT ON COLUMN final_table.product_code IS 'Product code (EAN-13)';
 COMMENT ON COLUMN final_table.product_name IS 'Product name in Original language';
 COMMENT ON COLUMN final_table.product_quantity IS 'Product quantity in grams or milliliters';
 COMMENT ON COLUMN final_table.product_quantity_unit IS 'Product quantity unit (g or ml)';
-COMMENT ON COLUMN final_table.product_price IS 'Product price in EUR/100g';
+COMMENT ON COLUMN final_table.product_price IS 'Price of one product in EUR';
+COMMENT ON COLUMN final_table.price IS 'Price in EUR/100g';
 COMMENT ON COLUMN final_table.product_currency IS 'Product price currency (EUR)';
 COMMENT ON COLUMN final_table.price_id IS 'Price ID in Open Prices';
 -- SELECT product_quantity_unit AS unit, count(*) AS cnt from final_table GROUP BY unit ORDER BY cnt DESC;
@@ -411,7 +412,7 @@ COMMENT ON COLUMN final_table.fa_18_3_a_lino IS 'Fatty acid 18:3 alpha-linolenic
 COMMENT ON COLUMN final_table.fa_20_4_ara IS 'Fatty acid 20:4 arachidonic g/100g';
 COMMENT ON COLUMN final_table.fa_20_5_epa IS 'Fatty acid 20:5 eicosapentaenoic g/100g';
 COMMENT ON COLUMN final_table.fa_20_6_dha IS 'Fatty acid 20:6 docosahexaenoic g/100g';
-COMMENT ON COLUMN final_table.cholesterol IS 'Cholesterol g/100g';
+COMMENT ON COLUMN final_table.cholesterol IS 'Cholesterol mg/100g';
 COMMENT ON COLUMN final_table.salt IS 'Salt g/100g';
 COMMENT ON COLUMN final_table.calcium IS 'Calcium mg/100g';
 COMMENT ON COLUMN final_table.copper IS 'Copper mg/100g';
@@ -437,27 +438,29 @@ COMMENT ON COLUMN final_table.vitamin_pp IS 'Vitamin PP mg/100g';
 COMMENT ON COLUMN final_table.pantothenic_acid IS 'Pantothenic acid mg/100g';
 COMMENT ON COLUMN final_table.vitamin_b6 IS 'Vitamin B6 mg/100g';
 COMMENT ON COLUMN final_table.vitamin_b9 IS 'Vitamin B9 µg/100g';
-COMMENT ON COLUMN final_table.folates IS 'Folates µg/100g';
+COMMENT ON COLUMN final_table.folates IS 'Folates';
 COMMENT ON COLUMN final_table.vitamin_b12 IS 'Vitamin B12 µg/100g';
-
+-- See documentation links for agribalyse in Makefile
+-- This document was used: Agribalyse-Guide-VF_Planche.pdf
 COMMENT ON COLUMN final_table.data_quality_rating IS 'Agribalyse data quality rating';
 COMMENT ON COLUMN final_table.eco_score IS 'Agribalyse eco score';
-COMMENT ON COLUMN final_table.climate_change_score IS 'Agribalyse climate change score';
-COMMENT ON COLUMN final_table.ozone_depletion_score IS 'Agribalyse ozone depletion score';
-COMMENT ON COLUMN final_table.ionizing_radiation_score IS 'Agribalyse ionizing radiation score';
-COMMENT ON COLUMN final_table.photochemical_ozone_formation_score IS 'Agribalyse photochemical ozone formation score';
-COMMENT ON COLUMN final_table.fine_particles_score IS 'Agribalyse fine particles score';
-COMMENT ON COLUMN final_table.non_carcinogenic_toxicity_score IS 'Agribalyse non-carcinogenic toxicity score';
-COMMENT ON COLUMN final_table.carcinogenic_toxicity_score IS 'Agribalyse carcinogenic toxicity score';
-COMMENT ON COLUMN final_table.terrestrial_acidification_score IS 'Agribalyse terrestrial acidification score';
-COMMENT ON COLUMN final_table.freshwater_eutrophication_score IS 'Agribalyse freshwater eutrophication score';
-COMMENT ON COLUMN final_table.marine_eutrophication_score IS 'Agribalyse marine eutrophication score';
-COMMENT ON COLUMN final_table.terrestrial_eutrophication_score IS 'Agribalyse terrestrial eutrophication score';
-COMMENT ON COLUMN final_table.freshwater_ecotoxicity_score IS 'Agribalyse freshwater ecotoxicity score';
-COMMENT ON COLUMN final_table.land_use_score IS 'Agribalyse land use score';
-COMMENT ON COLUMN final_table.water_depletion_score IS 'Agribalyse water depletion score';
-COMMENT ON COLUMN final_table.energy_depletion_score IS 'Agribalyse energy depletion score';
-COMMENT ON COLUMN final_table.mineral_depletion_score IS 'Agribalyse mineral depletion score';
+COMMENT ON COLUMN final_table.climate_change IS 'Agribalyse climate change (kg CO2 eq)';
+COMMENT ON COLUMN final_table.ozone_depletion IS 'Agribalyse ozone depletion (kg CFC-11 eq)';
+COMMENT ON COLUMN final_table.fine_particles IS 'Agribalyse fine particles (Disease incidences)';
+COMMENT ON COLUMN final_table.terrestrial_acidification IS 'Agribalyse terrestrial acidification (mol H+ eq)';
+COMMENT ON COLUMN final_table.freshwater_eutrophication IS 'Agribalyse freshwater eutrophication (kg P eq)';
+COMMENT ON COLUMN final_table.marine_eutrophication IS 'Agribalyse marine eutrophication (kg N eq)';
+COMMENT ON COLUMN final_table.terrestrial_eutrophication IS 'Agribalyse terrestrial eutrophication (mol N eq)';
+COMMENT ON COLUMN final_table.ionizing_radiation IS 'Agribalyse ionizing radiation (kBq U-235 eq)';
+COMMENT ON COLUMN final_table.photochemical_ozone_formation IS 'Agribalyse photochemical ozone formation (kg NMVOC eq)';
+COMMENT ON COLUMN final_table.freshwater_ecotoxicity IS 'Agribalyse freshwater ecotoxicity (CTUe)';
+COMMENT ON COLUMN final_table.carcinogenic_toxicity IS 'Agribalyse carcinogenic toxicity (CTUh)';
+COMMENT ON COLUMN final_table.non_carcinogenic_toxicity IS 'Agribalyse non-carcinogenic toxicity (CTUh)';
+COMMENT ON COLUMN final_table.land_use IS 'Agribalyse land use (point score, based on the LANCA model)';
+COMMENT ON COLUMN final_table.energy_depletion IS 'Agribalyse energy depletion (MJ)';
+COMMENT ON COLUMN final_table.mineral_depletion IS 'Agribalyse mineral depletion (kg Sb eq)';
+COMMENT ON COLUMN final_table.water_depletion IS 'Agribalyse water depletion (m3 Eau eq)';
 COMMENT ON COLUMN final_table.biogenic_climate_change_emissions IS 'Agribalyse biogenic climate change emissions';
 COMMENT ON COLUMN final_table.fossil_climate_change_emissions IS 'Agribalyse fossil climate change emissions';
 COMMENT ON COLUMN final_table.land_use_change_climate_change_emissions IS 'Agribalyse land use change climate change emissions';
+--
