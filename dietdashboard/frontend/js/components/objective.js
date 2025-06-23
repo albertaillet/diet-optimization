@@ -69,7 +69,7 @@ export function Objective(parent, state) {
 
   // Loading the objective variables table
   parent.select("#objective-variables").html("<tr><td>Loading...</td></tr>");
-  fetch("/column_description.csv")
+  fetch("/static/column_description.csv")
     .then(response => response.text())
     .then(text => d3.csvParse(text, d3.autoType))
     .then(csv => csv.map(row => [row.column_name, row.comment, row.mean, row.min, row.max]))

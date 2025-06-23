@@ -56,7 +56,7 @@ var state = {
 };
 state = { ...state, ...restoreState() };
 
-const locationData = await csv("/locations.csv", autoType);
+const locationData = await csv("/static/locations.csv", autoType);
 
 const tabs = [
   { id: "sliders-tab", name: "Nutrient Targets", component: parent => Sliders(parent, state.resultData, state.sliders) },

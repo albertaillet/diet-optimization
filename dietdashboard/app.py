@@ -12,7 +12,6 @@ import csv
 import io
 import json
 import math
-import os
 import re
 import time
 from collections.abc import Iterable
@@ -29,10 +28,8 @@ from dietdashboard.objective import validate_objective_str
 
 DEBUG_DIR = Path(__file__).parent.parent / "tmp"
 DATA_DIR = Path(__file__).parent.parent / "data"
-OFF_USERNAME = os.getenv("OFF_USERNAME")
 TEMPLATE_FOLDER = Path(__file__).parent / "frontend/html"
 QUERY = (Path(__file__).parent / "queries/query.sql").read_text()
-QUERY_DESC = (Path(__file__).parent / "queries/column_description.sql").read_text()
 LP_METHOD = "revised simplex"
 CACHE_TIMEOUT = 60 * 10  # 10 minutes
 SQL_ERROR_COL_REF_REGEX = re.compile(r"Binder Error: Referenced column \"([a-zA-Z_]+)\" not found in FROM clause!")
@@ -259,36 +256,6 @@ def create_app() -> Flask:
     @app.route("/static/<path:path>")
     def send_static(path):
         return app.send_static_file(path)
-
-    @app.route("/locations.csv", methods=["GET"])
-    def locations():
-        """Return a CSV of the locations within the given tile."""
-        query = """SELECT DISTINCT ON (location_id)
-            location_id, location_osm_lat, location_osm_lon, location_osm_display_name, COUNT(*) AS count
-            FROM final_table
-            GROUP BY location_id, location_osm_lat, location_osm_lon, location_osm_display_name"""
-        with get_con() as con:
-            locations = query_dicts(con=con, query=query)
-        fieldnames = ["id", "lat", "lon", "name", "count"]
-        colnames = ["location_id", "location_osm_lat", "location_osm_lon", "location_osm_display_name", "count"]
-        data = ({f: loc[c] for f, c in zip(fieldnames, colnames, strict=True)} for loc in locations)
-        csv_string = create_csv(fieldnames, data)
-        response = make_response(csv_string)
-        response.mimetype = "text/csv"
-        response.headers["Cache-Control"] = f"public, max-age={CACHE_TIMEOUT}"
-        return response
-
-    @app.route("/column_description.csv")
-    def column_description():
-        with get_con() as con:
-            # Fetch the column descriptions from the database
-            rows = query_dicts(con=con, query=QUERY_DESC)
-        fieldnames = ["column_name", "comment", "mean", "min", "max"]
-        csv_string = create_csv(fieldnames, rows)
-        response = make_response(csv_string)
-        response.mimetype = "text/csv"
-        response.headers["Cache-Control"] = f"public, max-age={CACHE_TIMEOUT}"
-        return response
 
     return app
 
