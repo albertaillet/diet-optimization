@@ -167,7 +167,7 @@ data-info:
 # ---------- Run the optmization dashboard. ----------
 
 static:
-	./dietdashboard/static.py
+	time duckdb data/data.db -readonly < ./dietdashboard/queries/static.sql
 
 run-dev:
 	@trap "kill 0" EXIT; \
