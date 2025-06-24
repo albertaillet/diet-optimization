@@ -1,19 +1,15 @@
 SHELL := /bin/sh
 
-# ---------- Fetch Ciqual and Calnut tables. ----------
+# ---------- Ciqual and Calnut tables. ----------
 
 # Documentation:
 # Ciuqal: https://ciqual.anses.fr/cms/sites/default/files/inline-files/Table%20Ciqual%202020_doc_XML_ENG_2020%2007%2007.pdf
 # Calnut: https://ciqual.anses.fr/cms/sites/default/files/inline-files/Table%20CALNUT%202020_doc_FR_2020%2007%2007.pdf
-# Ciqual download page: https://ciqual.anses.fr/#/cms/download/node/20
+# Ciqual is available at these links:
+# https://ciqual.anses.fr/#/cms/download/node/20
 # https://www.data.gouv.fr/fr/datasets/table-de-composition-nutritionnelle-des-aliments-ciqual/
-# On Open Food Facts:
+# Calnut is available on Open Food Facts:
 # https://github.com/openfoodfacts/openfoodfacts-server/tree/main/external-data/ciqual/calnut
-
-# This file is not used anymore, the full ANSES-CIQUAL 2020 Table in xml format is used instead.
-# CIQUAL_CSV := data/ciqual2020.csv
-# $(CIQUAL_CSV):
-# 	wget -O $(CIQUAL_CSV) https://raw.githubusercontent.com/openfoodfacts/openfoodfacts-server/main/external-data/ciqual/ciqual/CIQUAL2020_ENG_2020_07_07.csv
 
 CIQUAL_XML_ZIP := data/XML_2020_07_07.zip
 $(CIQUAL_XML_ZIP):
@@ -27,10 +23,18 @@ CALNUT_1_CSV := data/calnut.1.csv
 $(CALNUT_1_CSV):
 	wget -O $(CALNUT_1_CSV) https://raw.githubusercontent.com/openfoodfacts/openfoodfacts-server/refs/heads/main/external-data/ciqual/calnut/CALNUT.csv.1
 
-# ---------- Fetch Agribalyse data. ----------
-# On Open Food Facts:
-# https://github.com/openfoodfacts/openfoodfacts-server/tree/main/external-data/environmental_score/agribalyse
+# Unzip and convert the Ciqual data to csv.
+CIQUAL_DIR := data/ciqual2020
+unzip-and-process-ciqual: $(CIQUAL_XML_ZIP)
+	[ -d $(CIQUAL_DIR) ] && rm -r $(CIQUAL_DIR) || true
+	unzip -o $(CIQUAL_XML_ZIP) -d $(CIQUAL_DIR)
+	./scripts/xml_to_csv.py $(CIQUAL_DIR)/alim_2020_07_07.xml $(CIQUAL_DIR)/alim.csv
+	./scripts/xml_to_csv.py $(CIQUAL_DIR)/alim_grp_2020_07_07.xml $(CIQUAL_DIR)/alim_grp.csv
+	./scripts/xml_to_csv.py $(CIQUAL_DIR)/compo_2020_07_07.xml $(CIQUAL_DIR)/compo.csv
+	./scripts/xml_to_csv.py $(CIQUAL_DIR)/sources_2020_07_07.xml $(CIQUAL_DIR)/sources.csv
+	./scripts/xml_to_csv.py $(CIQUAL_DIR)/const_2020_07_07.xml $(CIQUAL_DIR)/const.csv
 
+# ---------- Agribalyse commands. ----------
 # Documentation:
 # https://doc.agribalyse.fr/documentation
 # Data License: ETALAB Licence Ouverte v2.0
@@ -39,20 +43,22 @@ $(CALNUT_1_CSV):
 # https://data.gouv.fr/datasets?q=AGRIBALYSE (.csv)
 # https://data.ademe.fr/datasets?topics=TQJGtxm2_ (multiple formats)
 # https://entrepot.recherche.data.gouv.fr/dataset.xhtml?persistentId=doi:10.57745/XTENSJ (.xlsx)
+# https://github.com/openfoodfacts/openfoodfacts-server/tree/main/external-data/environmental_score/agribalyse (.csv)
 
-# Sed to remove all rows that are empty or contain only commas.
+# Sed is used to remove all rows that are empty or contain only commas.
 AGRIBALYSE_CSV := data/agribalyse_synthese.csv
 $(AGRIBALYSE_CSV):
 	wget -O $(AGRIBALYSE_CSV) https://www.data.gouv.fr/fr/datasets/r/41397293-3e85-4959-8936-940bb79d91fc
 	sed -i.bak '/^,/d' $(AGRIBALYSE_CSV)
 	rm $(AGRIBALYSE_CSV).bak
 
-# fetch-agribalyse-details:
-# 	wget -O data/agribalyse_ingredient_details.csv https://www.data.gouv.fr/fr/datasets/r/6bd67be2-dea5-446c-bbf5-6fff9a6366c0
-# 	wget -O data/agribalyse_step_details.csv https://www.data.gouv.fr/fr/datasets/r/93b8a0f4-03f4-41d4-8aef-287df16176fd
+# To fetch more detailed Agribalyse data:
+# wget -O data/agribalyse_ingredient_details.csv https://www.data.gouv.fr/fr/datasets/r/6bd67be2-dea5-446c-bbf5-6fff9a6366c0
+# wget -O data/agribalyse_step_details.csv https://www.data.gouv.fr/fr/datasets/r/93b8a0f4-03f4-41d4-8aef-287df16176fd
 
-# ---------- Fetch the nutrient map from recipe estimator map. ----------
+# ---------- Nutrient map commands. ----------
 
+# Fetch the initial version of the nutrient map from https://github.com/openfoodfacts/recipe-estimator
 NUTRIENT_MAP_RE := data/nutrient_map_recipe_estimator.csv
 $(NUTRIENT_MAP_RE):
 	wget -O $(NUTRIENT_MAP_RE) https://raw.githubusercontent.com/openfoodfacts/recipe-estimator/main/ciqual/nutrient_map.csv
@@ -66,7 +72,7 @@ nutrient-map-update-counts:
 nutrient-map-update-ciqual: $(CALNUT_1_CSV)
 	duckdb < ./queries/nutrient_map_update_ciqual.sql
 
-# ---------- Fetch the EUR Exchange rates from the Europen Central Bank. ----------
+# ---------- EUR exchange rates from the European Central Bank. ----------
 
 # The reference rates are usually updated at around 16:00 CET every working day.
 # Documentation: https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html
@@ -80,7 +86,7 @@ clean-exchange-rate:
 	rm $(EXCHANGE_RATES_CSV)
 fetch-exchange-rates: clean-exchange-rate $(EXCHANGE_RATES_CSV)
 
-# ---------- Fetch the prices and products exports. ----------
+# ---------- Open food facts prices and products exports. ----------
 
 # Documentation:
 # Open Food Facts data page: https://world.openfoodfacts.org/data
@@ -109,18 +115,6 @@ $(PRODUCTS_PARQUET):
 
 fetch-all: $(CIQUAL_XML_ZIP) $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(PRICES_PARQUET) $(PRODUCTS_PARQUET) $(AGRIBALYSE_CSV) fetch-exchange-rates
 
-# ---------- Unzip and convert the Ciqual data to csv. ----------
-
-CIQUAL_DIR := data/ciqual2020
-unzip-and-process-ciqual: $(CIQUAL_XML_ZIP)
-	[ -d $(CIQUAL_DIR) ] && rm -r $(CIQUAL_DIR) || true
-	unzip -o $(CIQUAL_XML_ZIP) -d $(CIQUAL_DIR)
-	./scripts/xml_to_csv.py $(CIQUAL_DIR)/alim_2020_07_07.xml $(CIQUAL_DIR)/alim.csv
-	./scripts/xml_to_csv.py $(CIQUAL_DIR)/alim_grp_2020_07_07.xml $(CIQUAL_DIR)/alim_grp.csv
-	./scripts/xml_to_csv.py $(CIQUAL_DIR)/compo_2020_07_07.xml $(CIQUAL_DIR)/compo.csv
-	./scripts/xml_to_csv.py $(CIQUAL_DIR)/sources_2020_07_07.xml $(CIQUAL_DIR)/sources.csv
-	./scripts/xml_to_csv.py $(CIQUAL_DIR)/const_2020_07_07.xml $(CIQUAL_DIR)/const.csv
-
 # ---------- Fetch, extract and summarize the Recommendations from the Nordic Nutrition Recommendations 2023. ----------
 # recommendations_nnr2023.csv is tracked in git but can be regenerated by deleting the file and running
 # make data/recommendations_nnr2023.csv
@@ -139,9 +133,9 @@ $(NNR_EXTRACTED_TABLES): $(NNR_HTML)
 $(NNR_SUMMARY_CSV): $(NNR_EXTRACTED_TABLES)
 	./scripts/recommendations_nnr2023/recommendations_summarize_general.py
 
-# ---------- Load the data into the database. ----------
+# ---------- Database commands. ----------
 
-rm:
+rm-db:
 	rm data/data.db
 
 load: $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(PRICES_PARQUET) $(PRODUCTS_PARQUET) $(EXCHANGE_RATES_CSV) nutrient-map-update-ciqual
@@ -159,12 +153,12 @@ sendover: load process recommendations
 	CREATE TABLE final_table AS SELECT * FROM data.final_table;\
 	CREATE TABLE recommendations AS SELECT * FROM data.recommendations;\
 	DETACH data;"
-# rsyunc -avz data/sendover_DATE.db host:~/path/to/remote/directory/
+# rsync -avz data/sendover_DATE.db host:~/path/to/remote/directory/
 
 data-info:
 	./scripts/db_info.py
 
-# ---------- Run the optmization dashboard. ----------
+# ---------- App commands. ----------
 
 static:
 	time duckdb data/data.db -readonly < ./queries/static.sql
@@ -184,7 +178,7 @@ list-gunicorn:
 kill-gunicorn:
 	pkill -f "dietdashboard.app"
 
-# ---------- Frontend utilities. ----------
+# ---------- Frontend commands. ----------
 
 frontend-install:
 	cd dietdashboard/frontend/js && pnpm install
