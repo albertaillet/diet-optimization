@@ -49,7 +49,7 @@ $(AGRIBALYSE_CSV):
 
 # fetch-agribalyse-details:
 # 	wget -O data/agribalyse_ingredient_details.csv https://www.data.gouv.fr/fr/datasets/r/6bd67be2-dea5-446c-bbf5-6fff9a6366c0
-# 	wget -O data/agribalyse_ingredient_details.csv https://www.data.gouv.fr/fr/datasets/r/93b8a0f4-03f4-41d4-8aef-287df16176fd
+# 	wget -O data/agribalyse_step_details.csv https://www.data.gouv.fr/fr/datasets/r/93b8a0f4-03f4-41d4-8aef-287df16176fd
 
 # ---------- Fetch the nutrient map from recipe estimator map. ----------
 
@@ -64,7 +64,7 @@ nutrient-map-update-counts:
 	./scripts/nutrient_map/nutrient_map_update_counts.py
 
 nutrient-map-update-ciqual: $(CALNUT_1_CSV)
-	duckdb < ./dietdashboard/queries/nutrient_map_update_ciqual.sql
+	duckdb < ./queries/nutrient_map_update_ciqual.sql
 
 # ---------- Fetch the EUR Exchange rates from the Europen Central Bank. ----------
 
@@ -145,13 +145,13 @@ rm:
 	rm data/data.db
 
 load: $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(PRICES_PARQUET) $(PRODUCTS_PARQUET) $(EXCHANGE_RATES_CSV) nutrient-map-update-ciqual
-	time duckdb data/data.db < ./dietdashboard/queries/load.sql
+	time duckdb data/data.db < ./queries/load.sql
 
 process:
-	time duckdb data/data.db < ./dietdashboard/queries/process.sql
+	time duckdb data/data.db < ./queries/process.sql
 
 recommendations:
-	time duckdb data/data.db < ./dietdashboard/queries/recommendations.sql
+	time duckdb data/data.db < ./queries/recommendations.sql
 
 sendover: load process recommendations
 	time duckdb data/sendover_$(shell date +%Y%m%d_%H%M%S).db "\
@@ -167,7 +167,7 @@ data-info:
 # ---------- Run the optmization dashboard. ----------
 
 static:
-	time duckdb data/data.db -readonly < ./dietdashboard/queries/static.sql
+	time duckdb data/data.db -readonly < ./queries/static.sql
 
 run-dev:
 	@trap "kill 0" EXIT; \

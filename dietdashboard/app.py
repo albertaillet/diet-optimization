@@ -29,7 +29,7 @@ from dietdashboard.objective import validate_objective_str
 DEBUG_DIR = Path(__file__).parent.parent / "tmp"
 DATA_DIR = Path(__file__).parent.parent / "data"
 TEMPLATE_FOLDER = Path(__file__).parent / "frontend/html"
-QUERY = (Path(__file__).parent / "queries/query.sql").read_text()
+QUERY = (Path(__file__).parent.parent / "queries/query.sql").read_text()
 LP_METHOD = "revised simplex"
 CACHE_TIMEOUT = 60 * 10  # 10 minutes
 SQL_ERROR_COL_REF_REGEX = re.compile(r"Binder Error: Referenced column \"([a-zA-Z_]+)\" not found in FROM clause!")

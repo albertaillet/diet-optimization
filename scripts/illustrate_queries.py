@@ -1,6 +1,6 @@
 #!/usr/bin/env -S uv run
 # type: ignore[reportOptionalMemberAccess]
-"""This script creates a subset of the data and prints the intermediate tables for debugging."""
+"""This script creates a subset of the data and adds illustrations to query files."""
 
 import re
 from contextlib import redirect_stdout
@@ -13,7 +13,7 @@ import sqlglot.expressions as exp
 
 # sqlglot.pretty = True  # Enable pretty printing
 DATA_DIR = Path(__file__).parent.parent / "data"
-QUERIES_DIR = Path(__file__).parent / "queries"
+QUERIES_DIR = Path(__file__).parent.parent / "queries"
 
 con = duckdb.connect(":memory:")
 # Attach the explore database with the full data to the in-memory database,
