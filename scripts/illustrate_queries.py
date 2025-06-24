@@ -20,44 +20,44 @@ con = duckdb.connect(":memory:")
 # Then create a subset of the tables for the example
 con.sql(f"ATTACH DATABASE '{DATA_DIR / 'data.db'}' AS full_tables (READ_ONLY);")
 con.sql("""
-CREATE OR REPLACE TABLE nutrient_map AS
+CREATE TABLE nutrient_map AS
 SELECT * FROM full_tables.nutrient_map
 WHERE id IN ('sodium', 'protein');
 
-CREATE OR REPLACE TABLE ssgrp_colors AS
+CREATE TABLE ssgrp_colors AS
 SELECT * FROM full_tables.ssgrp_colors;
 
-CREATE OR REPLACE TABLE ciqual_alim AS
+CREATE TABLE ciqual_alim AS
 SELECT * FROM full_tables.ciqual_alim
 WHERE alim_code IN ('20516', '20904');
 
-CREATE OR REPLACE TABLE ciqual_compo AS
+CREATE TABLE ciqual_compo AS
 SELECT * FROM full_tables.ciqual_compo
 WHERE const_code in ('10110', '25000')
 AND alim_code IN ('20516', '20904');
 
-CREATE OR REPLACE TABLE calnut_0 AS
+CREATE TABLE calnut_0 AS
 SELECT * FROM full_tables.calnut_0
 WHERE alim_code IN ('20516', '20904');
 
-CREATE OR REPLACE TABLE calnut_1 AS
+CREATE TABLE calnut_1 AS
 SELECT * FROM full_tables.calnut_1
 WHERE CONST_CODE in ('10110', '25000') -- Same as CONST_LABEL in ('sodium_mg', 'proteines_g')
 AND ALIM_CODE IN ('20516', '20904');
 
-CREATE OR REPLACE TABLE agribalyse AS
+CREATE TABLE agribalyse AS
 SELECT * FROM full_tables.agribalyse
 WHERE ciqual_food_code IN ('20516', '20904');
 
-CREATE OR REPLACE TABLE euro_exchange_rates AS
+CREATE TABLE euro_exchange_rates AS
 SELECT currency, CAST(rate AS DOUBLE) AS rate FROM
 (VALUES ('CHF', 0.9358), ('EUR', 1.0), ('NOK', 11.533), ('SEK', 10.9245)) AS t(currency, rate);
 
-CREATE OR REPLACE TABLE prices AS
+CREATE TABLE prices AS
 SELECT * FROM full_tables.prices
 WHERE product_code IN ('3111950001928', '4099200179193');
 
-CREATE OR REPLACE TABLE products AS
+CREATE TABLE products AS
 SELECT code, product_quantity, product_name, product_quantity_unit, product_quantity,
 ciqual_food_code, ciqual_food_code_origin, nutriments
 FROM full_tables.products WHERE code IN ('3111950001928', '4099200179193');
