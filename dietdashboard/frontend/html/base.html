@@ -1,12 +1,11 @@
 <!doctype html>
 <html lang="en">
   <head>
-    {% include 'partials/head.html' %}
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {% block head %} {% endblock %}
   </head>
   <body>
-    <header>
-      <h1>Nutrition Dashboard</h1>
-    </header>
-    {% block content %}{% endblock %} {% include 'partials/modal_range.html' %}
+    {% block content %}{% endblock %}
   </body>
 </html>

@@ -1,4 +1,16 @@
-{% extends "base.html" %} {% block content %}
+{% extends "base.html" %} {% block head %}
+<title>Diet Optimization</title>
+{% if is_production %}
+<script data-goatcounter="https://sorbro.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+{% endif %}
+<script type="module" src="static/bundle.js"></script>
+<link rel="stylesheet" href="static/bundle.css" />
+<!-- prettier-ignore -->
+<script id="slider-csv-data" type="text/csv">{{slider_csv}}</script>
+{% endblock %} {% block content %}
+<header>
+  <h1>Diet Optimization</h1>
+</header>
 <div class="dashboard-content">
   <div class="dashboard-column">
     <div id="input-tabs"></div>
@@ -7,4 +19,21 @@
     <div id="result"></div>
   </div>
 </div>
+<dialog id="rangeModal" class="modal-content">
+  <form method="dialog" id="rangeForm" style="display: flex; flex-direction: column; gap: 10px">
+    <label style="display: flex; justify-content: space-between; align-items: center">
+      <h3 id="modalTitle" style="margin: 0"></h3>
+      <button>&times;</button>
+    </label>
+    <input type="hidden" id="currentSliderId" />
+    <label for="minVal">Minimum Value:</label>
+    <input type="number" id="minVal" name="minVal" min="0" step="1" required />
+    <label for="maxVal">Maximum Value:</label>
+    <input type="number" id="maxVal" name="maxVal" min="0" step="1" required />
+    <div style="display: flex; justify-content: left; gap: 10px">
+      <button>Cancel</button>
+      <button name="save">Save Changes</button>
+    </div>
+  </form>
+</dialog>
 {% endblock %}
