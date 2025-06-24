@@ -67,10 +67,10 @@ nutrient-map-reformat: $(NUTRIENT_MAP_RE)
 	./scripts/nutrient_map/nutrient_map_reformat.py
 
 nutrient-map-update-counts:
-	./scripts/nutrient_map/nutrient_map_update_counts.py
+	time duckdb < queries/nutrient_map_update_counts.sql
 
 nutrient-map-update-ciqual: $(CALNUT_1_CSV)
-	duckdb < ./queries/nutrient_map_update_ciqual.sql
+	time duckdb < ./queries/nutrient_map_update_ciqual.sql
 
 # ---------- EUR exchange rates from the European Central Bank. ----------
 
