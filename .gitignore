@@ -26,10 +26,12 @@ CLAUDE.md
 gunicorn.log
 gunicorn.pid
 
-# Bundled javascript files
-bundle.js
-bundle.js.map
-bundle.css
+# Generated static files
+dietdashboard/static/bundle.js
+dietdashboard/static/bundle.js.map
+dietdashboard/static/bundle.css
+dietdashboard/static/locations.csv
+dietdashboard/static/column_description.csv
 
 # Javascript modules
 node_modules/
