@@ -216,6 +216,7 @@ Related [xkcd](https://xkcd.com/927/).
 - [Open Food Prices](https://prices.openfoodfacts.org/), a crowdsourced database of food prices.
 - [Purchase to Plate](https://www.ers.usda.gov/data-products/purchase-to-plate/), a USDA database that provides information on food prices and expenditures in the United States.
 - [Matpriskollen](https://matpriskollen.se/), a Swedish food price comparison tool.
+- [Project Hammer](https://jacobfilipp.com/hammer/), apparently the biggest open database of Canadian Grocery prices. Info about gathering [FAQ](https://jacobfilipp.com/hammer/#FAQ). Code available [here](https://github.com/snacsnoc/grocery-app).
 
 ## Other data sources
 
@@ -265,7 +266,6 @@ Related [xkcd](https://xkcd.com/927/).
   - Uses SUStable for foods and CIQUAL for nutritional values, the carbon impact was obtained from a database of 402 foods built previously by the environmental consultancy firm BIO by Deloitte, and used Alpro data for plant-based dairy alternatives.
   - Constraints based on French RDAs, NNR2004 for sodium, WHO guidelines on most macronutrients, ANSES for fish and seafood limits and some constraints to make the solution "culturally acceptable".
 - Fouillet, H. et al. Plant to animal protein ratio in the diet: nutrient adequacy, long-term health and environmental pressure. Front. Nutr (2023) [doi](https://doi.org/10.3389/fnut.2023.1178121)
-
   - Used CIQUAL and survey of dietary data. Uses ANSES recommendations for nutrients [link](https://www.anses.fr/fr/system/files/NUT2018SA0238Ra.pdf).
   - Formula used for the Health Risk (HR) criterion, and Diet Departure (DD) see paper for details. Not sure how accurate the values for disability-adjusted life-years (DALYs) and their minimum risk exposure levels (TMREL) are.
     $$
