@@ -198,6 +198,9 @@ CREATE OR REPLACE TABLE products AS (
   product_quantity_unit,
   CAST(product_quantity AS FLOAT) AS product_quantity,
   quantity AS quantity_str,
+  categories,
+  categories_tags,
+  compared_to_category,
   categories_properties,
   COALESCE(
       categories_properties.ciqual_food_code,
