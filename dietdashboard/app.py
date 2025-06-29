@@ -47,7 +47,7 @@ def validate_objective(con: duckdb.DuckDBPyConnection, objective_string: str) ->
         return False, "Invalid objective function syntax."
     try:
         # Checks that the column exists and that it is a numeric (https://duckdb.org/docs/stable/sql/data_types/numeric.html)
-        out = con.sql(f"""SELECT column_name FROM (DESCRIBE (SELECT {objective_string} from final_table))
+        out = con.sql(f"""SELECT column_name FROM (DESCRIBE (SELECT {objective_string} from final_table_price))
                     WHERE column_type NOT IN ('DECIMAL', 'FLOAT', 'DOUBLE', 'REAL');""").fetchone()
         if out:
             return False, f"Variable {out[0]} is not numeric."
@@ -246,7 +246,7 @@ def create_app() -> Flask:
     @app.route("/info/<price_id>", methods=["GET"])
     def info(price_id: str) -> str:
         with get_con() as con:
-            rows = query_dicts(con, """SELECT * FROM data.final_table WHERE price_id = $price_id""", price_id=price_id)
+            rows = query_dicts(con, """SELECT * FROM data.final_table_price WHERE price_id = $price_id""", price_id=price_id)
         if len(rows) == 0:
             return "<h1>No product found</h1>"
         row = rows[0]

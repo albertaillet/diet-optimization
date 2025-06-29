@@ -10,7 +10,7 @@ color,
 price,
 location_osm_display_name,
 location_osm_id,
-FROM final_table
+FROM final_table_price
 WHERE price IS NOT NULL
   AND price > 0
   AND location_id IN (SELECT UNNEST($locations))

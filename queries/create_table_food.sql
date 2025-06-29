@@ -1,3 +1,5 @@
+-- Final table with one row per food type in the ciqual database, enriched with price and agribalyse data.
+CREATE OR REPLACE TABLE final_table_food AS (
 WITH
 /* All alim codes.
 Illustration of step_1:
@@ -260,4 +262,5 @@ step_7 AS (
   LEFT JOIN agribalyse AS ab ON ab.ciqual_food_code = prev.ciqual_food_code
   LEFT JOIN ssgrp_colors AS sc ON ciq.alim_ssgrp_code = sc.alim_ssgrp_code
 )
-SELECT * FROM step_7;
+SELECT * FROM step_7
+);

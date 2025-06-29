@@ -67,10 +67,10 @@ nutrient-map-reformat: $(NUTRIENT_MAP_RE)
 	./scripts/nutrient_map/nutrient_map_reformat.py
 
 nutrient-map-update-counts:
-	time duckdb < queries/nutrient_map_update_counts.sql
+	time duckdb < queries/update_nutrient_map_counts.sql
 
 nutrient-map-update-ciqual: $(CALNUT_1_CSV)
-	time duckdb < ./queries/nutrient_map_update_ciqual.sql
+	time duckdb < ./queries/update_nutrient_map_ciqual.sql
 
 # ---------- EUR exchange rates from the European Central Bank. ----------
 
@@ -141,8 +141,11 @@ rm-db:
 load: $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(PRICES_PARQUET) $(PRODUCTS_PARQUET) $(EXCHANGE_RATES_CSV) nutrient-map-update-ciqual
 	time duckdb data/data.db < ./queries/load.sql
 
-process:
-	time duckdb data/data.db < ./queries/process.sql
+create_table_food:
+	time duckdb data/data.db < ./queries/create_table_food.sql
+
+create_table_price:
+	time duckdb data/data.db < ./queries/create_table_price.sql
 
 recommendations:
 	time duckdb data/data.db < ./queries/recommendations.sql
@@ -150,7 +153,7 @@ recommendations:
 sendover: load process recommendations
 	time duckdb data/sendover_$(shell date +%Y%m%d_%H%M%S).db "\
 	ATTACH 'data/data.db' AS data;\
-	CREATE TABLE final_table AS SELECT * FROM data.final_table;\
+	CREATE TABLE final_table_price AS SELECT * FROM data.final_table_price;\
 	CREATE TABLE recommendations AS SELECT * FROM data.recommendations;\
 	DETACH data;"
 # rsync -avz data/sendover_DATE.db host:~/path/to/remote/directory/

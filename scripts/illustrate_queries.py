@@ -91,9 +91,9 @@ con = get_connection()
 for table in ("ciqual_alim", "ciqual_compo", "calnut_0", "calnut_1", "agribalyse", "euro_exchange_rates", "prices", "products"):
     add_table_illustration(con, table, QUERIES_DIR / "load.sql", max_width=190)
 
-# Create the illustration tables and add illustrations to the process queries
-process_query_path = QUERIES_DIR / "process.sql"
-expression = sqlglot.parse_one(process_query_path.read_text())
+# Create the illustration tables and add illustrations to create_table_price.sql
+query_path = QUERIES_DIR / "create_table_price.sql"
+expression = sqlglot.parse_one(query_path.read_text())
 # --- Replace the chosen nutrients in the pivot expression ---
 expression.find(exp.Pivot).find(exp.In).args["expressions"] = ["sodium", "protein"]
 # --- Run each CTE as a CREATE TABLE statement ---
@@ -101,18 +101,18 @@ for cte_expression in expression.find(exp.With).expressions:
     table = exp.Table(this=exp.Identifier(this=cte_expression.alias))
     create_table = exp.Create(this=table, kind="TABLE", expression=cte_expression.this)
     con.sql(create_table.sql())
-    add_table_illustration(con, table.name, process_query_path, max_width=152)
+    add_table_illustration(con, table.name, query_path, max_width=152)
 
 con.close()
 
 con = get_connection()
 
-# Create the illustration tables and add illustrations to the process2 queries
-process2_query_path = QUERIES_DIR / "process2.sql"
-expression = sqlglot.parse_one(process2_query_path.read_text())
+# Create the illustration tables and add illustrations to the create_table_food
+query_path = QUERIES_DIR / "create_table_food.sql"
+expression = sqlglot.parse_one(query_path.read_text())
 # --- Replace the chosen nutrients in the pivot expression ---
 expression.find(exp.Pivot).find(exp.In).args["expressions"] = ["sodium", "protein"]
-# --- Replace the source tables with the full_tables from. ---
+# --- Replace the source tables with the full_tables. ---
 # for table_expression in expression.find_all(exp.Table):
 #     name = table_expression.this.name
 #     if name.startswith("step"):
@@ -123,7 +123,7 @@ for cte_expression in expression.find(exp.With).expressions:
     table = exp.Table(this=exp.Identifier(this=cte_expression.alias))
     create_table = exp.Create(this=table, kind="TABLE", expression=cte_expression.this)
     con.sql(create_table.sql())
-    add_table_illustration(con, table.name, process2_query_path, max_width=130, max_rows=6)
+    add_table_illustration(con, table.name, query_path, max_width=130, max_rows=6)
 
 con.close()
 print("Illustrations created successfully.")

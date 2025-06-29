@@ -8,7 +8,7 @@ COPY (
     location_osm_lon AS lon,
     location_osm_display_name AS name,
     COUNT(*) AS count
-  FROM final_table
+  FROM final_table_price
   GROUP BY id, lat, lon, name
   ORDER BY location_id, count DESC
 )
@@ -19,10 +19,10 @@ COPY (
   WITH
     c AS (
       SELECT column_name, comment FROM duckdb_columns()
-      WHERE table_name = 'final_table'
+      WHERE table_name = 'final_table_price'
         AND data_type IN ('DECIMAL','FLOAT','DOUBLE','REAL')
     ),
-    s AS (SELECT * FROM (SUMMARIZE final_table))
+    s AS (SELECT * FROM (SUMMARIZE final_table_price))
   SELECT
     c.column_name,
     c.comment,
