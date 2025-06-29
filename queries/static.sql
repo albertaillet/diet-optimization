@@ -31,5 +31,6 @@ COPY (
     printf('%.2f', CAST(s.avg AS FLOAT)) AS mean,
   FROM c
   JOIN s ON c.column_name = s.column_name
+  WHERE c.column_name NOT SIMILAR TO 'location_osm_l..|product_quantity'
 )
 TO 'dietdashboard/static/column_description.csv';
