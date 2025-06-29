@@ -15,59 +15,66 @@ import sqlglot.expressions as exp
 DATA_DIR = Path(__file__).parent.parent / "data"
 QUERIES_DIR = Path(__file__).parent.parent / "queries"
 
-con = duckdb.connect(":memory:")
-# Attach the explore database with the full data to the in-memory database,
-# Then create a subset of the tables for the example
-con.sql(f"ATTACH DATABASE '{DATA_DIR / 'data.db'}' AS full_tables (READ_ONLY);")
-con.sql("""
-CREATE TABLE nutrient_map AS
-SELECT * FROM full_tables.nutrient_map
-WHERE id IN ('sodium', 'protein');
 
-CREATE TABLE ssgrp_colors AS
-SELECT * FROM full_tables.ssgrp_colors;
+def get_connection() -> duckdb.DuckDBPyConnection:
+    """Get a DuckDB connection."""
+    con = duckdb.connect(":memory:")
+    # Attach the explore database with the full data to the in-memory database,
+    # Then create a subset of the tables for the example
+    con.sql(f"ATTACH DATABASE '{DATA_DIR / 'data.db'}' AS full_tables (READ_ONLY);")
+    con.sql("""
+    CREATE TABLE nutrient_map AS
+    SELECT * FROM full_tables.nutrient_map
+    WHERE id IN ('sodium', 'protein');
 
-CREATE TABLE ciqual_alim AS
-SELECT * FROM full_tables.ciqual_alim
-WHERE alim_code IN ('20516', '20904');
+    CREATE TABLE ssgrp_colors AS
+    SELECT * FROM full_tables.ssgrp_colors;
 
-CREATE TABLE ciqual_compo AS
-SELECT * FROM full_tables.ciqual_compo
-WHERE const_code in ('10110', '25000')
-AND alim_code IN ('20516', '20904');
+    CREATE TABLE ciqual_alim AS
+    SELECT * FROM full_tables.ciqual_alim
+    WHERE alim_code IN ('20516', '20904');
 
-CREATE TABLE calnut_0 AS
-SELECT * FROM full_tables.calnut_0
-WHERE alim_code IN ('20516', '20904');
+    CREATE TABLE ciqual_compo AS
+    SELECT * FROM full_tables.ciqual_compo
+    WHERE const_code in ('10110', '25000')
+    AND alim_code IN ('20516', '20904');
 
-CREATE TABLE calnut_1 AS
-SELECT * FROM full_tables.calnut_1
-WHERE CONST_CODE in ('10110', '25000') -- Same as CONST_LABEL in ('sodium_mg', 'proteines_g')
-AND ALIM_CODE IN ('20516', '20904');
+    CREATE TABLE calnut_0 AS
+    SELECT * FROM full_tables.calnut_0
+    WHERE alim_code IN ('20516', '20904');
 
-CREATE TABLE agribalyse AS
-SELECT * FROM full_tables.agribalyse
-WHERE ciqual_food_code IN ('20516', '20904');
+    CREATE TABLE calnut_1 AS
+    SELECT * FROM full_tables.calnut_1
+    WHERE CONST_CODE in ('10110', '25000') -- Same as CONST_LABEL in ('sodium_mg', 'proteines_g')
+    AND ALIM_CODE IN ('20516', '20904');
 
-CREATE TABLE euro_exchange_rates AS
-SELECT currency, CAST(rate AS DOUBLE) AS rate FROM
-(VALUES ('CHF', 0.9358), ('EUR', 1.0), ('NOK', 11.533), ('SEK', 10.9245)) AS t(currency, rate);
+    CREATE TABLE agribalyse AS
+    SELECT * FROM full_tables.agribalyse
+    WHERE ciqual_food_code IN ('20516', '20904');
 
-CREATE TABLE prices AS
-SELECT * FROM full_tables.prices
-WHERE product_code IN ('3111950001928', '4099200179193');
+    CREATE TABLE euro_exchange_rates AS
+    SELECT currency, CAST(rate AS DOUBLE) AS rate FROM
+    (VALUES ('CHF', 0.9358), ('EUR', 1.0), ('NOK', 11.533), ('SEK', 10.9245)) AS t(currency, rate);
 
-CREATE TABLE products AS
-SELECT code, product_quantity, product_name, product_quantity_unit, product_quantity,
-ciqual_food_code, ciqual_food_code_origin, nutriments
-FROM full_tables.products WHERE code IN ('3111950001928', '4099200179193');
-""")
+    CREATE TABLE prices AS
+    SELECT * FROM full_tables.prices
+    WHERE product_code IN ('3111950001928', '4099200179193');
+
+    CREATE TABLE products AS
+    SELECT code, product_quantity, product_name, product_quantity_unit, product_quantity,
+    ciqual_food_code, ciqual_food_code_origin, nutriments
+    FROM full_tables.products WHERE code IN ('3111950001928', '4099200179193');
+    """)
+    return con
 
 
-def add_table_illustration(table: str, query_path: Path) -> None:
+def add_table_illustration(
+    con: duckdb.DuckDBPyConnection, table: str, query_path: Path, max_width: int | None = None, max_rows: int | None = None
+) -> None:
     """Generate an illustration of the table and write it to the query file."""
     with redirect_stdout(StringIO()) as stdout:
-        con.table(table).order("1").show(max_width=152)  # Order by the first column for consistency to avoid random order
+        # Order by the first column for consistency to avoid random order
+        con.table(table).order("1").show(max_width=max_width, max_rows=max_rows)
     table_illustration = f"Illustration of {table}:\n{stdout.getvalue().strip()}"
     # table_illustration = f"Illustration of {table}:\n┌┘"  # Uncomment to have empty illustrations
     pattern = re.compile(rf"Illustration of {table}:\n┌[^┘]*┘")
@@ -79,9 +86,12 @@ def add_table_illustration(table: str, query_path: Path) -> None:
     query_path.write_text(pattern.sub(table_illustration, query))
 
 
-for table in ("ciqual_alim", "ciqual_compo", "calnut_0", "calnut_1", "agribalyse", "euro_exchange_rates", "prices", "products"):
-    add_table_illustration(table, QUERIES_DIR / "load.sql")
+con = get_connection()
 
+for table in ("ciqual_alim", "ciqual_compo", "calnut_0", "calnut_1", "agribalyse", "euro_exchange_rates", "prices", "products"):
+    add_table_illustration(con, table, QUERIES_DIR / "load.sql", max_width=190)
+
+# Create the illustration tables and add illustrations to the process queries
 process_query_path = QUERIES_DIR / "process.sql"
 expression = sqlglot.parse_one(process_query_path.read_text())
 # --- Replace the chosen nutrients in the pivot expression ---
@@ -91,4 +101,29 @@ for cte_expression in expression.find(exp.With).expressions:
     table = exp.Table(this=exp.Identifier(this=cte_expression.alias))
     create_table = exp.Create(this=table, kind="TABLE", expression=cte_expression.this)
     con.sql(create_table.sql())
-    add_table_illustration(table.name, process_query_path)
+    add_table_illustration(con, table.name, process_query_path, max_width=152)
+
+con.close()
+
+con = get_connection()
+
+# Create the illustration tables and add illustrations to the process2 queries
+process2_query_path = QUERIES_DIR / "process2.sql"
+expression = sqlglot.parse_one(process2_query_path.read_text())
+# --- Replace the chosen nutrients in the pivot expression ---
+expression.find(exp.Pivot).find(exp.In).args["expressions"] = ["sodium", "protein"]
+# --- Replace the source tables with the full_tables from. ---
+# for table_expression in expression.find_all(exp.Table):
+#     name = table_expression.this.name
+#     if name.startswith("step"):
+#         continue
+#     table_expression.args["this"] = exp.Identifier(this=f"full_tables.{name}")
+# --- Run each CTE as a CREATE TABLE statement ---
+for cte_expression in expression.find(exp.With).expressions:
+    table = exp.Table(this=exp.Identifier(this=cte_expression.alias))
+    create_table = exp.Create(this=table, kind="TABLE", expression=cte_expression.this)
+    con.sql(create_table.sql())
+    add_table_illustration(con, table.name, process2_query_path, max_width=130, max_rows=6)
+
+con.close()
+print("Illustrations created successfully.")

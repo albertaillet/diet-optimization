@@ -178,7 +178,7 @@ step_5 AS (
     GROUP BY code, ciqual_food_code
   )
 ),
-/** Strip the `_value` suffix from any column name
+/* Strip the `_value` suffix from any column name
 Illustration of step_6:
 ┌───────────────┬──────────────────┬────────┬─────────────┬────────────────┬─────────┬──────────────┬────────────────┐
 │     code      │ ciqual_food_code │ sodium │ sodium_unit │ sodium_origin  │ protein │ protein_unit │ protein_origin │
@@ -348,20 +348,13 @@ step_7 AS (
     ab.fossil_climate_change_emissions,
     ab.land_use_change_climate_change_emissions,
   FROM prices AS pr
-  JOIN step_6 AS prev
-    ON pr.product_code = prev.code
-  JOIN step_1 AS p
-    ON pr.product_code = p.code
-  JOIN euro_exchange_rates AS ex
-    ON pr.currency = ex.currency
-  LEFT JOIN ciqual_alim AS ciq
-    ON prev.ciqual_food_code = ciq.alim_code
-  LEFT JOIN agribalyse AS ab
-    ON prev.ciqual_food_code = ab.ciqual_food_code
-  LEFT JOIN ssgrp_colors AS sc
-    ON ciq.alim_ssgrp_code = sc.alim_ssgrp_code
-  WHERE pr.price IS NOT NULL
-    AND p.product_quantity > 0 and p.product_quantity < 30000 -- Filter out invalid quantities (e.g. 0 or >30 kg)
+  JOIN step_6 AS prev ON pr.product_code = prev.code
+  JOIN step_1 AS p ON pr.product_code = p.code
+  JOIN euro_exchange_rates AS ex ON pr.currency = ex.currency
+  LEFT JOIN ciqual_alim AS ciq ON ciq.alim_code = prev.ciqual_food_code
+  LEFT JOIN agribalyse AS ab ON ab.ciqual_food_code = prev.ciqual_food_code
+  LEFT JOIN ssgrp_colors AS sc ON ciq.alim_ssgrp_code = sc.alim_ssgrp_code
+  WHERE pr.price IS NOT NULL AND p.product_quantity > 0 and p.product_quantity < 30000 -- Filter out invalid quantities (e.g. 0 or >30 kg)
 )
 SELECT * FROM step_7
 );
