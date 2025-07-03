@@ -172,6 +172,9 @@ sendover: load process recommendations
 data-info:
 	./scripts/db_info.py
 
+open-db:
+	duckdb -readonly data/data.db
+
 # ---------- App commands. ----------
 
 static:
@@ -280,3 +283,19 @@ unit-ciqual-calnut:
 # │ kj          │     1 │     │ kj          │     1 │
 # │ kcal        │     1 │     │ kcal        │     1 │
 # └─────────────┴───────┘     └─────────────┴───────┘
+
+# ---------- Miscellaneous commands. ----------
+
+nova-groups:
+	duckdb data/data.db -readonly "SELECT nova_group, count(*) AS count FROM products GROUP BY nova_group ORDER BY nova_group DESC"
+
+# ┌────────────┬─────────┐
+# │ nova_group │  count  │
+# │   int32    │  int64  │
+# ├────────────┼─────────┤
+# │          4 │  627066 │
+# │          3 │  191272 │
+# │          2 │   60903 │
+# │          1 │  115601 │
+# │       NULL │ 2863517 │
+# └────────────┴─────────┘
