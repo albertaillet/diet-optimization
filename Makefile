@@ -81,7 +81,8 @@ $(EXCHANGE_RATES_CSV):
 	wget https://www.ecb.europa.eu/stats/eurofxref/eurofxref.zip
 	unzip -o eurofxref.zip -d data/euro_exchange_rates/
 	rm eurofxref.zip
-	./scripts/transpose_exchange_rates.py
+	ln -sf $$(./scripts/transpose_exchange_rates.py) $(EXCHANGE_RATES_CSV)
+
 clean-exchange-rate:
 	rm $(EXCHANGE_RATES_CSV)
 fetch-exchange-rates: clean-exchange-rate $(EXCHANGE_RATES_CSV)

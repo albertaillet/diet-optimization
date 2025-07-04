@@ -2,7 +2,6 @@
 """This script transposes the exchange rates CSV file to make it easier to work with."""
 
 import csv
-import shutil
 from datetime import datetime
 from pathlib import Path
 
@@ -24,5 +23,5 @@ if __name__ == "__main__":
         writer.writerow(["currency", "rate"])
         writer.writerows((c.strip(), r.strip()) for c, r in data[0].items() if c.strip() and r.strip())
 
-    shutil.copy(EXCHANGE_RATE_OUTPUT_CSV, EXCHANGE_RATE_DIR / "latest.csv")
-    print(f"Exchange rates for {date} transposed and saved to {EXCHANGE_RATE_OUTPUT_CSV}")
+    # This print output is used in shell scripts
+    print(EXCHANGE_RATE_OUTPUT_CSV)
