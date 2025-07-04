@@ -4,8 +4,8 @@ from pathlib import Path
 import duckdb
 
 REPO_DIR = Path(__file__).parent.parent
-# QUERY_PATH = REPO_DIR / "queries/price_comparison.sql"
-QUERY_PATH = REPO_DIR / "queries/price_query.sql"
+# QUERY_PATH = REPO_DIR / "queries/price_at_locations_comparison.sql"
+QUERY_PATH = REPO_DIR / "queries/price_at_locations.sql"
 
 # Hardcoded locations
 locations = (601, 602, 627, 628, 629, 632, 633, 2211)  # 2208, 2228, 2229
