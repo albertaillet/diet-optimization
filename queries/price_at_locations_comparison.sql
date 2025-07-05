@@ -1,6 +1,7 @@
 -- Price comparison: one row = category, one column = location
 WITH base AS (
   SELECT
+    pr.id,
     p.compared_to_category AS category,
     pr.location_id,
     round(1000 * pr.price / p.product_quantity / ex.rate, 2) AS price
@@ -15,11 +16,11 @@ agg AS (
   SELECT
     category,
     location_id,
-    MIN(price) AS price,
+    {'id': arg_min(id, price), 'price': MIN(price)} AS price_struct
   FROM base
   GROUP BY category, location_id
 )
 SELECT *
 FROM agg
-PIVOT (MIN(price) FOR location_id IN $locations)
+PIVOT (FIRST(price_struct) FOR location_id IN $locations)
 ORDER BY category;
