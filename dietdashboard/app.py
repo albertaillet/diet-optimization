@@ -29,6 +29,7 @@ from dietdashboard.objective import validate_objective_str
 DEBUG_DIR = Path(__file__).parent.parent / "tmp"
 DATA_DIR = Path(__file__).parent.parent / "data"
 TEMPLATE_FOLDER = Path(__file__).parent / "frontend/html"
+STATIC_FOLDER = Path(__file__).parent / "static"
 QUERY = (Path(__file__).parent.parent / "queries/query.sql").read_text()
 LP_METHOD = "revised simplex"
 CACHE_TIMEOUT = 60 * 10  # 10 minutes
@@ -110,10 +111,10 @@ def create_csv(fieldnames: list[str], data: Iterable[dict[str, str]]) -> str:
 
 
 def create_app() -> Flask:
-    app = Flask(__name__)
+    # TODO: serve static files with Caddy
+    app = Flask(__name__, static_folder=STATIC_FOLDER, template_folder=TEMPLATE_FOLDER)
     app.config["COMPRESS_MIMETYPES"] = ["text/html", "text/css", "text/javascript", "text/csv", "text/plain"]
     Compress(app)
-    app.template_folder = TEMPLATE_FOLDER
     con = get_con()
 
     # Create sliders
@@ -251,11 +252,6 @@ def create_app() -> Flask:
             return "<h1>No product found</h1>"
         row = rows[0]
         return render_template("info.html", item=row, grouped_nutrients=grouped_nutrients)
-
-    # serve all static files TODO: do this in a better way
-    @app.route("/static/<path:path>")
-    def send_static(path):
-        return app.send_static_file(path)
 
     return app
 
