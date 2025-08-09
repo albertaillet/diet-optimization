@@ -259,16 +259,18 @@ step_6 AS (
   FROM step_5
 ),
 /* Illustration of step_7:
-┌───────────────┬──────────────┬──────────────────┬───┬───────────────────┬──────────────────────┬──────────────────────┬──────────────────────┐
-│ product_code  │ product_name │ product_quantity │ … │ mineral_depletion │ biogenic_climate_c…  │ fossil_climate_cha…  │ land_use_change_cl…  │
-│    varchar    │   varchar    │      float       │   │      double       │        double        │        double        │        double        │
-├───────────────┼──────────────┼──────────────────┼───┼───────────────────┼──────────────────────┼──────────────────────┼──────────────────────┤
-│ 3111950001928 │ Pois chiches │           1000.0 │ … │           4.9e-06 │               0.0148 │                0.709 │                0.175 │
-│ 4099200179193 │ Tofu natur   │            350.0 │ … │          5.15e-06 │               0.0161 │                0.986 │              0.00187 │
-│ 4099200179193 │ Tofu natur   │            350.0 │ … │          5.15e-06 │               0.0161 │                0.986 │              0.00187 │
-├───────────────┴──────────────┴──────────────────┴───┴───────────────────┴──────────────────────┴──────────────────────┴──────────────────────┤
-│ 3 rows                                                                                                                  53 columns (7 shown) │
-└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌───────────────┬──────────────┬──────────────────┬──────────────────────┬───┬──────────────────────┬──────────────────────┬──────────────────────┐
+│ product_code  │ product_name │ product_quantity │ product_quantity_u…  │ … │ biogenic_climate_c…  │ fossil_climate_cha…  │ land_use_change_cl…  │
+│    varchar    │   varchar    │      float       │       varchar        │   │        double        │        double        │        double        │
+├───────────────┼──────────────┼──────────────────┼──────────────────────┼───┼──────────────────────┼──────────────────────┼──────────────────────┤
+│ 3111950001928 │ Pois chiches │           1000.0 │ g                    │ … │               0.0148 │                0.709 │                0.175 │
+│ 3111950001928 │ Pois chiches │           1000.0 │ g                    │ … │               0.0148 │                0.709 │                0.175 │
+│ 4099200179193 │ Tofu natur   │            350.0 │ g                    │ … │               0.0161 │                0.986 │              0.00187 │
+│ 4099200179193 │ Tofu natur   │            350.0 │ g                    │ … │               0.0161 │                0.986 │              0.00187 │
+│ 4099200179193 │ Tofu natur   │            350.0 │ g                    │ … │               0.0161 │                0.986 │              0.00187 │
+├───────────────┴──────────────┴──────────────────┴──────────────────────┴───┴──────────────────────┴──────────────────────┴──────────────────────┤
+│ 5 rows                                                                                                                     74 columns (7 shown) │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 */
 step_7 AS (
   SELECT
@@ -295,27 +297,27 @@ step_7 AS (
     pr.location_osm_lat,
     pr.location_osm_lon,
     -- DEBUG columns start --
-    -- pr.type AS price_type,
-    -- pr.owner AS price_owner,
-    -- pr.price_is_discounted,
-    -- pr.price_without_discount,
-    -- pr.price_per,
-    -- pr.date AS price_date,
-    -- pr.created AS price_created,
-    -- pr.updated AS price_updated,
-    -- pr.source AS price_source,
-    -- pr.location_type,
-    -- pr.location_osm_type,
-    -- pr.location_osm_tag_key,
-    -- pr.location_osm_tag_value,
-    -- pr.location_osm_address_postcode,
-    -- pr.location_osm_address_city,
-    -- pr.location_osm_address_country,
-    -- pr.location_osm_address_country_code,
-    -- pr.location_website_url,
-    -- pr.location_source,
-    -- pr.location_created,
-    -- pr.location_updated,
+    pr.type AS price_type,
+    pr.owner AS price_owner,
+    pr.price_is_discounted,
+    pr.price_without_discount,
+    pr.price_per,
+    pr.date AS price_date,
+    pr.created AS price_created,
+    pr.updated AS price_updated,
+    pr.source AS price_source,
+    pr.location_type,
+    pr.location_osm_type,
+    pr.location_osm_tag_key,
+    pr.location_osm_tag_value,
+    pr.location_osm_address_postcode,
+    pr.location_osm_address_city,
+    pr.location_osm_address_country,
+    pr.location_osm_address_country_code,
+    pr.location_website_url,
+    pr.location_source,
+    pr.location_created,
+    pr.location_updated,
     -- DEBUG columns end --
     -- Price in EUR per 100g
     100 * pr.price / p.product_quantity / ex.rate AS price,  -- TODO: this assumes that product_quantity is in grams
