@@ -162,7 +162,7 @@ create_table_price:
 recommendations:
 	time duckdb data/data.db < ./queries/recommendations.sql
 
-sendover: load process recommendations
+sendover: load create_table_price recommendations
 	time duckdb data/sendover_$(shell date +%Y%m%d_%H%M%S).db "\
 	ATTACH 'data/data.db' AS data;\
 	CREATE TABLE final_table_price AS SELECT * FROM data.final_table_price;\
