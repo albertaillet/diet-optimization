@@ -4,7 +4,6 @@
 # Dotenv file
 .env
 
-# Folders to exclude
 # python virtual environment
 .venv/
 
@@ -35,3 +34,59 @@ dietdashboard/static/column_description.csv
 
 # Javascript modules
 node_modules/
+
+# Ruff cache
+.ruff_cache/
+
+# ---- Data ----
+
+# Open food facts exports
+**/food*.parquet
+**/products*.parquet
+**/prices*.parquet
+
+# Open food facts database dump
+**/openfoodfacts-product*.jsonl.gz
+
+# DuckDB databases
+**/*.db
+# DuckDB tmp files
+**/**/duckdb_temp_storage_*.tmp
+
+# Fetched NNR2023 html
+**/recommendations_nnr2023.html
+
+# Ciqual 2020 table
+**/ciqual2020.csv
+**/XML_2020_07_07.zip
+**/ciqual2020/*.xml
+**/ciqual2020/*.csv
+
+# Calnut tables
+**/calnut.0.csv
+**/calnut.1.csv
+
+# Agribalyse tables
+**/agribalyse_*.csv
+
+# EUR exchange rates
+**/euro_exchange_rates/eurofxref.csv
+**/euro_exchange_rates/latest.csv
+# EUR exchange rates with date
+**/euro_exchange_rates/*-*-*.csv
+
+# Livsmedelsdatabasen table
+**/LivsmedelsDB_*.xlsx
+**/LivsmedelsDB_*.csv
+
+# Fetched nutrient_map
+**/nutrient_map_recipe_estimator.csv
+
+# Benchmarking files
+**/input.json
+**/benchmark_results.json
+**/benchmark.npz
+
+# Other files
+**/exported_images/*
+**/user_data/*
