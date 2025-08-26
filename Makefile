@@ -25,7 +25,7 @@ $(CALNUT_1_CSV):
 
 # Unzip and convert the Ciqual data to csv.
 CIQUAL_DIR := data/ciqual2020
-unzip-and-process-ciqual: $(CIQUAL_XML_ZIP)
+$(CIQUAL_DIR)/%.csv: $(CIQUAL_XML_ZIP)
 	[ -d $(CIQUAL_DIR) ] && rm -r $(CIQUAL_DIR) || true
 	unzip -o $(CIQUAL_XML_ZIP) -d $(CIQUAL_DIR)
 	./scripts/xml_to_csv.py $(CIQUAL_DIR)/alim_2020_07_07.xml $(CIQUAL_DIR)/alim.csv
@@ -150,7 +150,9 @@ check-data: $(files)
 rm-db:
 	rm data/data.db
 
-load: $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(PRICES_PARQUET) $(PRODUCTS_PARQUET) $(EXCHANGE_RATES_CSV) nutrient-map-update-ciqual
+load: $(CIQUAL_DIR)/alim.csv $(CIQUAL_DIR)/compo.csv $(CIQUAL_DIR)/sources.csv \
+	  $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(EXCHANGE_RATES_CSV) \
+	  $(PRICES_PARQUET) $(PRODUCTS_PARQUET) nutrient-map-update-ciqual
 	time duckdb data/data.db < ./queries/load.sql
 
 create_table_food:
@@ -179,7 +181,7 @@ open-db:
 
 # ---------- App commands. ----------
 
-static:
+static: load create_table_price
 	time duckdb data/data.db -readonly < ./queries/static.sql
 
 run-dev:
