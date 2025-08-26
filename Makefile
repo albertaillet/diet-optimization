@@ -167,6 +167,7 @@ sendover: load create_table_price recommendations
 	ATTACH 'data/data.db' AS data;\
 	CREATE TABLE final_table_price AS SELECT * FROM data.final_table_price;\
 	CREATE TABLE recommendations AS SELECT * FROM data.recommendations;\
+	CREATE TABLE nutrient_map AS SELECT * FROM read_csv('data/nutrient_map.csv') WHERE calnut_const_code IS NOT NULL;\
 	DETACH data;"
 # rsync -avz data/sendover_DATE.db host:~/path/to/remote/directory/
 
@@ -214,6 +215,17 @@ frontend-copy:
 	-e js -e css -e html \
 	--ignore node_modules --ignore d3.js \
 	--cxml
+
+# ---------- Containers. ----------
+
+# TODO: only copy over static frontend code.
+# The sendover db is renamed so that it gets included in the container build context (.containerignore container *.db)
+build-container: #sendover
+	mv $$(ls -t ./data/sendover_*.db | head -n 1 | xargs realpath) ./data/data.db.build_context
+	podman build . -t app-container
+
+run-container:
+	podman run --rm -it -p 8000:8000 app-container make run-gunicorn
 
 # ---------- Create the nutrient extraction template. ----------
 
