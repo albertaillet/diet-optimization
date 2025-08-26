@@ -236,6 +236,16 @@ Related [xkcd](https://xkcd.com/927/).
 - [Documenu](https://github.com/documenu), Restaurant menu API.
 - 🎖️[knowledge-mining-nutrition](https://forgemia.inra.fr/stephane.dervaux/knowledge-mining-nutrition) Ongoing research project on knowledge mining in nutrition (02/2025).
 
+### Meal replacement food for tech people
+
+- [Mealsquares](https://mealsquares.com) (Sponsors Slatestarcodex, is a "nutritionally complete" food that contains a balanced diet worth of nutrients in a few tasty easily measurable units. Think Soylent, except zero preparation, made with natural ingredients, and looks/tastes a lot like an ordinary scone).
+- [Huel](https://huel.com)
+- [Soylent](https://soylent.com)
+- [Ambronite](https://ambronite.com)
+- [Yfood](https://yfood.com/) (Germany and Switzerland)
+- [Queal](https://queal.com)
+- [Ka’Chava](https://www.kachava.com/)
+
 ### Linear programming inside databases:
 
 - Linear Optimization in Relational Databases thesis at UZH [Berni](https://www.ifi.uzh.ch/dam/jcr:adafa697-21ee-43a9-9031-fc27d5428dee/ReportBerniBSc.pdf) [Peru](https://www.ifi.uzh.ch/dam/jcr:21df42d7-3d96-47a8-bef6-3d512bad0a60/preuFacharbeit.pdf)
