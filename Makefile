@@ -1,5 +1,18 @@
 SHELL := /bin/sh
 
+# ------ Definition of PHONY targets. ------
+
+.PHONY: nutrient-map-reformat nutrient-map-update-counts nutrient-map-update-ciqual \
+	clean-exchange-rate fetch-exchange-rates \
+	fetch-all \
+	generate-checksums check-data \
+	rm-db load create-table-food create-table-price recommendations sendover data-info open-db \
+	static run-dev run-gunicorn list-gunicorn kill-gunicorn \
+	frontend-install frontend-bundle frontend-watch frontend-copy \
+	build-container run-container \
+	template-rename unit-products unit-nutrients unit-ciqual-calnut \
+	nova-groups
+
 # ---------- Ciqual and Calnut tables. ----------
 
 # Documentation:
@@ -144,7 +157,6 @@ generate-checksums: $(files)
 check-data: $(files)
 	@sha256sum -c $(CHECKSUMS)
 
-
 # ---------- Database commands. ----------
 
 rm-db:
@@ -155,16 +167,16 @@ load: $(CIQUAL_DIR)/alim.csv $(CIQUAL_DIR)/compo.csv $(CIQUAL_DIR)/sources.csv \
 	  $(PRICES_PARQUET) $(PRODUCTS_PARQUET) nutrient-map-update-ciqual
 	time duckdb data/data.db < ./queries/load.sql
 
-create_table_food:
+create-table-food:
 	time duckdb data/data.db < ./queries/create_table_food.sql
 
-create_table_price:
+create-table-price:
 	time duckdb data/data.db < ./queries/create_table_price.sql
 
 recommendations:
 	time duckdb data/data.db < ./queries/recommendations.sql
 
-sendover: load create_table_price recommendations
+sendover: load create-table-price recommendations
 	time duckdb data/sendover_$(shell date +%Y%m%d_%H%M%S).db "\
 	ATTACH 'data/data.db' AS data;\
 	CREATE TABLE final_table_price AS SELECT * FROM data.final_table_price;\
@@ -181,7 +193,7 @@ open-db:
 
 # ---------- App commands. ----------
 
-static: load create_table_price
+static: load create-table-price
 	time duckdb data/data.db -readonly < ./queries/static.sql
 
 run-dev:
