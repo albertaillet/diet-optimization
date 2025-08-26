@@ -225,7 +225,7 @@ build-container: check-data frontend-install frontend-bundle static sendover
 	podman build . -t app-container
 
 run-container:
-	podman run --rm -it -p 8000:8000 app-container make run-gunicorn
+	podman run --rm -p 8000:8000 app-container
 
 # ---------- Create the nutrient extraction template. ----------
 
