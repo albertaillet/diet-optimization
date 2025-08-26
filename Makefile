@@ -5,7 +5,7 @@ SHELL := /bin/sh
 .PHONY: nutrient-map-update-counts nutrient-map-update-ciqual \
 	clean-exchange-rate fetch-exchange-rates \
 	fetch-all \
-	generate-checksums check-data \
+	generate-checksums clean-checksums check-data \
 	rm-db load create-table-food create-table-price recommendations sendover data-info open-db \
 	static run-dev run-gunicorn list-gunicorn kill-gunicorn \
 	frontend-install frontend-bundle frontend-watch frontend-copy \
@@ -143,8 +143,12 @@ $(NNR_SUMMARY_CSV): $(NNR_EXTRACTED_TABLES)
 
 files = $(CIQUAL_XML_ZIP) $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(AGRIBALYSE_CSV)
 CHECKSUMS := data/checksums.txt
-generate-checksums: $(files)
+$(CHECKSUMS): $(files)
 	@sha256sum $(files) | tee $(CHECKSUMS)
+
+clean-checksums:
+	[ -f $(CHECKSUMS) ] && rm $(CHECKSUMS) || true
+generate-checksums: $(files) clean-checksums $(CHECKSUMS)
 
 check-data: $(files)
 	@sha256sum -c $(CHECKSUMS)
