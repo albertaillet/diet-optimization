@@ -2,7 +2,7 @@ SHELL := /bin/sh
 
 # ------ Definition of PHONY targets. ------
 
-.PHONY: nutrient-map-reformat nutrient-map-update-counts nutrient-map-update-ciqual \
+.PHONY: nutrient-map-update-counts nutrient-map-update-ciqual \
 	clean-exchange-rate fetch-exchange-rates \
 	fetch-all \
 	generate-checksums check-data \
@@ -71,18 +71,10 @@ $(AGRIBALYSE_CSV):
 
 # ---------- Nutrient map commands. ----------
 
-# Fetch the initial version of the nutrient map from https://github.com/openfoodfacts/recipe-estimator
-NUTRIENT_MAP_RE := data/nutrient_map_recipe_estimator.csv
-$(NUTRIENT_MAP_RE):
-	wget -O $(NUTRIENT_MAP_RE) https://raw.githubusercontent.com/openfoodfacts/recipe-estimator/51d8dee9b2fe4542fb0a39af8bdd57bbc46d53f9/ciqual/nutrient_map.csv
-
-nutrient-map-reformat: $(NUTRIENT_MAP_RE)
-	./scripts/nutrient_map/nutrient_map_reformat.py
-
 nutrient-map-update-counts:
 	time duckdb < queries/update_nutrient_map_counts.sql
 
-nutrient-map-update-ciqual: $(CALNUT_1_CSV)
+nutrient-map-update-ciqual: $(CIQUAL_DIR)/const.csv $(CALNUT_1_CSV)
 	time duckdb < ./queries/update_nutrient_map_ciqual.sql
 
 # ---------- EUR exchange rates from the European Central Bank. ----------
