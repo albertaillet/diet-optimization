@@ -138,10 +138,10 @@ $(NNR_SUMMARY_CSV): $(NNR_EXTRACTED_TABLES)
 
 files = $(CIQUAL_XML_ZIP) $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(AGRIBALYSE_CSV)
 CHECKSUMS := data/checksums.txt
-generate-checksums:
+generate-checksums: $(files)
 	@sha256sum $(files) | tee $(CHECKSUMS)
 
-check-data:
+check-data: $(files)
 	@sha256sum -c $(CHECKSUMS)
 
 
@@ -220,7 +220,7 @@ frontend-copy:
 
 # TODO: only copy over static frontend code.
 # The sendover db is renamed so that it gets included in the container build context (.containerignore container *.db)
-build-container: #sendover
+build-container: check-data frontend-install frontend-bundle static sendover
 	mv $$(ls -t ./data/sendover_*.db | head -n 1 | xargs realpath) ./data/data.db.build_context
 	podman build . -t app-container
 
