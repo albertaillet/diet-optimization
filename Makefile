@@ -30,11 +30,11 @@ $(CIQUAL_XML_ZIP):
 
 CALNUT_0_CSV := data/calnut.0.csv
 $(CALNUT_0_CSV):
-	wget -O $(CALNUT_0_CSV) https://raw.githubusercontent.com/openfoodfacts/openfoodfacts-server/refs/heads/main/external-data/ciqual/calnut/CALNUT.csv.0
+	wget -O $(CALNUT_0_CSV) https://raw.githubusercontent.com/openfoodfacts/openfoodfacts-server/9bf87d4d5fd19fb00d1c56fe05bc605a6dde7822/external-data/ciqual/calnut/CALNUT.csv.0
 
 CALNUT_1_CSV := data/calnut.1.csv
 $(CALNUT_1_CSV):
-	wget -O $(CALNUT_1_CSV) https://raw.githubusercontent.com/openfoodfacts/openfoodfacts-server/refs/heads/main/external-data/ciqual/calnut/CALNUT.csv.1
+	wget -O $(CALNUT_1_CSV) https://raw.githubusercontent.com/openfoodfacts/openfoodfacts-server/9bf87d4d5fd19fb00d1c56fe05bc605a6dde7822/external-data/ciqual/calnut/CALNUT.csv.1
 
 # Unzip and convert the Ciqual data to csv.
 CIQUAL_DIR := data/ciqual2020
@@ -74,7 +74,7 @@ $(AGRIBALYSE_CSV):
 # Fetch the initial version of the nutrient map from https://github.com/openfoodfacts/recipe-estimator
 NUTRIENT_MAP_RE := data/nutrient_map_recipe_estimator.csv
 $(NUTRIENT_MAP_RE):
-	wget -O $(NUTRIENT_MAP_RE) https://raw.githubusercontent.com/openfoodfacts/recipe-estimator/main/ciqual/nutrient_map.csv
+	wget -O $(NUTRIENT_MAP_RE) https://raw.githubusercontent.com/openfoodfacts/recipe-estimator/51d8dee9b2fe4542fb0a39af8bdd57bbc46d53f9/ciqual/nutrient_map.csv
 
 nutrient-map-reformat: $(NUTRIENT_MAP_RE)
 	./scripts/nutrient_map/nutrient_map_reformat.py
