@@ -26,7 +26,7 @@ gunicorn.log
 gunicorn.pid
 
 # Javascript modules
-node_modules/
+**/node_modules/
 
 # Ruff cache
 .ruff_cache/

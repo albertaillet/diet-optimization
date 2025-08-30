@@ -28,6 +28,11 @@ COPY queries/query.sql queries/query.sql
 # Could ignore all js files
 COPY dietdashboard/ dietdashboard/
 
+ENV UV_LINK_MODE=copy \
+    UV_COMPILE_BYTECODE=1 \
+    UV_CACHE_DIR=/root/.cache/uv \
+    UV_PROJECT_ENVIRONMENT=/app/.venv
+
 # ---- Install all python dependencies ----
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=./uv.lock,target=uv.lock,ro,z \
@@ -35,8 +40,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-editable --no-dev
 
 # ---- Copy data files ----
-COPY ./data ./data
-RUN ln -s /app/data/data.db.build_context /app/data/data.db
+# COPY ./data ./data
+# RUN ln -s /app/data/data.db.build_context /app/data/data.db
 
 # ---- Run the app
 # Debugging:
