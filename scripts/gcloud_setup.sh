@@ -15,6 +15,22 @@ gcloud iam service-accounts create runtime-sa \
   --display-name "Service Account for Cloud Run Service Runtime" \
   --project="${PROJECT_ID}"
 
+# Grant the Cloud Run Deployer Service Account permissions
+# Allows deploying to Cloud Run
+gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+  --member="serviceAccount:cloud-run-deployer@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/run.admin"
+
+# Allows pushing images to Artifact Registry
+gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+  --member="serviceAccount:cloud-run-deployer@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/artifactregistry.writer"
+
+# Grant the Cloud Run Runtime Service Account the invoker role
+gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+  --member="serviceAccount:runtime-sa@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/run.invoker"
+
 # Get your project number
 gcloud projects describe "${PROJECT_ID}" --format="value(projectNumber)"
 
@@ -56,3 +72,13 @@ gcloud iam workload-identity-pools providers describe github-provider \
 #   --role="roles/iam.workloadIdentityUser" \
 #   --member="principalSet://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${WIF_POOL_ID}/attribute.repository/${GITHUB_ORG}/${GITHUB_REPO}" \
 #   --project="${PROJECT_ID}"
+
+# Create a Artifact Registry repository (this needs billing enabled)
+export GCP_REGION="europe-west9"
+export GCP_AR_REPO_NAME="diet-optimization-ar"
+
+gcloud artifacts repositories create "${GCP_AR_REPO_NAME}" \
+  --repository-format=docker \
+  --location="${GCP_REGION}" \
+  --description="Docker repository for GitHub Actions" \
+  --project="${PROJECT_ID}"
