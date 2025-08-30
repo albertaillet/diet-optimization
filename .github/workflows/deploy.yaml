@@ -1,0 +1,68 @@
+name: Cron build → AR → Cloud Run
+
+on:
+  schedule:
+    - cron: "0 16 * * *" # Runs every day at 17:00 CET (16:00 UTC)
+  workflow_dispatch: # Allows manual triggering of the workflow
+
+jobs:
+  build_push_deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write # Needed for OIDC to GCP
+      contents: read # To checkout the repository
+
+    strategy:
+      fail-fast: false
+
+    env:
+      GCP_PROJECT: diet-optimization-460319
+      # Possible regions: Paris (europe-west9) Stockholm (europe-north2) or Finland (europe-north1) or Zurich (europe-west6)
+      GCP_REGION: europe-west9 # Paris - Ensure AR and Cloud Run are in this region
+
+      # Cloud Run Service Details
+      GCP_CLOUD_RUN_SERVICE: your-service # IMPORTANT: Replace with your Cloud Run service name
+      GCP_RUNTIME_SA: runtime-sa@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com # IMPORTANT: Replace with your Cloud Run runtime service account
+
+      # Image Naming Conventions for Google Artifact Registry (AR)
+      GCP_AR_REPO_NAME: your-ar-repo # IMPORTANT: Replace with the actual name of your Artifact Registry repository
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate Image Tag with Date/Time
+        run: |
+          IMAGE_DATETIME_TAG=$(date +'%Y%m%d-%H%M%S')
+          echo "GCP_AR_IMAGE_NAME=${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT }}/${{ env.GCP_AR_REPO_NAME }}/${{ github.repository }}:${{ github.sha }}-$IMAGE_DATETIME_TAG" >> $GITHUB_ENV
+
+      # --- Authenticate to Google Cloud and Artifact Registry ---
+      - name: Auth to Google Cloud (OIDC)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL_ID/providers/PROVIDER_ID # IMPORTANT: Replace with your Workload Identity Federation details
+          service_account: cloud-run-deployer@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com
+
+      - name: Install gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker "${{ env.GCP_REGION }}-docker.pkg.dev"
+
+      # --- Build and Push to Artifact Registry ---
+      - name: Build container
+        run: docker build -t "$GCP_AR_IMAGE_NAME" .
+
+      - name: Push image to Artifact Registry
+        run: docker push "$GCP_AR_IMAGE_NAME"
+
+      # --- Deploy to Cloud Run from Artifact Registry ---
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy "${{ env.GCP_CLOUD_RUN_SERVICE }}" \
+            --image "${{ env.GCP_AR_IMAGE_NAME }}" \
+            --region "${{ env.GCP_REGION }}" \
+            --platform managed \
+            --allow-unauthenticated \
+            --service-account "${{ env.GCP_RUNTIME_SA }}"
