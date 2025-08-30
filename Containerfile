@@ -35,8 +35,8 @@ ENV UV_LINK_MODE=copy \
 
 # ---- Install all python dependencies ----
 RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=./uv.lock,target=uv.lock,ro,z \
-    --mount=type=bind,source=./pyproject.toml,target=pyproject.toml,ro,z \
+    --mount=type=bind,source=./uv.lock,target=uv.lock \
+    --mount=type=bind,source=./pyproject.toml,target=pyproject.toml \
     uv sync --frozen --no-editable --no-dev
 
 # ---- Copy data files ----
