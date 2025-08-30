@@ -73,3 +73,20 @@ gcloud artifacts repositories create "${GCP_AR_REPO_NAME}" \
   --location="${GCP_REGION}" \
   --description="Docker repository for GitHub Actions" \
   --project="${PROJECT_ID}"
+
+# Make the repository only have a max of one container image:
+# - Navigate to Artifact Registry: In the Google Cloud console, go to the Artifact Registry page.
+# - Select the Repository: Click on the name of the repository you want to configure.
+# - Edit the Repository: Click the "Edit Repository" button.
+# - Configure Cleanup Policies: Scroll down to the "Cleanup policies" section.
+# - Add a "Keep" Policy:
+#   - Click "Add a cleanup policy."
+#   - Give it a name, for example, "Keep latest image."
+#   - For "Policy type," select Keep most recent versions.
+#   - In the "Keep count" field, enter 1.
+# - Add a "Delete" Policy:
+#   - Click "Add a cleanup policy" again.
+#   - Give it a name, for example, "Delete all others."
+#   - For "Policy type," select Conditional delete.
+#   - You can set the "Tag state" to "Any tag state" to apply the policy to all images, regardless of whether they have a tag.
+#   - Choose "Delete artifacts": In the main "Cleanup policies" section, make sure the "Delete artifacts" option is selected.
