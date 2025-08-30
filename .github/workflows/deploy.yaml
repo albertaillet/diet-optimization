@@ -20,13 +20,8 @@ jobs:
       GCP_PROJECT: diet-optimization-460319
       # Possible regions: Paris (europe-west9) Stockholm (europe-north2) or Finland (europe-north1) or Zurich (europe-west6)
       GCP_REGION: europe-west9 # Paris - Ensure AR and Cloud Run are in this region
-
-      # Cloud Run Service Details
-      GCP_CLOUD_RUN_SERVICE: your-service # IMPORTANT: Replace with your Cloud Run service name
-      GCP_RUNTIME_SA: runtime-sa@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com # IMPORTANT: Replace with your Cloud Run runtime service account
-
-      # Image Naming Conventions for Google Artifact Registry (AR)
-      GCP_AR_REPO_NAME: your-ar-repo # IMPORTANT: Replace with the actual name of your Artifact Registry repository
+      GCP_CLOUD_RUN_SERVICE: diet-optimization-cloud-run
+      GCP_AR_REPO_NAME: diet-optimization-ar
 
     steps:
       - name: Checkout
@@ -41,7 +36,7 @@ jobs:
       - name: Auth to Google Cloud (OIDC)
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: projects/PROJECT_NUMBER/locations/global/workloadIdentityPools/POOL_ID/providers/PROVIDER_ID # IMPORTANT: Replace with your Workload Identity Federation details
+          workload_identity_provider: projects/1069350939469/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider
           service_account: cloud-run-deployer@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com
 
       - name: Install gcloud
@@ -65,4 +60,4 @@ jobs:
             --region "${{ env.GCP_REGION }}" \
             --platform managed \
             --allow-unauthenticated \
-            --service-account "${{ env.GCP_RUNTIME_SA }}"
+            --service-account "runtime-sa@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com"
