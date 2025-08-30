@@ -47,7 +47,7 @@ jobs:
 
       # --- Build and Push to Artifact Registry ---
       - name: Build container
-        run: docker build -t "$GCP_AR_IMAGE_NAME" .
+        run: docker build -t "$GCP_AR_IMAGE_NAME" -f Containerfile .
 
       - name: Push image to Artifact Registry
         run: docker push "$GCP_AR_IMAGE_NAME"
