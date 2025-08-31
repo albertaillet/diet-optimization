@@ -32,6 +32,12 @@ gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
   --member="serviceAccount:runtime-sa@${PROJECT_ID}.iam.gserviceaccount.com" \
   --role="roles/run.invoker"
 
+# Grant the Cloud Run Deployer Service Account the ability to "act as" the runtime service account
+gcloud iam service-accounts add-iam-policy-binding "runtime-sa@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --member="serviceAccount:cloud-run-deployer@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --role="roles/iam.serviceAccountUser" \
+  --project="${PROJECT_ID}"
+
 # Documentation for Workload Identity Federation
 # https://github.com/google-github-actions/auth/blob/0dfce0c0f81ee698e8ca7d23b8a0b0706f6370e3/README.md#preferred-direct-workload-identity-federation
 # Make sure to enable the IAM Service Account Credentials API
