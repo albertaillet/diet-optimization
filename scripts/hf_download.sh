@@ -26,7 +26,7 @@ if [[ -f "$outpath" ]]; then
   echo "File already exists."
 else
   echo "Downloading"
-  wget -O "$outpath" "$sha_url"
+  wget --no-verbose -O "$outpath" "$sha_url"
 fi
 
 ln -sfn "${TARGET}/${sha}.parquet" "data/${TARGET}.parquet"
