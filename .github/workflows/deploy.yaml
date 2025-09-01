@@ -68,7 +68,9 @@ jobs:
           find . -print | sed -e 's;[^/]*/;|____;g;s;____|; |;g'
 
       - name: Build container
-        run: docker build -t "$GCP_AR_IMAGE_NAME" -f Containerfile .
+        run: |
+          make build-container
+          docker tag app-container "$GCP_AR_IMAGE_NAME"
 
       # --- Authenticate to Google Cloud and Artifact Registry ---
       # - name: Auth to Google Cloud (OIDC)
