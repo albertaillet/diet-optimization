@@ -7,7 +7,7 @@ SHELL := /bin/sh
 	rm-exchange-rate fetch-exchange-rates \
 	fetch-all \
 	generate-checksums rm-checksums check-data \
-	rm-db load create-table-food create-table-price recommendations sendover data-info open-db \
+	rm-db rm-data-db rm-sendover-db create-table-food create-table-price recommendations data-info open-db \
 	static run-dev run-gunicorn list-gunicorn kill-gunicorn \
 	frontend-install frontend-bundle frontend-watch frontend-copy \
 	build-container run-container \
@@ -162,42 +162,53 @@ check-data: $(files)
 
 # ---------- Database commands. ----------
 
-rm-db:
-	rm data/data.db
+DATA_DB := data/data.db
+SENDOVER_DB := data/sendover.db
 
-load: $(CIQUAL_DIR)/alim.csv $(CIQUAL_DIR)/compo.csv $(CIQUAL_DIR)/sources.csv \
+rm-data-db:
+	rm $(DATA_DB)
+
+rm-sendover-db:
+	rm $(SENDOVER_DB)
+
+rm-db: rm-data-db rm-sendover-db
+
+$(DATA_DB): $(CIQUAL_DIR)/alim.csv $(CIQUAL_DIR)/compo.csv $(CIQUAL_DIR)/sources.csv \
 	  $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(AGRIBALYSE_CSV) $(EXCHANGE_RATES_CSV) \
-	  $(PRICES_PARQUET) $(PRODUCTS_PARQUET) nutrient-map-update-ciqual
-	time duckdb data/data.db < ./queries/load.sql
+	  $(PRICES_PARQUET) $(PRODUCTS_PARQUET)
+	time duckdb $(DATA_DB) < ./queries/load.sql
+	make create-table-price recommendations
 
+# One row per ciqual food item (not used).
 create-table-food:
-	time duckdb data/data.db < ./queries/create_table_food.sql
+	time duckdb $(DATA_DB) < ./queries/create_table_food.sql
 
+# One row per open prices price.
 create-table-price:
-	time duckdb data/data.db < ./queries/create_table_price.sql
+	time duckdb $(DATA_DB) < ./queries/create_table_price.sql
 
 recommendations:
-	time duckdb data/data.db < ./queries/recommendations.sql
+	time duckdb $(DATA_DB) < ./queries/recommendations.sql
 
-sendover: load create-table-price recommendations
-	time duckdb data/sendover_$(shell date +%Y%m%d_%H%M%S).db "\
-	ATTACH 'data/data.db' AS data;\
+$(SENDOVER_DB): $(DATA_DB)
+	time duckdb $(SENDOVER_DB) "\
+	ATTACH '$(DATA_DB)' AS data;\
 	CREATE TABLE final_table_price AS SELECT * FROM data.final_table_price;\
 	CREATE TABLE recommendations AS SELECT * FROM data.recommendations;\
-	CREATE TABLE nutrient_map AS SELECT * FROM read_csv('data/nutrient_map.csv') WHERE calnut_const_code IS NOT NULL;\
+	CREATE TABLE nutrient_map AS SELECT * FROM data.nutrient_map;\
 	DETACH data;"
-# rsync -avz data/sendover_DATE.db host:~/path/to/remote/directory/
+# rsync -avz data/sendover.db host:~/path/to/remote/directory/
 
 data-info:
 	./scripts/db_info.py
 
-open-db:
-	duckdb -readonly data/data.db
+open-db: $(DATA_DB)
+	duckdb -readonly $(DATA_DB)
 
 # ---------- App commands. ----------
 
-static: load create-table-price
-	time duckdb data/data.db -readonly < ./queries/static.sql
+static: $(DATA_DB)
+	time duckdb $(DATA_DB) -readonly < ./queries/static.sql
 
 run-dev:
 	@trap "kill 0" EXIT; \
@@ -237,22 +248,22 @@ frontend-copy:
 
 # TODO: only copy over static frontend code.
 # The sendover db is renamed so that it gets included in the container build context (.containerignore container *.db)
-build-container: check-data frontend-install frontend-bundle static sendover
-	mv $$(ls -t ./data/sendover_*.db | head -n 1 | xargs realpath) ./data/data.db.build_context
-	podman build . -t app-container
+build-container: check-data frontend-install frontend-bundle static $(SENDOVER_DB)
+	mv ./data/sendover.db ./data/sendover.db.build_context
+	docker build . -t app-container
 
 run-container:
-	podman run --rm -p 8000:8000 app-container
+	docker run --rm -p 8000:8000 app-container
 
 # ---------- Create the nutrient extraction template. ----------
 
-template-rename:
-	duckdb data/data.db -readonly "SELECT id FROM nutrient_map WHERE calnut_const_code IS NOT NULL" -csv -noheader | awk '{print $$0 "_value AS " $$0 ","}'
+template-rename: $(DATA_DB)
+	duckdb $(DATA_DB) -readonly "SELECT id FROM nutrient_map WHERE calnut_const_code IS NOT NULL" -csv -noheader | awk '{print $$0 "_value AS " $$0 ","}'
 
 # ---------- Queries to view available units. ----------
 
-unit-products:
-	duckdb data/data.db -readonly \
+unit-products: $(DATA_DB)
+	duckdb $(DATA_DB) -readonly \
 	"SELECT p.product_quantity_unit AS unit, count(*) AS count \
 	FROM products AS p \
 	GROUP BY p.product_quantity_unit ORDER BY count DESC"
@@ -268,8 +279,8 @@ unit-products:
 # │ kj     │      13 │
 # └────────┴─────────┘
 
-unit-nutrients:
-	duckdb data/data.db -readonly \
+unit-nutrients: $(DATA_DB)
+	duckdb $(DATA_DB) -readonly \
 	"SELECT n.unnest.unit as unit, count(*) AS count \
 	FROM products, UNNEST(products.nutriments) AS n \
 	GROUP BY n.unnest.unit ORDER BY count DESC"
@@ -300,9 +311,9 @@ unit-nutrients:
 # │ missing   │        8 │
 # etc..
 
-unit-ciqual-calnut:
-	duckdb data/data.db -readonly "SELECT ciqual_unit, count(*) AS count FROM nutrient_map AS n GROUP BY ciqual_unit ORDER BY count DESC"
-	duckdb data/data.db -readonly "SELECT calnut_unit, count(*) AS count FROM nutrient_map AS n GROUP BY calnut_unit ORDER BY count DESC"
+unit-ciqual-calnut: $(DATA_DB)
+	duckdb $(DATA_DB) -readonly "SELECT ciqual_unit, count(*) AS count FROM nutrient_map AS n GROUP BY ciqual_unit ORDER BY count DESC"
+	duckdb $(DATA_DB) -readonly "SELECT calnut_unit, count(*) AS count FROM nutrient_map AS n GROUP BY calnut_unit ORDER BY count DESC"
 
 # ┌─────────────┬───────┐     ┌─────────────┬───────┐
 # │ ciqual_unit │ count │     │ calnut_unit │ count │
@@ -316,8 +327,8 @@ unit-ciqual-calnut:
 
 # ---------- Miscellaneous commands. ----------
 
-nova-groups:
-	duckdb data/data.db -readonly "SELECT nova_group, count(*) AS count FROM products GROUP BY nova_group ORDER BY nova_group DESC"
+nova-groups: $(DATA_DB)
+	duckdb $(DATA_DB) -readonly "SELECT nova_group, count(*) AS count FROM products GROUP BY nova_group ORDER BY nova_group DESC"
 
 # ┌────────────┬─────────┐
 # │ nova_group │  count  │

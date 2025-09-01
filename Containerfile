@@ -35,13 +35,12 @@ ENV UV_LINK_MODE=copy \
 
 # ---- Install all python dependencies ----
 RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=./uv.lock,target=uv.lock \
-    --mount=type=bind,source=./pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=./uv.lock,target=uv.lock,relabel=shared \
+    --mount=type=bind,source=./pyproject.toml,target=pyproject.toml,relabel=shared \
     uv sync --frozen --no-editable --no-dev
 
 # ---- Copy data files ----
-COPY ./data/data.db ./data/data.db
-# RUN ln -s /app/data/data.db.build_context /app/data/data.db
+COPY ./data/sendover.db.build_context ./data/data.db
 
 # ---- Run the app
 # Debugging:

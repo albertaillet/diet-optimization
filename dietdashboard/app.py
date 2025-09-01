@@ -247,7 +247,7 @@ def create_app() -> Flask:
     @app.route("/info/<price_id>", methods=["GET"])
     def info(price_id: str) -> str:
         with get_con() as con:
-            rows = query_dicts(con, """SELECT * FROM data.final_table_price WHERE price_id = $price_id""", price_id=price_id)
+            rows = query_dicts(con, """SELECT * FROM final_table_price WHERE price_id = $price_id""", price_id=price_id)
         if len(rows) == 0:
             return "<h1>No product found</h1>"
         row = rows[0]
