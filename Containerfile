@@ -40,7 +40,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-editable --no-dev
 
 # ---- Copy data files ----
-# COPY ./data ./data
+COPY ./data/data.db ./data/data.db
 # RUN ln -s /app/data/data.db.build_context /app/data/data.db
 
 # ---- Run the app
