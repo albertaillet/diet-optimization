@@ -35,8 +35,10 @@ gunicorn.pid
 
 # Open food facts exports
 **/food*.parquet
-**/products*.parquet
-**/prices*.parquet
+**/products.parquet
+**/products/*.parquet
+**/prices.parquet
+**/prices/*.parquet
 
 # Open food facts database dump
 **/openfoodfacts-product*.jsonl.gz

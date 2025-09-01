@@ -102,11 +102,11 @@ fetch-exchange-rates: clean-exchange-rate $(EXCHANGE_RATES_CSV)
 
 PRICES_PARQUET := data/prices.parquet
 $(PRICES_PARQUET):
-	wget -O $(PRICES_PARQUET) https://huggingface.co/datasets/openfoodfacts/open-prices/resolve/main/prices.parquet
+	DATASET="openfoodfacts/open-prices" FILENAME=prices TARGET=prices ./scripts/hf_download.sh
 
 PRODUCTS_PARQUET := data/products.parquet
 $(PRODUCTS_PARQUET):
-	wget -O $(PRODUCTS_PARQUET) https://huggingface.co/datasets/openfoodfacts/product-database/resolve/main/food.parquet
+	DATASET="openfoodfacts/product-database" FILENAME=food TARGET=products ./scripts/hf_download.sh
 # Possible to use DuckDB, but queries the Hugging Face API too much and gets (HTTP 429 Too Many Requests)
 # COPY (
 # SELECT code, nutriments, nutriscore_score, product_name, product_quantity, product_quantity_unit, quantity, categories_properties,
