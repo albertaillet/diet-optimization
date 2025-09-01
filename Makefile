@@ -166,7 +166,7 @@ rm-db:
 	rm data/data.db
 
 load: $(CIQUAL_DIR)/alim.csv $(CIQUAL_DIR)/compo.csv $(CIQUAL_DIR)/sources.csv \
-	  $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(EXCHANGE_RATES_CSV) \
+	  $(CALNUT_0_CSV) $(CALNUT_1_CSV) $(AGRIBALYSE_CSV) $(EXCHANGE_RATES_CSV) \
 	  $(PRICES_PARQUET) $(PRODUCTS_PARQUET) nutrient-map-update-ciqual
 	time duckdb data/data.db < ./queries/load.sql
 
