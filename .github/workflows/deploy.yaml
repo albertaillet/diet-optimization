@@ -27,9 +27,6 @@ jobs:
       GCP_AR_REPO_NAME: diet-optimization-ar
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Install uv
         uses: astral-sh/setup-uv@v6
 
@@ -38,24 +35,22 @@ jobs:
           curl -fsSL https://install.duckdb.org | sh
           echo '/home/runner/.duckdb/cli/latest' >> $GITHUB_PATH
 
-      - name: Load Data and create static files
-        run: |
-          make load static
-
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10
-          run_install: false
 
       - name: Install esbuild
         run: |
           curl -fsSL https://esbuild.github.io/dl/latest | sh
           sudo mv esbuild /usr/local/bin/
 
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load Data and create static files
+        run: make load static
+
       - name: Install and bundle frontend code
-        run: |
-          make frontend-install frontend-bundle
+        run: make frontend-install frontend-bundle
 
       - name: Generate Image Tag with Date/Time
         run: |
@@ -88,7 +83,6 @@ jobs:
       # - name: Push image to Artifact Registry
       #   run: docker push "$GCP_AR_IMAGE_NAME"
 
-      # --- Deploy to Cloud Run from Artifact Registry ---
       # - name: Deploy to Cloud Run
       #   run: |
       #     gcloud run deploy "${{ env.GCP_CLOUD_RUN_SERVICE }}" \
@@ -96,4 +90,5 @@ jobs:
       #       --region "${{ env.GCP_REGION }}" \
       #       --platform managed \
       #       --allow-unauthenticated \
+      #       --port 8000 \
       #       --service-account "runtime-sa@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com"
