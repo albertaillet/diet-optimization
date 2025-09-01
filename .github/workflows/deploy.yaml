@@ -72,8 +72,8 @@ jobs:
       - name: Install gcloud
         uses: google-github-actions/setup-gcloud@v2
 
-      # - name: Configure Docker for Artifact Registry
-      #   run: gcloud auth configure-docker "${{ env.GCP_REGION }}-docker.pkg.dev"
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker "${{ env.GCP_REGION }}-docker.pkg.dev"
 
       # --- Build and Push to Artifact Registry ---
       - name: Build container
