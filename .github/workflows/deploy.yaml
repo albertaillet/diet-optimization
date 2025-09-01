@@ -62,32 +62,36 @@ jobs:
           IMAGE_DATETIME_TAG=$(date +'%Y%m%d-%H%M%S')
           echo "GCP_AR_IMAGE_NAME=${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT }}/${{ env.GCP_AR_REPO_NAME }}/${{ github.repository }}:${{ github.sha }}-$IMAGE_DATETIME_TAG" >> $GITHUB_ENV
 
-      # --- Authenticate to Google Cloud and Artifact Registry ---
-      - name: Auth to Google Cloud (OIDC)
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: projects/1069350939469/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider
-          service_account: cloud-run-deployer@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com
+      - name: Print directory tree
+        run: |
+          echo "Directory tree:"
+          find . -print | sed -e 's;[^/]*/;|____;g;s;____|; |;g'
 
-      - name: Install gcloud
-        uses: google-github-actions/setup-gcloud@v2
-
-      - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker "${{ env.GCP_REGION }}-docker.pkg.dev"
-
-      # --- Build and Push to Artifact Registry ---
       - name: Build container
         run: docker build -t "$GCP_AR_IMAGE_NAME" -f Containerfile .
 
-      - name: Push image to Artifact Registry
-        run: docker push "$GCP_AR_IMAGE_NAME"
+      # --- Authenticate to Google Cloud and Artifact Registry ---
+      # - name: Auth to Google Cloud (OIDC)
+      #   uses: google-github-actions/auth@v2
+      #   with:
+      #     workload_identity_provider: projects/1069350939469/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider
+      #     service_account: cloud-run-deployer@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com
+
+      # - name: Install gcloud
+      #   uses: google-github-actions/setup-gcloud@v2
+
+      # - name: Configure Docker for Artifact Registry
+      #   run: gcloud auth configure-docker "${{ env.GCP_REGION }}-docker.pkg.dev"
+
+      # - name: Push image to Artifact Registry
+      #   run: docker push "$GCP_AR_IMAGE_NAME"
 
       # --- Deploy to Cloud Run from Artifact Registry ---
-      - name: Deploy to Cloud Run
-        run: |
-          gcloud run deploy "${{ env.GCP_CLOUD_RUN_SERVICE }}" \
-            --image "${{ env.GCP_AR_IMAGE_NAME }}" \
-            --region "${{ env.GCP_REGION }}" \
-            --platform managed \
-            --allow-unauthenticated \
-            --service-account "runtime-sa@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com"
+      # - name: Deploy to Cloud Run
+      #   run: |
+      #     gcloud run deploy "${{ env.GCP_CLOUD_RUN_SERVICE }}" \
+      #       --image "${{ env.GCP_AR_IMAGE_NAME }}" \
+      #       --region "${{ env.GCP_REGION }}" \
+      #       --platform managed \
+      #       --allow-unauthenticated \
+      #       --service-account "runtime-sa@${{ env.GCP_PROJECT }}.iam.gserviceaccount.com"
