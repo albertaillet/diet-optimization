@@ -31,7 +31,9 @@ jobs:
         uses: astral-sh/setup-uv@v6
 
       - name: Install duckdb
-        run: curl -fsSL https://install.duckdb.org | sh
+        run: |
+          curl -fsSL https://install.duckdb.org | sh
+          echo '/home/runner/.duckdb/cli/latest' >> $GITHUB_PATH
 
       - name: Load Data and create static files
         run: |
