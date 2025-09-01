@@ -51,7 +51,7 @@ jobs:
       - name: Install esbuild
         run: |
           curl -fsSL https://esbuild.github.io/dl/latest | sh
-          mv esbuild /home/runner/.local/bin/
+          sudo mv esbuild /usr/local/bin/
 
       - name: Install and bundle frontend code
         run: |
