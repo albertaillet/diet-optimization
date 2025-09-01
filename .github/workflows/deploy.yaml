@@ -4,6 +4,9 @@ on:
   schedule:
     - cron: "0 16 * * *" # Runs every day at 17:00 CET (16:00 UTC)
   workflow_dispatch: # Allows manual triggering of the workflow
+  push:
+    branches:
+      - main
 
 jobs:
   build_push_deploy:
@@ -46,7 +49,9 @@ jobs:
           run_install: false
 
       - name: Install esbuild
-        run: curl -fsSL https://esbuild.github.io/dl/latest | sh
+        run: |
+          curl -fsSL https://esbuild.github.io/dl/latest | sh
+          mv esbuild /home/runner/.local/bin/
 
       - name: Install and bundle frontend code
         run: |
