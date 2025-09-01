@@ -156,6 +156,13 @@ Apps with API, database documentation, licensing or search tools:
 - 🎖️[TheMealDB](https://www.themealdb.com/), small meal and recipe database and API.
 - [GroceryDB](https://github.com/Barabasi-Lab/GroceryDB)
 
+Apps for grocery prices comparison:
+
+- [flipp](https://flipp.com)
+- [Popgot](https://popgot.com)
+- [Price.com](https://price.com)
+- [Wikiedpia page about it ](https://en.wikipedia.org/wiki/Comparison_shopping_website)
+
 Apps with a bit of information about their databases:
 
 - [Cronometer](https://cronometer.com/), data sources described [here](https://support.cronometer.com/hc/en-us/articles/360018239472-Data-Sources).
@@ -422,3 +429,18 @@ Layout used in JupyterLab:
 - [Lumino](https://github.com/jupyterlab/lumino)
   - Fork of [PhosphorJS](https://github.com/phosphorjs/phosphor)
   - [Examples](https://lumino.readthedocs.io/en/latest/examples.html)
+
+Duckdb in the browser:
+
+- [DuckDB shell](https://shell.duckdb.org) Also http://duckdb.github.io/duckdb-wasm
+- [DuckDB WASM examples](https://github.com/duckdb-wasm-examples)
+- [Awesome Duckdb](https://github.com/davidgasquez/awesome-duckdb)
+  - [DuckUI](https://demo.duckui.com) (not the same as DuckDB ui)
+  - [PondPilot](https://app.pondpilot.io)
+
+Blogpost about baked data:
+
+- https://simonwillison.net/2021/Jul/28/baked-data/
+  - Mentioned deploy script https://github.com/simonw/datasette.io/blob/362bef486fb60c36641ec33e89f331f563ee1da9/.github/workflows/deploy.yml
+  - Datasette haversine https://datasette.io/plugins/datasette-haversine
+  - Google cloud errors https://til.simonwillison.net/googlecloud/gcloud-error-workaround
