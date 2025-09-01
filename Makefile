@@ -3,9 +3,10 @@ SHELL := /bin/sh
 # ------ Definition of PHONY targets. ------
 
 .PHONY: nutrient-map-update-counts nutrient-map-update-ciqual \
-	clean-exchange-rate fetch-exchange-rates \
+	rm-products rm-prices \
+	rm-exchange-rate fetch-exchange-rates \
 	fetch-all \
-	generate-checksums clean-checksums check-data \
+	generate-checksums rm-checksums check-data \
 	rm-db load create-table-food create-table-price recommendations sendover data-info open-db \
 	static run-dev run-gunicorn list-gunicorn kill-gunicorn \
 	frontend-install frontend-bundle frontend-watch frontend-copy \
@@ -88,9 +89,9 @@ $(EXCHANGE_RATES_CSV):
 	rm eurofxref.zip
 	ln -sf $$(./scripts/transpose_exchange_rates.py) $(EXCHANGE_RATES_CSV)
 
-clean-exchange-rate:
+rm-exchange-rate:
 	rm $(EXCHANGE_RATES_CSV)
-fetch-exchange-rates: clean-exchange-rate $(EXCHANGE_RATES_CSV)
+fetch-exchange-rates: rm-exchange-rate $(EXCHANGE_RATES_CSV)
 
 # ---------- Open food facts prices and products exports. ----------
 
@@ -107,6 +108,12 @@ $(PRICES_PARQUET):
 PRODUCTS_PARQUET := data/products.parquet
 $(PRODUCTS_PARQUET):
 	DATASET="openfoodfacts/product-database" FILENAME=food TARGET=products ./scripts/hf_download.sh
+
+rm-prices:
+	rm $(PRICES_PARQUET)
+rm-products:
+	rm $(PRODUCTS_PARQUET)
+
 # Possible to use DuckDB, but queries the Hugging Face API too much and gets (HTTP 429 Too Many Requests)
 # COPY (
 # SELECT code, nutriments, nutriscore_score, product_name, product_quantity, product_quantity_unit, quantity, categories_properties,
@@ -146,9 +153,9 @@ CHECKSUMS := data/checksums.txt
 $(CHECKSUMS): $(files)
 	@sha256sum $(files) | tee $(CHECKSUMS)
 
-clean-checksums:
+rm-checksums:
 	[ -f $(CHECKSUMS) ] && rm $(CHECKSUMS) || true
-generate-checksums: $(files) clean-checksums $(CHECKSUMS)
+generate-checksums: $(files) rm-checksums $(CHECKSUMS)
 
 check-data: $(files)
 	@sha256sum -c $(CHECKSUMS)
