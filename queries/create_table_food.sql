@@ -24,8 +24,8 @@ Illustration of step_2:
 │ ciqual_food_code │ nutrient_id │ ciqual_const_code │ ciqual_unit │ calnut_const_code │ calnut_unit │
 │      int64       │   varchar   │       int64       │   varchar   │       int64       │   varchar   │
 ├──────────────────┼─────────────┼───────────────────┼─────────────┼───────────────────┼─────────────┤
-│            20516 │ sodium      │             10110 │ mg          │             10110 │ mg          │
 │            20516 │ protein     │             25000 │ g           │             25000 │ g           │
+│            20516 │ sodium      │             10110 │ mg          │             10110 │ mg          │
 │            20904 │ protein     │             25000 │ g           │             25000 │ g           │
 │            20904 │ sodium      │             10110 │ mg          │             10110 │ mg          │
 └──────────────────┴─────────────┴───────────────────┴─────────────┴───────────────────┴─────────────┘
@@ -45,10 +45,10 @@ step_2 AS (
 │ nutrient_id │ ciqual_food_code │ final_nutrient_value │ final_nutrient_unit │ final_nutrient_origin │
 │   varchar   │      int64       │        float         │       varchar       │        varchar        │
 ├─────────────┼──────────────────┼──────────────────────┼─────────────────────┼───────────────────────┤
-│ protein     │            20516 │                 20.5 │ g                   │ ciqual_C_81271        │
 │ protein     │            20904 │                 13.4 │ g                   │ ciqual_A_83108        │
-│ sodium      │            20516 │                 23.2 │ mg                  │ ciqual_C_81259        │
+│ protein     │            20516 │                 20.5 │ g                   │ ciqual_C_81271        │
 │ sodium      │            20904 │                 10.0 │ mg                  │ ciqual_A_83096        │
+│ sodium      │            20516 │                 23.2 │ mg                  │ ciqual_C_81259        │
 └─────────────┴──────────────────┴──────────────────────┴─────────────────────┴───────────────────────┘
 */
 step_3 AS (
