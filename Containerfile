@@ -35,9 +35,14 @@ ENV UV_LINK_MODE=copy \
 
 # ---- Install all python dependencies ----
 RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=./uv.lock,target=uv.lock,relabel=shared \
-    --mount=type=bind,source=./pyproject.toml,target=pyproject.toml,relabel=shared \
+    --mount=type=bind,source=./uv.lock,target=uv.lock \
+    --mount=type=bind,source=./pyproject.toml,target=pyproject.toml \
     uv sync --frozen --no-editable --no-dev
+
+# RUN --mount=type=cache,target=/root/.cache/uv \
+#     --mount=type=bind,source=./uv.lock,target=uv.lock,relabel=shared \
+#     --mount=type=bind,source=./pyproject.toml,target=pyproject.toml,relabel=shared \
+#     uv sync --frozen --no-editable --no-dev
 
 # ---- Copy data files ----
 COPY ./data/sendover.db.build_context ./data/data.db
