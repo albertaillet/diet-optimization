@@ -50,7 +50,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Load Data and create static files
-        run: make load static
+        run: make static
 
       - name: Install and bundle frontend code
         run: make frontend-install frontend-bundle
