@@ -340,3 +340,13 @@ nova-groups: $(DATA_DB)
 # │          1 │  115601 │
 # │       NULL │ 2863517 │
 # └────────────┴─────────┘
+
+# Show products with null ciqual_food_code
+null-ciqual-code: $(DATA_DB)
+	duckdb $(DATA_DB) -readonly "SELECT\
+		DISTINCT product_code, product_name,\
+		energy_fibre_kcal, energy_fibre_kcal_origin,\
+		carbohydrate, carbohydrate_origin,\
+		fat, fat_origin,\
+		protein, protein_origin\
+		FROM final_table_price WHERE ciqual_food_code IS NULL"

@@ -15,8 +15,7 @@ WITH
 step_1 AS (
   SELECT product_name[1].text AS product_name, *
   FROM products
-  WHERE ciqual_food_code IS NOT NULL
-    AND EXISTS ( SELECT 1 FROM prices WHERE products.code = prices.product_code )
+  WHERE EXISTS ( SELECT 1 FROM prices WHERE products.code = prices.product_code )
 ),
 /* step_1 x nutrient_map (table to later be pivoted)
 Illustration of step_2:
@@ -150,7 +149,7 @@ step_4 AS (
   LEFT JOIN calnut_1 AS cal
     ON nm.ciqual_food_code = cal.ALIM_CODE AND cal.CONST_CODE = nm.calnut_const_code
   LEFT JOIN step_3 AS p
-    ON nm.code = p.code AND nm.ciqual_food_code = p.ciqual_food_code AND nm.off_id = p.off_id
+    ON nm.code = p.code AND (nm.ciqual_food_code IS NOT DISTINCT FROM p.ciqual_food_code) AND nm.off_id = p.off_id
 ),
 /* Illustration of step_5:
 ┌───────────────┬──────────────────┬──────────────┬─────────────┬────────────────┬───────────────┬──────────────┬────────────────┐
