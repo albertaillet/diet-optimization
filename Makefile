@@ -248,7 +248,7 @@ frontend-copy:
 
 # TODO: only copy over static frontend code.
 # The sendover db is renamed so that it gets included in the container build context (.containerignore container *.db)
-build-container: check-data frontend-install frontend-bundle static $(SENDOVER_DB)
+build-container: frontend-install frontend-bundle check-data static $(SENDOVER_DB)
 	mv ./data/sendover.db ./data/sendover.db.build_context
 	docker build . -t app-container -f Containerfile
 
