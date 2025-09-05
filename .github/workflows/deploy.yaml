@@ -55,6 +55,9 @@ jobs:
           IMAGE_DATETIME_TAG=$(date +'%Y%m%d-%H%M%S')
           echo "GCP_AR_IMAGE_NAME=${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT }}/${{ env.GCP_AR_REPO_NAME }}/${{ github.repository }}:${{ github.sha }}-$IMAGE_DATETIME_TAG" >> $GITHUB_ENV
 
+      - name: Set wget to no-verbose for cleaner logs
+        run: echo "verbose = off" > ~/.wgetrc
+
       - name: Build container
         run: |
           make build-container
