@@ -27,9 +27,6 @@ jobs:
       GCP_AR_REPO_NAME: diet-optimization-ar
 
     steps:
-      - name: Install uv
-        uses: astral-sh/setup-uv@v6
-
       - name: Install duckdb
         run: |
           curl -fsSL https://install.duckdb.org | sh
@@ -48,6 +45,10 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
+
+      # uv is installed after checkout to use the version in the repository
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
 
       - name: Generate Image Tag with Date/Time
         run: |
