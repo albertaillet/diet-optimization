@@ -1,4 +1,4 @@
-name: Cron build → AR → Cloud Run
+name: Build, Push and Deploy to Cloud Run
 
 on:
   schedule:
@@ -10,14 +10,12 @@ on:
 
 jobs:
   build_push_deploy:
+    name: Build container → Push to Artifact Registry → Deploy to Cloud Run
     runs-on: ubuntu-latest
 
     permissions:
       id-token: write # Needed for OIDC to GCP
       contents: read # To checkout the repository
-
-    strategy:
-      fail-fast: false
 
     env:
       GCP_PROJECT: diet-optimization-460319
