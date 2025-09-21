@@ -34,6 +34,8 @@ QUERY = (Path(__file__).parent.parent / "queries/query.sql").read_text()
 LP_METHOD = "revised simplex"
 CACHE_TIMEOUT = 60 * 10  # 10 minutes
 SQL_ERROR_COL_REF_REGEX = re.compile(r"Binder Error: Referenced column \"([a-zA-Z_]+)\" not found in FROM clause!")
+ACTIVE_THRESHOLD = 1e-3  # Threshold to consider a constraint as active
+PRODUCT_THRESHOLD = 1e-3  # Minimum quantity in grams to include a product in the output
 
 
 def get_con() -> duckdb.DuckDBPyConnection:
@@ -152,7 +154,7 @@ def create_app() -> Flask:
         valid, message = validate_objective(con, objective)
         if not valid:
             return f"Invalid objective function: {message}"
-        debug_folder = DEBUG_DIR / f"optimize/{time.strftime('%Y-%m-%d-%H-%M-%S')}-{time.perf_counter_ns()}"
+        debug_folder = DEBUG_DIR / f"optimize/{time.strftime("%Y-%m-%d-%H-%M-%S")}-{time.perf_counter_ns()}"
         debug_folder.mkdir(parents=True)
         with (debug_folder / "input.json").open("w+") as f:
             f.write(json.dumps(data, indent=2))
@@ -170,6 +172,7 @@ def create_app() -> Flask:
         start = time.perf_counter()
         q = QUERY.replace("$objective", objective)  # Replace the placeholder with the actual objective function
         chosen_nutrient_ids = [nid for nid in nutrient_ids if nid in chosen_bounds]
+        num_nutrients = len(chosen_nutrient_ids)
         products_and_prices = query_numpy(con, q, locations=locations, nutrient_ids=chosen_nutrient_ids)
         query_time = time.perf_counter() - start
         con.close()
@@ -191,7 +194,7 @@ def create_app() -> Flask:
                     "array_time": array_time,
                     "optimization_time": optimization_time,
                     "num_products": A_nutrients.shape[1],
-                    "num_nutrients": A_nutrients.shape[0],
+                    "num_nutrients": num_nutrients,
                 },
                 indent=2,
             )
@@ -203,10 +206,18 @@ def create_app() -> Flask:
         nutrients_levels = A_nutrients * result.x
         assert (nutrients_levels < -1e-7).sum() == 0, "Negative values in nutrients_levels."
 
+        # Determine which constraints are active, when slack is close to 0, the constraint is active
+        # assert len(result.slack) == 2 * len(chosen_bounds)
+        active_constraints = [
+            {"nutrient_id": chosen_nutrient_ids[i % num_nutrients]}
+            for i, slack in enumerate(result.slack)
+            if abs(slack) <= ACTIVE_THRESHOLD
+        ]
+
         x = result.x
         # Sort by quantity and remove those with zero quantity
         indices = np.argsort(x)[::-1]
-        indices = indices[x[indices] > 1e-3]
+        indices = indices[x[indices] > PRODUCT_THRESHOLD]
 
         fieldnames = [
             "id",
@@ -242,6 +253,7 @@ def create_app() -> Flask:
         (debug_folder / "output.csv").write_text(result_csv_string)  # Write the CSV to the debug folder
         response = make_response(result_csv_string)
         response.mimetype = "text/csv"
+        response.headers["Binding-Constraints"] = json.dumps(active_constraints)
         return response
 
     @app.route("/info/<price_id>", methods=["GET"])

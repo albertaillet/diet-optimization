@@ -7,6 +7,7 @@
   --white: #fff;
   --grey: #ccc;
   --light-grey: #f0f0f0;
+  --highlight-yellow: #ffc107; /* Dark yellow for highlights */
 }
 
 * {
@@ -260,4 +261,16 @@ button.tab-button.active {
 g.map-brush .selection {
   /* Style for the brush selection rectangle */
   fill: rgba(100, 100, 100, 0.3);
+}
+
+/* Active variable highlighting */
+tr.active-variable {
+  background-color: rgba(255, 200, 58, 0.2) !important; /* Light yellow background */
+  border-left: 3px solid var(--highlight-yellow) !important; /* Yellow left border */
+  border-right: 3px solid var(--highlight-yellow) !important; /* Yellow left border */
+  font-weight: 500;
+}
+
+tr.active-variable:hover {
+  background-color: rgba(255, 200, 7, 0.3) !important; /* Slightly darker yellow on hover */
 }

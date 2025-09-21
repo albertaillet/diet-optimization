@@ -27,17 +27,21 @@ function optimize(state) {
     data[`${nutrient.id}_upper`] = nutrient.upper;
   });
   fetch("/optimize.csv", { body: JSON.stringify(data), method: "POST", headers: { "Content-Type": "application/json" } })
-    .then(response => Promise.all([response.headers.get("Content-Type"), response.text()]))
-    .then(([contentType, text]) => {
+    .then(response =>
+      Promise.all([response.headers.get("Content-Type"), response.text(), response.headers.get("Binding-Constraints")])
+    )
+    .then(([contentType, text, constraintsHeader]) => {
       if (!contentType.includes("text/csv")) {
         state.resultData = [];
+        state.activeConstraints = [];
         result.html(text);
       } else {
         state.resultData = csvParse(text, autoType);
+        state.activeConstraints = constraintsHeader ? JSON.parse(constraintsHeader) : [];
         Result(result, state.resultData);
       }
       if (state.inputTabs.current === "sliders-tab") {
-        SlidersTableBody(select("#slider-table-body"), state.resultData, state.sliders);
+        SlidersTableBody(select("#slider-table-body"), state.resultData, state.sliders, state.activeConstraints);
       }
     });
 }
@@ -51,6 +55,7 @@ var state = {
   locations: defaultLocations,
   objective: "price", // Default objective function
   resultData: [],
+  activeConstraints: [], // Array of active constraints from optimization
   inputTabs: { current: "sliders-tab" },
   brushMode: null
 };
@@ -59,7 +64,11 @@ state = { ...state, ...restoreState() };
 const locationData = await csv("/static/locations.csv", autoType);
 
 const tabs = [
-  { id: "sliders-tab", name: "Nutrient Targets", component: parent => Sliders(parent, state.resultData, state.sliders) },
+  {
+    id: "sliders-tab",
+    name: "Nutrient Targets",
+    component: parent => Sliders(parent, state.resultData, state.sliders, state.activeConstraints)
+  },
   { id: "locations-tab", name: "Location Selection", component: parent => Locations(parent, locationData, state) },
   { id: "objective-tab", name: "Objective Function", component: parent => Objective(parent, state) }
 ];
@@ -73,7 +82,7 @@ function App(state) {
 // Redraw on resize
 window.addEventListener("resize", () => {
   if (state.inputTabs.current === "sliders-tab") {
-    SlidersTableBody(select("#slider-table-body"), state.resultData, state.sliders);
+    SlidersTableBody(select("#slider-table-body"), state.resultData, state.sliders, state.activeConstraints);
   }
 });
 

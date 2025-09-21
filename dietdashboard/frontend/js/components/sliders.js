@@ -37,11 +37,12 @@ const NUTRIENTTYPENAMES = {
  * @param {d3.Selection} parent
  * @param {Array<Result>} productsData
  * @param {Array<Slider>} sliderData
+ * @param {Array<Object>} activeConstraints
  */
-export function Sliders(parent, productsData, sliderData) {
+export function Sliders(parent, productsData, sliderData, activeConstraints) {
   parent.html(template);
   const tableBody = parent.select("#slider-table-body");
-  SlidersTableBody(tableBody, productsData, sliderData);
+  SlidersTableBody(tableBody, productsData, sliderData, activeConstraints);
 }
 
 /**
@@ -114,9 +115,11 @@ function SliderLabelAndButtons(parent) {
  * @param {d3.Selection} parent
  * @param {Array<Result>} productsData
  * @param {Array<Slider>} sliderData
+ * @param {Array<Object>} activeConstraints
  */
-export function SlidersTableBody(parent, productsData, sliderData) {
+export function SlidersTableBody(parent, productsData, sliderData, activeConstraints) {
   const height = CONFIG.svgHeight - CONFIG.margin.top - CONFIG.margin.bottom;
+  const activeSet = new Set(activeConstraints.map(c => c.nutrient_id));
   parent
     .selectAll("tbody")
     .data(NUTRIENTTYPES, d => d)
@@ -130,6 +133,7 @@ export function SlidersTableBody(parent, productsData, sliderData) {
       d => d.id
     )
     .join(enter => enter.append("tr").call(SliderLabelAndButtons))
+    .attr("class", d => (!d.header && activeSet.has(d.id) ? "active-variable" : "")) // Highlight active, see css
     .select("svg")
     .select("g.slider")
     .each(function (d) {
