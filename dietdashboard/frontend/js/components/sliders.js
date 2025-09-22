@@ -35,14 +35,12 @@ const NUTRIENTTYPENAMES = {
 
 /**
  * @param {d3.Selection} parent
- * @param {Array<Result>} productsData
- * @param {Array<Slider>} sliderData
- * @param {Array<Object>} activeConstraints
+ * @param {State} state
  */
-export function Sliders(parent, productsData, sliderData, activeConstraints) {
+export function Sliders(parent, state) {
   parent.html(template);
   const tableBody = parent.select("#slider-table-body");
-  SlidersTableBody(tableBody, productsData, sliderData, activeConstraints);
+  SlidersTableBody(tableBody, state.resultData, state.sliders, state.activeConstraints);
 }
 
 /**
@@ -113,11 +111,11 @@ function SliderLabelAndButtons(parent) {
 
 /**
  * @param {d3.Selection} parent
- * @param {Array<Result>} productsData
- * @param {Array<Slider>} sliderData
+ * @param {Array<Result>} resultData
+ * @param {Array<Slider>} sliders
  * @param {Array<Object>} activeConstraints
  */
-export function SlidersTableBody(parent, productsData, sliderData, activeConstraints) {
+export function SlidersTableBody(parent, resultData, sliders, activeConstraints) {
   const height = CONFIG.svgHeight - CONFIG.margin.top - CONFIG.margin.bottom;
   const activeSet = new Set(activeConstraints.map(c => c.nutrient_id));
   parent
@@ -126,10 +124,7 @@ export function SlidersTableBody(parent, productsData, sliderData, activeConstra
     .join("tbody")
     .selectAll("tr")
     .data(
-      d => [
-        { header: true, nutrient_type: d, id: `nutrient_${d}` },
-        ...sliderData.filter(nutrient => nutrient.nutrient_type == d)
-      ],
+      d => [{ header: true, nutrient_type: d, id: `nutrient_${d}` }, ...sliders.filter(nutrient => nutrient.nutrient_type == d)],
       d => d.id
     )
     .join(enter => enter.append("tr").call(SliderLabelAndButtons))
@@ -145,7 +140,7 @@ export function SlidersTableBody(parent, productsData, sliderData, activeConstra
       const width = this.parentNode.clientWidth - CONFIG.margin.left - CONFIG.margin.right;
       const x = d3.scaleLinear().domain([d.min, d.max]).range([0, width]);
       Axis(slider, x, height);
-      Segments(slider, productsData, d.id, x, height);
+      Segments(slider, resultData, d.id, x, height);
       Brush(slider, d, x, height, width);
     });
 }

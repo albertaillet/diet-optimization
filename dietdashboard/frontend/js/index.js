@@ -50,7 +50,7 @@ function optimize(state) {
  * @type {State}
  */
 var state = {
-  sliders: csvParse(document.getElementById("slider-csv-data").textContent, autoType), // Default slider data
+  sliders: [], // Default slider data
   mapTransform: { k: 4062, x: 415, y: 875 },
   locations: defaultLocations,
   objective: "price", // Default objective function
@@ -64,11 +64,7 @@ state = { ...state, ...restoreState() };
 const locationData = await csv("/static/locations.csv", autoType);
 
 const tabs = [
-  {
-    id: "sliders-tab",
-    name: "Nutrient Targets",
-    component: parent => Sliders(parent, state.resultData, state.sliders, state.activeConstraints)
-  },
+  { id: "sliders-tab", name: "Nutrient Targets", component: parent => Sliders(parent, state) },
   { id: "locations-tab", name: "Location Selection", component: parent => Locations(parent, locationData, state) },
   { id: "objective-tab", name: "Objective Function", component: parent => Objective(parent, state) }
 ];

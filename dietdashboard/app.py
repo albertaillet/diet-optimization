@@ -119,11 +119,8 @@ def create_app() -> Flask:
     Compress(app)
     con = get_con()
 
-    # Create sliders
-    recommendations = query_dicts(con=con, query="""SELECT * FROM recommendations""")
-    nutrient_ids = [row["id"] for row in recommendations]
-    sliders = [{k: rec[k] for k in ("id", "name", "unit", "nutrient_type")} | create_rangeslider(rec) for rec in recommendations]
-    slider_csv = create_csv(["id", "name", "unit", "nutrient_type", "min", "max", "lower", "upper", "active"], sliders)  # type: ignore[reportArgumentType]
+    # Get all nutrient ids TODO: order them by type
+    nutrient_ids = [row["id"] for row in query_dicts(con, """SELECT id FROM nutrient_map WHERE disabled IS NULL""")]
 
     # Create nutrient for info page (and order them)
     q = """SELECT nutrient_type, list({'id': id, 'name': name, 'unit': ciqual_unit}) AS nutrients
@@ -136,7 +133,7 @@ def create_app() -> Flask:
 
     @app.route("/")
     def index():
-        return render_template("dashboard.html", slider_csv=slider_csv)
+        return render_template("dashboard.html")
 
     @app.route("/validate_objective", methods=["GET"])
     def validate():
