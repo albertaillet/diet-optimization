@@ -73,7 +73,10 @@ gcloud iam service-accounts add-iam-policy-binding "cloud-run-deployer@${PROJECT
   --member="principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/github-actions-pool/subject/repo:${GITHUB_ORG}/${GITHUB_REPO}:ref:refs/heads/main" # Or whichever branch you want to use
 
 # Create a Artifact Registry repository (this needs billing enabled)
-export GCP_REGION="europe-west9"
+# https://cloud.google.com/run/docs/mapping-custom-domains
+# Domain mapping is available in the following regions:
+# asia-east1, asia-northeast1, asia-southeast1, europe-north1, europe-west1, europe-west4, us-central1, us-east1, us-east4, us-west1
+export GCP_REGION="europe-west1"
 export GCP_AR_REPO_NAME="diet-optimization-ar"
 
 gcloud artifacts repositories create "${GCP_AR_REPO_NAME}" \
@@ -98,3 +101,6 @@ gcloud artifacts repositories create "${GCP_AR_REPO_NAME}" \
 #   - For "Policy type," select Conditional delete.
 #   - You can set the "Tag state" to "Any tag state" to apply the policy to all images, regardless of whether they have a tag.
 #   - Choose "Delete artifacts": In the main "Cleanup policies" section, make sure the "Delete artifacts" option is selected.
+
+# List verified domains for the project
+gcloud domains list-user-verified --project="${PROJECT_ID}"

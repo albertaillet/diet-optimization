@@ -19,8 +19,7 @@ jobs:
 
     env:
       GCP_PROJECT: diet-optimization-460319
-      # Possible regions: Paris (europe-west9) Stockholm (europe-north2) or Finland (europe-north1) or Zurich (europe-west6)
-      GCP_REGION: europe-west9 # Paris - Ensure AR and Cloud Run are in this region
+      GCP_REGION: europe-west1 # Ensure AR and Cloud Run are in this region
       GCP_CLOUD_RUN_SERVICE: diet-optimization-cloud-run
       GCP_AR_REPO_NAME: diet-optimization-ar
 
