@@ -1,6 +1,6 @@
 version = 1
 revision = 3
-requires-python = ">=3.13"
+requires-python = "==3.13.*"
 
 [[package]]
 name = "appnope"
@@ -398,7 +398,7 @@ dependencies = [
     { name = "brotli", marker = "platform_python_implementation != 'PyPy'" },
     { name = "brotlicffi", marker = "platform_python_implementation == 'PyPy'" },
     { name = "flask" },
-    { name = "pyzstd", marker = "python_full_version < '3.14'" },
+    { name = "pyzstd" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/33/77/7d3c1b071e29c09bd796a84f95442f3c75f24a1f2a9f2c86c857579ab4ec/flask_compress-1.18.tar.gz", hash = "sha256:fdbae1bd8e334dfdc8b19549829163987c796fafea7fa1c63f9a4add23c8413a", size = 16571, upload-time = "2025-07-11T14:08:13.496Z" }
 wheels = [
