@@ -60,8 +60,7 @@ jobs:
           make build-container
           docker tag app-container "$GCP_AR_IMAGE_NAME"
 
-      # --- Authenticate to Google Cloud and Artifact Registry ---
-      - name: Auth to Google Cloud (OIDC)
+      - name: Authenticate to Google Cloud (OIDC)
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: projects/1069350939469/locations/global/workloadIdentityPools/github-actions-pool/providers/github-provider
