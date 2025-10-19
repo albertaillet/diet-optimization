@@ -50,7 +50,7 @@ function optimize(state) {
  * @type {State}
  */
 var state = {
-  sliders: [], // Default slider data
+  sliders: csvParse(document.getElementById("slider-csv-data").textContent, autoType), // Default slider data
   mapTransform: { k: 4062, x: 415, y: 875 },
   locations: defaultLocations,
   objective: "price", // Default objective function
